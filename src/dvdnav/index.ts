@@ -470,6 +470,8 @@ dvdnav.prototype.get_next_cache_block = function() {
     this.position_current.spu_channel = -1; // Force an update.
     this.position_current.audio_channel = -1; // Force an update.
 
+    this.vobu.vobu = 0;
+
     // File opened successfully so return a VTS change event.
     if (LOG_DEBUG) {
       console.log('%cjsdvdnav: VTS_CHANGE', 'font-weight: bold;');
