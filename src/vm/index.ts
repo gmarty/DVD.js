@@ -1071,7 +1071,7 @@ vm.prototype.play_Cell = function() {
         case 1: // Angle block
           // Loop and check each cell instead? So we don't get outside the block?
           this.state.cellN += this.state.AGL_REG - 1;
-          if (DVDNAV_STRICT) {
+          if (false) {
             assert(this.state.cellN <= this.state.pgc.nr_of_cells);
             assert(this.state.pgc.cell_playback[this.state.cellN - 1].block_mode != 0);
             assert(this.state.pgc.cell_playback[this.state.cellN - 1].block_type == 1);
