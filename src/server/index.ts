@@ -148,6 +148,17 @@ server.on('error', function() {
   console.error('Something went wrong.');
 });
 
-function getDVDList(path) {
-  return fs.readdirSync(path);
+/**
+ * Return the list of directory given a dir.
+ * @todo Refactor to use asynchronous API.
+ *
+ * @param {string} dir
+ * @returns {Array.<string>}
+ */
+function getDVDList(dir) {
+  return fs.readdirSync(dir)
+    .filter(function(file) {
+      var stats = fs.statSync(path.normalize(dir, file));
+      return stats.isDirectory();
+    });
 }
