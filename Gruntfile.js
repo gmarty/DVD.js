@@ -7,28 +7,35 @@ module.exports = function(grunt) {
     typescript: {
       // Client side code uses amd modules and require.js.
       client: {
-        src: ['src/**/*.ts'],
-        dest: 'js/client',
+        src: [
+          'src/**/*.ts',
+          '!src/server/*.ts'
+        ],
+        dest: 'public/js/dvdjs',
         options: {
           module: 'amd',
           target: 'es5',
           base_path: 'src',
-          sourcemap: true,
+          sourcemap: false,
           declaration: false,
           comments: true
         }
       },
       // Node.js code uses commonjs modules and no sourcemap generated.
       server: {
-        src: ['src/**/*.ts'],
-        dest: 'js/server',
+        src: [
+          'src/server/*.ts',
+          'src/utils/*.ts',
+          'src/utils.ts'
+        ],
+        dest: 'dist/server',
         options: {
           module: 'commonjs',
           target: 'es5',
           base_path: 'src',
           sourcemap: false,
           declaration: false,
-          comments: true
+          removeComments: true
         }
       }
     },
