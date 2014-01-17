@@ -121,6 +121,32 @@ function dvdnav_vobu_t() {
   this.vobu = 0;        // Current VOBU.
 }
 
+/**
+ * Request the list of available DVD from the server, then execute a callback function.
+ *
+ * @param {Function} callback
+ */
+dvdnav.prototype.getDVDList = function(callback) {
+  var client = new BinaryClient('ws://localhost:9001');
+
+  client.on('open', function() {
+    client.send('', {req: 'DVD'});
+  });
+
+  client.on('stream', function(stream, meta) {
+    stream.on('data', function(data) {
+      if (meta.req === 'DVD') {
+        callback(data);
+        client.close();
+      }
+    });
+
+    stream.on('error', function() {
+      console.error('BinaryClient: error');
+    });
+  });
+};
+
 
 /*********************************************************************
  * initialisation & housekeeping functions                           *
@@ -670,7 +696,7 @@ dvdnav.prototype.get_next_cache_block = function() {
         return;
       }
 
-      utils.dumpBuffer(dsi);
+      //utils.dumpBuffer(dsi);
 
       this.pci = navRead.PCI(pci);
       this.dsi = navRead.DSI(dsi);
@@ -699,7 +725,7 @@ dvdnav.prototype.get_next_cache_block = function() {
       debugger;
 
       // At each VOBU, requests the corresponding bit of the encoded video file.
-      // this.vm.vmgi should be adapted for other cases.
+      // @todo this.vm.vmgi should be adapted for other cases.
       // We probably need to add the cell number too.
       console.log('%cdvdnav#get_next_cache_block()', 'color: green;', this.vobu.vobu, this.vm.vmgi.menu_vobu_admap.vobu_start_sectors.length);
       this.dvd.read_cache_block(this.file, 'VID', this.vobu.vobu, this.vm.vmgi.menu_vobu_admap.vobu_start_sectors.length, function(buffer) {

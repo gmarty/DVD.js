@@ -3,8 +3,10 @@
 'use strict';
 
 
+import http = require('http');
 import fs = require('fs');
 import path = require('path');
+import connect = require('connect');
 import binaryjs = require('binaryjs');
 import glob = require('glob');
 import Stream = require('../utils/stream');
@@ -25,6 +27,14 @@ var availableDvds = getDVDList(dvdPath);
  */
 var DVD_VIDEO_LB_LEN = 2048;
 
+// Static asset server.
+var app = connect()
+  .use(connect.static('public/'));
+http.createServer(app).listen(3000);
+
+console.log('Server running at http://localhost:3000/');
+
+// WebSockets server.
 var server = BinaryServer({port: 9001});
 
 server.on('connection', function(client) {
@@ -38,15 +48,22 @@ server.on('connection', function(client) {
       console.log('data');
       //parts = parts.push(data);
 
-      // Validate input
-      var dvd = meta.path;
+      // Validate input if a DVD path is specified.
+      if (meta.path) {
+        var dvd = meta.path;
 
-      if (availableDvds.indexOf(dvd) === -1) {
-        console.error('Requested DVD is not available.');
-        return;
+        if (availableDvds.indexOf(dvd) === -1) {
+          console.error('Requested DVD is not available.');
+          return;
+        }
       }
 
       switch (meta.req) {
+        case 'DVD':
+          // Send the list of DVD.
+          client.send(availableDvds, {req: meta.req});
+          break;
+
         case 'IFO':
           // Send all IFO files.
           var filePath = path.join(dvdPath, dvd, '/VIDEO_TS', '/*.IFO');

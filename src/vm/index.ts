@@ -956,11 +956,11 @@ vm.prototype.play_PGC_PG = function(pgN) {
   var link_values = new link_t();
 
   if (TRACE) {
-    console.log('jsdvdnav: play_PGC_PG:');
+    var msg = 'jsdvdnav: play_PGC_PG:';
     if (this.state.domain != DVDDomain_t.DVD_DOMAIN_FirstPlay) {
-      console.log(' this.state.pgcN (%i)', this.get_PGCN());
+      console.log(msg + ' this.state.pgcN (%i)', this.get_PGCN());
     } else {
-      console.log(' first_play_pgc');
+      console.log(msg + ' first_play_pgc');
     }
   }
 
@@ -1138,7 +1138,7 @@ vm.prototype.play_Cell_post = function() {
         console.log('jsdvdnav: Cell command didn\'t do a Jump, Link or Call');
       }
     } else if (TRACE) {
-      console.log('jsdvdnav: Invalid Cell command');
+      console.error('jsdvdnav: Invalid cell command');
     }
   }
 
@@ -2070,7 +2070,7 @@ vm.prototype.eval_compare = function(operation, data1, data2) {
     case 7:
       return data1 < data2;
   }
-  console.log('jsdvdnav: eval_compare: Invalid comparison code');
+  console.error('jsdvdnav: Invalid comparison code');
   return 0;
 };
 
@@ -2089,7 +2089,6 @@ vm.prototype.eval_if_version_1 = function(command) {
  This version only compares register which are in byte 6 and 7 */
 vm.prototype.eval_if_version_2 = function(command) {
   var op = this.getbits(command, 54, 3);
-  console.log('%cvm#eval_if_version_2()', 'color: green;', op);
   if (op) {
     return this.eval_compare(op, this.eval_reg(command, this.getbits(command, 15, 8)),
       this.eval_reg(command, this.getbits(command, 7, 8)));
@@ -2202,7 +2201,6 @@ vm.prototype.eval_link_instruction = function(command, cond, return_values) {
  returns 1 if jump or 0 if no jump
  actual jump instruction is in return_values parameter */
 vm.prototype.eval_jump_instruction = function(command, cond, return_values) {
-  console.log('%cvm#eval_jump_instruction()', 'color: green;', cond, return_values, this.getbits(command, 51, 4));
   switch (this.getbits(command, 51, 4)) {
     case 1:
       return_values.command = link_cmd_t.Exit;
@@ -2221,7 +2219,6 @@ vm.prototype.eval_jump_instruction = function(command, cond, return_values) {
       return_values.data2 = this.getbits(command, 41, 10);
       return cond;
     case 6:
-      console.log('%cvm#eval_jump_instruction()', 'color: green;', this.getbits(command, 23, 2));
       switch (this.getbits(command, 23, 2)) {
         case 0:
           return_values.command = link_cmd_t.JumpSS_FP;
@@ -2432,7 +2429,6 @@ vm.prototype.eval_command = function(bytes, return_values) {
   return_values.data2 = 0;
   return_values.data3 = 0;
 
-  console.log('%cvm#eval_command()', 'color: green;', this.getbits(command, 63, 3));
   switch (this.getbits(command, 63, 3)) { // three first old_bits
     case 0: // Special instructions
       cond = this.eval_if_version_1(command);
@@ -2443,7 +2439,6 @@ vm.prototype.eval_command = function(bytes, return_values) {
       }
       break;
     case 1: // Link/jump instructions
-      console.log('%cvm#eval_command() Link/jump instructions', 'color: green;', this.getbits(command, 60, 1));
       if (this.getbits(command, 60, 1)) {
         cond = this.eval_if_version_2(command);
         res = this.eval_jump_instruction(command, cond, return_values);
