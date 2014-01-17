@@ -138,19 +138,20 @@ export function dvdnav_cell_change_event_t() {
  * button turns to on activation) in your application.
  */
 export function dvdnav_highlight_event_t() {
-  return {
-    // highlight mode: 0 - hide, 1 - show, 2 - activate, currently always 1
-    display: 0,
+  // highlight mode: 0 - hide, 1 - show, 2 - activate, currently always 1
+  this.display = 0;
 
-    // @fixme these fields are currently not set
-    palette: 0, /* The CLUT entries for the highlight palette
-     (4-bits per entry -> 4 entries) */
-    sx: 0, sy: 0, ex: 0, ey: 0, // The start/end x,y positions
-    pts: 0, // Highlight PTS to match with SPU
+  // @fixme these fields are currently not set
+  this.palette = 0;
+  // The CLUT entries for the highlight palette (4-bits per entry -> 4 entries)
+  this.sx = 0;  // The start/end x,y positions
+  this.sy = 0;
+  this.ex = 0;
+  this.ey = 0;
+  this.pts = 0; // Highlight PTS to match with SPU
 
-    // button number for the SPU decoder/overlaying engine
-    buttonN: 0
-  }
+  // button number for the SPU decoder/overlaying engine
+  this.buttonN = 0
 }
 
 
