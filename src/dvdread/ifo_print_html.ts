@@ -936,10 +936,10 @@ function ifoPrint_PTL_MAIT(ptl_mait) {
      all the dics I tested so it might be padding to even also.
      If it is for the menu it probably the first entry.  */
     for (j = 0; j < 8; j++) {
-      utils.hexdump(ptl_mait.countries - ifoTypes.PTL_MAIT_COUNTRY_SIZE
+      output(utils.hexdump(ptl_mait.countries - ifoTypes.PTL_MAIT_COUNTRY_SIZE
         + ptl_mait.countries[i].pf_ptl_mai_start_byte
         + j * (ptl_mait.nr_of_vtss + 1) * 2,
-        (ptl_mait.nr_of_vtss + 1) * 2);
+        (ptl_mait.nr_of_vtss + 1) * 2));
       output('');
     }
   }

@@ -2859,7 +2859,7 @@ vm.prototype.print_reg_or_data = function(command, immediate, start) {
     var i = this.getbits(command, start, 16);
 
     msg += sprintf('%s', utils.toHex(i));
-    if (utils.isprint(String.fromCharCode(i & 0xFF)) && utils.isprint(String.fromCharCode((i >> 8) & 0xFF))) {
+    if (utils.isprint(i & 0xFF) && utils.isprint((i >> 8) & 0xFF)) {
       msg += sprintf(' ("%s")', utils.bit2str(i));
     }
   } else {
@@ -2887,7 +2887,7 @@ vm.prototype.print_reg_or_data_3 = function(command, immediate, start) {
     var i = this.getbits(command, start, 16);
 
     msg += sprintf('%s', utils.toHex(i));
-    if (utils.isprint(String.fromCharCode(i & 0xFF)) && utils.isprint(String.fromCharCode((i >> 8) & 0xFF))) {
+    if (utils.isprint(i & 0xFF) && utils.isprint((i >> 8) & 0xFF)) {
       msg += sprintf(' ("%s")', utils.bit2str(i));
     }
   } else {

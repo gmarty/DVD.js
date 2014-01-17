@@ -343,20 +343,24 @@ export function bit2str(bit: number): string {
 /**
  * @param {number} ptr (passed as reference).
  * @param {number} len
+ * @return {string}
  */
-export function hexdump(ptr: number, len: number) {
-  while (len--)
-    printf('%02x ', ptr++);
+export function hexdump(ptr: number, len: number): string {
+  var msg = '';
+  while (len--) {
+    msg += sprintf('%02x ', ptr++);
+  }
+
+  return msg;
 }
 
 
 /**
  * Check if a character is alphabetic.
- * @param {string} char
+ * @param {number} code
  * @return {boolean}
  */
-export function isalpha(char: string): boolean {
-  var code = char.charCodeAt(0);
+export function isalpha(code: number): boolean {
   return (code >= 0x41 && code <= 0x5A) || // A-Z
     (code >= 0x61 && code <= 0x7A);        // a-z
 }
@@ -364,11 +368,10 @@ export function isalpha(char: string): boolean {
 
 /**
  * Check if a character is printable.
- * @param {string} char
+ * @param {number} code
  * @return {boolean}
  */
-export function isprint(char: string): boolean {
-  var code = char.charCodeAt(0);
+export function isprint(code: number): boolean {
   return code >= 0x1F && code != 0x7F;
 }
 
