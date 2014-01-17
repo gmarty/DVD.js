@@ -9,7 +9,8 @@ module.exports = function(grunt) {
       client: {
         src: [
           'src/**/*.ts',
-          '!src/server/*.ts'
+          '!src/server/*.ts',
+          '!src/utils/*.ts'
         ],
         dest: 'public/js/dvdjs',
         options: {
