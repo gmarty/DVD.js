@@ -80,24 +80,7 @@ function dvdnav(screen) {
   //this.err_str = [];
 
   // Initialise video.
-  var mediaSource = new MediaSource();
   this.sourceBuffer = null;
-  this.screen.src = window.URL.createObjectURL(mediaSource);
-
-  mediaSource.addEventListener('sourceopen', function(event) {
-    console.log('MediaSource sourceopen event', event);
-    this.sourceBuffer = mediaSource.addSourceBuffer('video/webm;codecs="vp8,vorbis"');
-  }.bind(this), false);
-
-  mediaSource.addEventListener('sourceended', function(event) {
-    console.log('MediaSource sourceended event', event);
-    console.log(mediaSource);
-  }.bind(this), false);
-
-  mediaSource.addEventListener('sourceclose', function(event) {
-    console.log('MediaSource sourceclose event', event);
-    console.log(mediaSource);
-  }.bind(this), false);
 }
 
 // Inherit from event emitter.
@@ -119,10 +102,12 @@ function dvdnav_vobu_t() {
 
   // Not in original code:
   this.vobu = 0;        // Current VOBU.
+  this.vobuNb = 0;      // Total number of VOBUs.
 }
 
 /**
  * Request the list of available DVD from the server, then execute a callback function.
+ * @todo Refactor to merge into dvdread/index to avoid instantiate BinaryClient twice.
  *
  * @param {Function} callback
  */
@@ -497,6 +482,13 @@ dvdnav.prototype.get_next_cache_block = function() {
     this.position_current.audio_channel = -1; // Force an update.
 
     this.vobu.vobu = 0;
+    if (this.position_current.vts === -1) {
+      // VMG
+      this.vobu.vobuNb = this.vm.vmgi.menu_vobu_admap.vobu_start_sectors.length;
+    } else {
+      // VTS
+      this.vobu.vobuNb = this.vm.vtsi.vts_vobu_admap.vobu_start_sectors.length;
+    }
 
     // File opened successfully so return a VTS change event.
     if (LOG_DEBUG) {
@@ -725,19 +717,48 @@ dvdnav.prototype.get_next_cache_block = function() {
       debugger;
 
       // At each VOBU, requests the corresponding bit of the encoded video file.
-      // @todo this.vm.vmgi should be adapted for other cases.
       // We probably need to add the cell number too.
-      console.log('%cdvdnav#get_next_cache_block()', 'color: green;', this.vobu.vobu, this.vm.vmgi.menu_vobu_admap.vobu_start_sectors.length);
-      this.dvd.read_cache_block(this.file, 'VID', this.vobu.vobu, this.vm.vmgi.menu_vobu_admap.vobu_start_sectors.length, function(buffer) {
+      console.log('%cdvdnav#get_next_cache_block()', 'color: green;', this.vobu.vobu, this.vobu.vobuNb);
+      this.dvd.read_cache_block(this.file, 'VID', this.vobu.vobu, this.vobu.vobuNb, function(buffer) {
         console.log('%cdvdnav#get_next_cache_block() dvd_reader#read_cache_block() callback for video event', 'color: green;');
 
-        this.sourceBuffer.appendBuffer(new Uint8Array(buffer));
+        var arr = new Uint8Array(buffer);
 
-        if (this.screen.paused) {
-          this.screen.play(); // Start playing after 1st chunk is appended.
+        // Should be 0.
+        if (this.vobu.vobu === 1) {
+          // New VOB file, it's probably a good idea to reinitialise video.
+          var mediaSource = new MediaSource();
+          this.sourceBuffer = null;
+          this.screen.src = window.URL.createObjectURL(mediaSource);
+
+          mediaSource.addEventListener('sourceopen', function(event) {
+            console.log('MediaSource sourceopen event', event);
+            this.sourceBuffer = mediaSource.addSourceBuffer('video/webm;codecs="vp8,vorbis"');
+            this.sourceBuffer.timestampOffset = 0;
+            this.sourceBuffer.appendBuffer(arr);
+
+            if (this.screen.paused) {
+              this.screen.play(); // Start playing after 1st chunk is appended.
+            }
+
+            this.nextBlock();
+          }.bind(this), false);
+
+          mediaSource.addEventListener('sourceended', function(event) {
+            console.log('MediaSource sourceended event', event);
+            console.log(mediaSource);
+          }.bind(this), false);
+
+          mediaSource.addEventListener('sourceclose', function(event) {
+            console.log('MediaSource sourceclose event', event);
+            console.log(mediaSource);
+          }.bind(this), false);
+        } else {
+          // Otherwise, we just append the video chunk.
+          this.sourceBuffer.appendBuffer(arr);
+
+          this.nextBlock();
         }
-
-        this.nextBlock();
       }.bind(this));
 
       this.vobu.vobu++;
