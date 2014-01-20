@@ -46,7 +46,8 @@ module.exports = function(grunt) {
       client: {
         files: [
           'src/**/*.ts',
-          '!src/server/*.ts'
+          '!src/server/*.ts',
+          '!src/utils/*.ts'
         ],
         tasks: ['typescript:client'],
         options: {
