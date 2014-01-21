@@ -37,9 +37,6 @@ export = dvdnav;
 function dvdnav(screen) {
   if (!(this instanceof dvdnav)) return new dvdnav(screen);
 
-  // Inherit from event emitter.
-  EventEmitter.call(this);
-
   // Not in original code:
   this.screen = screen; // The video element.
   this.dvd = new dvdReader.dvd_reader();
