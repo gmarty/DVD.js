@@ -709,10 +709,6 @@ dvdnav.prototype.get_next_cache_block = function() {
       }
       this.emit('navPacket');
 
-      console.log('this.vm.state.vtsN', this.vm.state.vtsN);
-      console.log(this.vm);
-      debugger;
-
       // At each VOBU, requests the corresponding bit of the encoded video file.
       // We probably need to add the cell number too.
       console.log('%cdvdnav#get_next_cache_block()', 'color: green;', this.vobu.vobu, this.vobu.vobuNb);
