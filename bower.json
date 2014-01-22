@@ -1,0 +1,29 @@
+{
+  "name": "dvd.js",
+  "version": "0.0.1",
+  "homepage": "https://github.com/gmarty/DVD.js",
+  "authors": [
+    "Guillaume Marty <edo999@gmail.com>"
+  ],
+  "description": "Play DVD in JavaScript for the sake of interoperability",
+  "keywords": [
+    "dvd",
+    "libdvdnav",
+    "libdvdread",
+    "interoperability"
+  ],
+  "license": "GNU GPL",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "~3.0.3",
+    "requirejs": "~2.1.10",
+    "eventEmitter": "~4.2.7"
+  }
+}

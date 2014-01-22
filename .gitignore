@@ -1,4 +1,5 @@
 node_modules/
 .idea/
 outputs/
-js/
+public/js/
+public/bower_components/
