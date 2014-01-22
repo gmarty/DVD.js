@@ -336,7 +336,7 @@ export function str2bit(str: string): number {
  * @return {string}
  */
 export function bit2str(bit: number): string {
-  return String.fromCharCode(bit >> 8) + String.fromCharCode(bit & 0xFF);
+  return String.fromCharCode((bit >> 8) & 0xFF) + String.fromCharCode(bit & 0xFF);
 }
 
 
@@ -357,6 +357,7 @@ export function hexdump(ptr: number, len: number): string {
 
 /**
  * Check if a character is alphabetic.
+ *
  * @param {number} code
  * @return {boolean}
  */
@@ -368,6 +369,7 @@ export function isalpha(code: number): boolean {
 
 /**
  * Check if a character is printable.
+ *
  * @param {number} code
  * @return {boolean}
  */
@@ -389,6 +391,23 @@ export function toHex(dec: number): string {
     hex = '0' + hex;
   }
   return '0x' + hex;
+}
+
+
+/**
+ * Quick title formatting function.
+ *
+ * @param {string} title
+ * @returns {string} A formatted title.
+ */
+export function formatTitle(title: string): string {
+  return title
+    .replace(/_/g, ' ')
+    .split(' ')
+    .map(function(word) {
+      return word.substring(0, 1).toUpperCase() + word.substring(1).toLowerCase();
+    })
+    .join(' ');
 }
 
 
