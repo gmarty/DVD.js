@@ -10,6 +10,7 @@ import utils = require('../utils');
 import vm = require('../vm/index');
 import navRead = require('../dvdread/nav_read');
 import dvdReader = require('../dvdread/index');
+import EventEmitter = require('../../../bower_components/eventEmitter/EventEmitter.min.js');
 
 var LOG_DEBUG = config.DEBUG;
 var DVDDomain_t = dvdTypes.DVDDomain_t;
@@ -77,6 +78,7 @@ function dvdnav(screen) {
   //this.err_str = [];
 
   // Initialise video.
+  this.mediaSource = null;
   this.sourceBuffer = null;
 }
 
@@ -493,7 +495,10 @@ dvdnav.prototype.get_next_cache_block = function() {
     }
     this.emit('vtsChange', vts_change_event);
 
-    this.nextBlock();
+    this.initializeMediaSource(function() {
+      this.nextBlock();
+    });
+
     return;
   }
 
@@ -715,43 +720,10 @@ dvdnav.prototype.get_next_cache_block = function() {
       this.dvd.read_cache_block(this.file, 'VID', this.vobu.vobu, this.vobu.vobuNb, function(buffer) {
         console.log('%cdvdnav#get_next_cache_block() dvd_reader#read_cache_block() callback for video event', 'color: green;');
 
-        var arr = new Uint8Array(buffer);
+        // We append the video chunk.
+        this.sourceBuffer.appendBuffer(new Uint8Array(buffer));
 
-        // Should be 0.
-        if (this.vobu.vobu === 1) {
-          // New VOB file, it's probably a good idea to reinitialise video.
-          var mediaSource = new MediaSource();
-          this.sourceBuffer = null;
-          this.screen.src = window.URL.createObjectURL(mediaSource);
-
-          mediaSource.addEventListener('sourceopen', function(event) {
-            console.log('MediaSource sourceopen event', event);
-            this.sourceBuffer = mediaSource.addSourceBuffer('video/webm;codecs="vp8,vorbis"');
-            this.sourceBuffer.timestampOffset = 0;
-            this.sourceBuffer.appendBuffer(arr);
-
-            if (this.screen.paused) {
-              this.screen.play(); // Start playing after 1st chunk is appended.
-            }
-
-            this.nextBlock();
-          }.bind(this), false);
-
-          mediaSource.addEventListener('sourceended', function(event) {
-            console.log('MediaSource sourceended event', event);
-            console.log(mediaSource);
-          }.bind(this), false);
-
-          mediaSource.addEventListener('sourceclose', function(event) {
-            console.log('MediaSource sourceclose event', event);
-            console.log(mediaSource);
-          }.bind(this), false);
-        } else {
-          // Otherwise, we just append the video chunk.
-          this.sourceBuffer.appendBuffer(arr);
-
-          this.nextBlock();
-        }
+        this.nextBlock();
       }.bind(this));
 
       this.vobu.vobu++;
@@ -765,6 +737,38 @@ dvdnav.prototype.get_next_cache_block = function() {
   this.vobu.blockN += this.vobu.vobu_length;
 
   this.nextBlock();
+};
+
+/**
+ * Initialize the Media Source and execute a callback when ready.
+ *
+ * @param {function} callback
+ */
+dvdnav.prototype.initializeMediaSource = function(callback) {
+  // New VOB file, it's probably a good idea to reinitialise video.
+  this.mediaSource = new MediaSource();
+  this.sourceBuffer = null;
+  this.screen.src = window.URL.createObjectURL(this.mediaSource);
+
+  this.mediaSource.addEventListener('sourceopen', function(event) {
+    console.log('MediaSource sourceopen event', event);
+    this.sourceBuffer = this.mediaSource.addSourceBuffer('video/webm;codecs=vp8,vorbis');
+    //this.sourceBuffer.timestampOffset = 0;
+
+    if (this.screen.paused) {
+      this.screen.play(); // Start playing after 1st chunk is appended.
+    }
+
+    callback.call(this);
+  }.bind(this), false);
+
+  this.mediaSource.addEventListener('sourceended', function(event) {
+    console.log('MediaSource sourceended event', event);
+  }.bind(this), false);
+
+  this.mediaSource.addEventListener('sourceclose', function(event) {
+    console.log('MediaSource sourceclose event', event);
+  }.bind(this), false);
 };
 
 // Ported from settings.c.
