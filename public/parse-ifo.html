@@ -1,0 +1,231 @@
+<!doctype html>
+<html>
+<head>
+<title>DVD.js - Parse IFO files</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<meta name="msapplication-TileColor" content="#00aba9">
+<meta name="msapplication-TileImage" content="/mstile-144x144.png">
+<link href="bower_components/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
+<link href="favicon-196x196.png" rel="icon" sizes="196x196">
+<link href="favicon-160x160.png" rel="icon" sizes="160x160">
+<link href="favicon-96x96.png" rel="icon" sizes="96x96">
+<link href="favicon-32x32.png" rel="icon" sizes="32x32">
+<link href="favicon-16x16.png" rel="icon" sizes="16x16">
+<style>
+body {
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+.navbar {
+  margin-bottom: 20px;
+}
+.color {
+  width: 10px;
+  height: 10px;
+  border-radius: 25%;
+  display: inline-block;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="navbar navbar-default" role="navigation">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+        <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span>
+        <span class="icon-bar"></span> <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="/"><img src="img/dvd.js.svg" alt="DVD.js" title="DVD.js" width="18" height="18"> DVD.js</a>
+    </div>
+    <div class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li><a href="index.html">Play DVD</a></li>
+        <li><a href="test.html">Test your browser</a></li>
+        <li class="active"><a href="parse-ifo.html">Parse IFO files</a></li>
+      </ul>
+    </div>
+  </div>
+  <form role="form">
+    <div class="row">
+      <div class="col-xs-12">
+        <h2>Parse IFO files</h2>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12 col-sm-6 col-md-4">
+        <label for="dvd_files">Select several IFO files</label>
+        <input type="file" id="dvd_files" class="form-control" multiple>
+      </div>
+      <div class="col-xs-12 col-sm-6 col-md-4">
+        <label for="num">Then, choose a file</label><br>
+        <select id="num" class="form-control"></select>
+      </div>
+      <div class="col-xs-12 col-sm-12 col-md-4">
+        <p>Progress</p>
+        <div class="progress progress-striped">
+          <div id="loading" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: 0%"></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-12">
+          <pre id="output" class="well"></pre>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+<script src="bower_components/requirejs/require.js"></script>
+<script src="lib/jDataView/src/jdataview.js"></script>
+<script src="lib/binaryParser/binaryParser.js"></script>
+<script>
+'use strict';
+
+// We load jQuery as a AMD module, then load Bootstrap async
+// (dirty... I know, there must be a better way).
+require(['bower_components/jquery/jquery.min.js'],
+    require.bind(null, ['bower_components/bootstrap/dist/js/bootstrap.min.js']));
+
+if (!window.File || !window.FileReader) {
+  // @todo Display an error message.
+}
+
+/**
+ * Check env (Modernizr):
+ * input file multiple∕dir
+ * File API
+ * FileReader.prototype.readAsArrayBuffer
+ * @todo Test FileReader.readAsDataURL with huge files.
+ */
+
+require([
+  'js/dvdjs/dvdread/index',
+  'js/dvdjs/dvdread/ifo_print_html'
+], function(dvdReader, ifoPrint) {
+  var dvd_reader = dvdReader.dvd_reader;
+  var dvd_file_t = dvdReader.dvd_file_t;
+
+  var dvdFiles = new dvd_reader();
+
+  document.getElementById('dvd_files').addEventListener('change', readFiles, false);
+
+  function readFiles(event) {
+    var files = event.target.files,
+        fileNum = files.length,
+        file,
+        totalWeight = 0,
+        loadedWeight = 0,
+        $progress = document.getElementById('loading'),
+        reader = new FileReader(),
+        readMethod = FileReader.prototype.readAsArrayBuffer ?
+            'readAsArrayBuffer' : 'readAsBinaryString';
+
+    // Set reader events.
+    reader.onprogress = function(e) {
+      if (e.lengthComputable && e.loaded >= 0) {
+        var percent = Math.round((loadedWeight + e.loaded) / totalWeight * 100);
+        $progress.style.width = percent + '%';
+      }
+    };
+
+    reader.onloadend = function(e) {
+      if (e.target.result == null) {
+        return;
+      }
+
+      dvdFiles.files[fileNum].view = new jDataView(e.target.result, undefined, undefined, false);
+      loadedWeight += e.target.result.byteLength;
+      var percent = Math.round(loadedWeight / totalWeight * 100);
+      $progress.style.width = percent + '%';
+
+      fileNum--;
+
+      if (fileNum >= 0) {
+        // Read the next file if present.
+        reader[readMethod](dvdFiles.files[fileNum].file);
+      } else {
+        populateSelect(dvdFiles);
+      }
+    };
+
+    reader.onerror = function(e) {
+      throw new Error('An error occurred.');
+    };
+
+    // Iterate over selected files.
+    while (fileNum--) {
+      if (!files[fileNum].name.match(/\.(ifo|bup|vob)$/i)
+          || files[fileNum].size > 1072000000) {
+        continue;
+      }
+
+      file = new dvd_file_t();
+      file.file = files[fileNum];
+      dvdFiles.files.push(file);
+    }
+
+    dvdFiles.files.forEach(function(dvd_file) {
+      totalWeight += dvd_file.file.size;
+    });
+
+    fileNum = dvdFiles.files.length - 1;
+
+    // Read the first file.
+    reader[readMethod](dvdFiles.files[fileNum].file);
+  }
+
+  /**
+   * Populate the dropdown menu with the files previously selected.
+   */
+  function populateSelect(dvdFiles) {
+    var $num = document.getElementById('num');
+    $num.addEventListener('change', function(event) {
+      ifoDecode(dvdFiles, parseInt(event.target.value, 10));
+    }, false);
+
+    var files = [];
+    dvdFiles.files.forEach(function(file) {
+      var label = file.file.name;
+      if (label.match(/\.BUP$/)) {
+        return;
+      }
+
+      var value = label == 'VIDEO_TS.IFO' ? 0 : +label.replace(/^VTS_/, '').replace(/_0\.IFO$/, '');
+
+      files.push({value: value, label: label});
+    });
+
+    // Clean the dropdown.
+    while ($num.firstChild) {
+      $num.removeChild($num.firstChild);
+    }
+
+    var option = document.createElement('option');
+    option.value = '';
+    option.text = 'IFO files';
+    $num.appendChild(option);
+
+    files
+        .sort(function(a, b) {
+          return a.value - b.value;
+        })
+        .forEach(function(file) {
+          var option = document.createElement('option');
+          option.value = file.value;
+          option.text = file.label;
+          $num.appendChild(option);
+        });
+  }
+
+  function ifoDecode(dvdFiles, title) {
+    if (title < 0) {
+      return;
+    }
+
+    console.log(dvdFiles, title);
+    ifoPrint(dvdFiles, title, document.getElementById('output'));
+  }
+});
+</script>
+</body>
+</html>

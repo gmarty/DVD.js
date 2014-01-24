@@ -1,0 +1,212 @@
+<!doctype html>
+<html>
+<head>
+<title>DVD.js - Test your browser</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<meta name="msapplication-TileColor" content="#00aba9">
+<meta name="msapplication-TileImage" content="/mstile-144x144.png">
+<link href="bower_components/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
+<link href="favicon-196x196.png" rel="icon" sizes="196x196">
+<link href="favicon-160x160.png" rel="icon" sizes="160x160">
+<link href="favicon-96x96.png" rel="icon" sizes="96x96">
+<link href="favicon-32x32.png" rel="icon" sizes="32x32">
+<link href="favicon-16x16.png" rel="icon" sizes="16x16">
+<style>
+body {
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+.navbar {
+  margin-bottom: 20px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="navbar navbar-default" role="navigation">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+        <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span>
+        <span class="icon-bar"></span> <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="/"><img src="img/dvd.js.svg" alt="DVD.js" title="DVD.js" width="18" height="18"> DVD.js</a>
+    </div>
+    <div class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li><a href="index.html">Play DVD</a></li>
+        <li class="active"><a href="test.html">Test your browser</a></li>
+        <li><a href="parse-ifo.html">Parse IFO files</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-xs-12">
+      <h2>Test your browser</h2>
+      <p id="platform"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-12">
+      <h2>Video support</h2>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
+      <p><span id="vid" class="glyphicon glyphicon-question-sign"></span> Video element</p>
+    </div>
+    <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
+      <p><span id="webm" class="glyphicon glyphicon-question-sign"></span> Webm video format</p>
+    </div>
+    <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
+      <p><span id="mse" class="glyphicon glyphicon-question-sign"></span> Media source API</p>
+    </div>
+    <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
+      <p><span id="vtt" class="glyphicon glyphicon-question-sign"></span> Subtitles via WebVTT<br>
+        <small>(optional)</small>
+      </p>
+    </div>
+    <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
+      <p><span id="mvt" class="glyphicon glyphicon-question-sign"></span> Multiple video tracks<br>
+        <small>(optional)</small>
+      </p>
+    </div>
+    <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
+      <p><span id="mat" class="glyphicon glyphicon-question-sign"></span> Multiple audio tracks<br>
+        <small>(optional)</small>
+      </p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-12">
+      <h2>Other support</h2>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
+      <p><span id="ws" class="glyphicon glyphicon-question-sign"></span> WebSockets</p>
+    </div>
+    <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
+      <p><span id="bws" class="glyphicon glyphicon-question-sign"></span> Binary WebSockets<br>
+        <small>(optional)</small>
+      </p>
+    </div>
+    <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
+      <p><span id="fra" class="glyphicon glyphicon-question-sign"></span> File API<br>
+        <small>(optional)</small>
+      </p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-12">
+      <p>If a feature other than the ones marked as optional is missing, your browser is not ready to run DVD.js.</p>
+      <p>Optional means either that the feature can be polyfilled or that it is not currently used.</p>
+    </div>
+  </div>
+  <footer>
+    <p>© 2014 Guillaume Marty (<a href="https://github.com/gmarty">https://github.com/gmarty</a>)
+    </p>
+  </footer>
+</div>
+<script src="bower_components/requirejs/require.js"></script>
+<script>
+'use strict';
+
+// We load jQuery as a AMD module, then load Bootstrap async
+// (dirty... I know, there must be a better way).
+require(['bower_components/jquery/jquery.min.js'],
+    require.bind(null, ['bower_components/bootstrap/dist/js/bootstrap.min.js']));
+
+require(['bower_components/platform/platform.js'], function(platform) {
+  document.querySelector('#platform').innerHTML = platform.description;
+});
+
+(function() {
+  /**
+   * @todo Test actual WebSockets connection to the server.
+   */
+  var videoElement = document.createElement('video');
+
+  // Detect video support.
+  support('vid', function() {
+    return !!videoElement;
+  });
+
+  // Webm video format support.
+  support('webm', function() {
+    return !!(videoElement) && videoElement.canPlayType &&
+        videoElement.canPlayType('video/webm;codecs=vp8,vorbis');
+  });
+
+  // Detect media source extension support.
+  // See http://www.w3.org/TR/media-source/
+  support('mse', function() {
+    var mediaSource = window.MediaSource || window.WebKitMediaSource;
+    return !!(mediaSource) && mediaSource.isTypeSupported &&
+        mediaSource.isTypeSupported('video/webm;codecs=vp8,vorbis');
+  });
+
+  // Detect subtitles via WebVTT support.
+  // See http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#texttracklist
+  support('vtt', function() {
+    return 'textTracks' in videoElement && (typeof videoElement.addTextTrack === 'function' ||
+        typeof videoElement.addTrack === 'function');
+  });
+
+  // See https://developer.apple.com/library/safari/documentation/AudioVideo/Conceptual/Using_HTML5_Audio_Video/ControllingMediaWithJavaScript/ControllingMediaWithJavaScript.html#//apple_ref/doc/uid/TP40009523-CH3-SW25
+  // See http://blog.denivip.ru/index.php/2013/10/alternative-audio-tracks-in-html5-video/?lang=en
+
+  // Detect multiple video tracks support.
+  // See http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#videotracklist
+  support('mvt', function() {
+    return 'videoTracks' in videoElement || 'MediaController' in window;
+  });
+
+  // Detect multiple audio tracks support.
+  // See http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#audiotracklist
+  support('mat', function() {
+    return 'audioTracks' in videoElement || 'MediaController' in window;
+  });
+
+  // Detect WebSockets support.
+  // See https://github.com/Modernizr/Modernizr/blob/master/feature-detects/websockets.js
+  support('ws', function() {
+    return 'WebSocket' in window && window.WebSocket.CLOSING === 2;
+  });
+
+  // Detect binary WebSockets support.
+  // See https://github.com/Modernizr/Modernizr/blob/master/feature-detects/websockets/binary.js
+  support('bws', function() {
+    var protocol = 'https:' == location.protocol ? 'wss' : 'ws';
+    var protoBin = false;
+
+    if ('WebSocket' in window) {
+      if (protoBin = 'binaryType' in WebSocket.prototype) {
+        return protoBin;
+      }
+      try {
+        return !!(new WebSocket(protocol + '://.').binaryType);
+      } catch (e) {
+      }
+    }
+
+    return false;
+  });
+
+  // Detect file API support.
+  // See https://github.com/Modernizr/Modernizr/blob/master/feature-detects/file/api.js
+  // We don't test FileList as not needed.
+  support('fra', function() {
+    return !!(window.File && window.FileReader);
+  });
+
+  function support(id, support) {
+    document.getElementById(id).className = support() ?
+        'glyphicon glyphicon-ok text-success' :
+        'glyphicon glyphicon-remove text-danger';
+  }
+})();
+</script>
+</body>
+</html>
