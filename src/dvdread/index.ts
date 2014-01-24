@@ -154,11 +154,11 @@ dvd_reader.prototype.open = function(path, cb) {
   });
 
   client.on('stream', function(stream, meta) {
-    console.log('BinaryClient: stream', stream, meta);
+    //console.log('BinaryClient: stream', stream, meta);
     var parts = [];
 
     stream.on('data', function(data) {
-      console.log('BinaryClient: data');
+      //console.log('BinaryClient: data');
       /*console.dir(meta);
        console.dir(data);*/
 
@@ -176,7 +176,7 @@ dvd_reader.prototype.open = function(path, cb) {
     });
 
     stream.on('end', function() {
-      console.log('BinaryClient: end');
+      //console.log('BinaryClient: end');
       /*console.dir(stream);
        console.dir(meta);
        console.dir(parts);*/
@@ -250,7 +250,7 @@ dvd_reader.prototype.open = function(path, cb) {
   });
 
   client.on('close', function() {
-    console.log('%cConnection closed.', cBlue);
+    //console.log('%cConnection closed.', cBlue);
   });
 
   client.on('error', function(err) {
@@ -259,7 +259,7 @@ dvd_reader.prototype.open = function(path, cb) {
 };
 
 dvd_reader.prototype.read_cache_block = function(file, type, sector, block_count, cb) {
-  console.log('%cdvd_reader#read_cache_block()', 'color: green;', file, sector, block_count);
+  //console.log('%cdvd_reader#read_cache_block()', 'color: green;', file, sector, block_count);
 
   // @todo Find a polyfill of the ES6 method to generate unique IDs.
   var cbId = btoa('' + performance.now()); // Generate a unique key for the callback.
