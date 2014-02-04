@@ -136,7 +136,9 @@ export function pci_t() {
     'btn_colit_t': btn_colit_t(),
     'btni_t': btni_t(),
 
+    'dvd_time_t': dvd_time_t(),
     'vm_cmd_t': vm_cmd_t(),
+    'user_ops_t': user_ops_t(),
     'main': {
       pci_gi: 'pci_gi_t',
       nsml_agli: 'nsml_agli_t',
