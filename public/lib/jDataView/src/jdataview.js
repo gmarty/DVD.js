@@ -264,6 +264,28 @@ jDataView.prototype = {
 	}
 };
 
+/**
+ * Add getUint64() method to jDataView.
+ *
+ * @param {number} offset Offset from the buffer start.
+ * @param {Boolean} littleEndian Whether to read little or big endian.
+ * @return {number} A Uint64 number.
+ */
+jDataView.prototype.getUint64 = function(offset, littleEndian) {
+  var b7 = this.getUint8(offset, 0, 8, littleEndian),
+    b6 = this.getUint8(offset, 1, 8, littleEndian),
+    b5 = this.getUint8(offset, 2, 8, littleEndian),
+    b4 = this.getUint8(offset, 3, 8, littleEndian),
+    b3 = this.getUint8(offset, 4, 8, littleEndian),
+    b2 = this.getUint8(offset, 5, 8, littleEndian),
+    b1 = this.getUint8(offset, 6, 8, littleEndian),
+    b0 = this.getUint8(offset, 7, 8, littleEndian);
+
+  return (b7 * Math.pow(2, 56)) + (b6 * Math.pow(2, 48)) +
+    (b5 * Math.pow(2, 40)) + (b4 * Math.pow(2, 32)) +
+    (b3 * Math.pow(2, 24)) + (b2 << 16) + (b1 << 8) + b0;
+};
+
 // Create wrappers
 
 var dataTypes = {
@@ -456,26 +478,3 @@ if (typeof module !== 'undefined') {
 }
 
 })(this);
-
-
-/**
- * Add getUint64() method to jDataView.
- *
- * @param {number} offset Offset from the buffer start.
- * @param {Boolean} littleEndian Whether to read little or big endian.
- * @return {number} A Uint64 number.
- */
-jDataView.prototype.getUint64 = function(offset, littleEndian) {
-  var b7 = this.getUint8(offset, 0, 8, littleEndian),
-    b6 = this.getUint8(offset, 1, 8, littleEndian),
-    b5 = this.getUint8(offset, 2, 8, littleEndian),
-    b4 = this.getUint8(offset, 3, 8, littleEndian),
-    b3 = this.getUint8(offset, 4, 8, littleEndian),
-    b2 = this.getUint8(offset, 5, 8, littleEndian),
-    b1 = this.getUint8(offset, 6, 8, littleEndian),
-    b0 = this.getUint8(offset, 7, 8, littleEndian);
-
-  return (b7 * Math.pow(2, 56)) + (b6 * Math.pow(2, 48)) +
-    (b5 * Math.pow(2, 40)) + (b4 * Math.pow(2, 32)) +
-    (b3 * Math.pow(2, 24)) + (b2 << 16) + (b1 << 8) + b0;
-};
