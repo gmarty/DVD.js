@@ -5,6 +5,7 @@
 
 import dvdReader = require('./index');
 import ifoTypes = require('./ifo_types');
+import BinaryParser = require('../lib/binaryParser/index');
 import utils = require('../utils');
 
 var sprintf = utils.sprintf;
@@ -54,7 +55,94 @@ export function ifoOpen(dvd, title) {
     return null;
   }
 
-  console.log('1');
+  ifofile = parseIFO(ifofile);
+
+  // First check if this is a VMGI file.
+  if (ifofile.vmgi_mat) {
+    console.log('VMGI');
+
+    if (!ifofile || !ifofile.first_play_pgc || !ifofile.tt_srpt || !ifofile || !ifofile.vts_atrt) {
+      return ifoOpen_try_bup();
+    }
+
+    console.log('ifofile', ifofile);
+
+    return ifofile;
+  }
+
+  if (ifofile.vtsi_mat) {
+    console.log('VTSI');
+
+    if (!ifofile.vts_ptt_srpt || !ifofile.vts_pgcit || !ifofile.vts_c_adt || !ifofile.vts_vobu_admap) {
+      return ifoOpen_try_bup();
+    }
+
+    console.log('ifofile', ifofile);
+
+    return ifofile;
+  }
+
+  return null;
+
+  function ifoOpen_try_bup() {
+    if (bup_file_opened)
+      return ifoOpen_fail();
+
+    // Try BUP instead
+    ifofile = null;
+
+    ifofile = new ifo_handle_t();
+    if (!ifofile)
+      return null;
+
+    ifofile.file = dvd.openFile(title, dvd_read_domain_t.DVD_READ_INFO_BACKUP_FILE);
+
+    if (title)
+      ifo_filename = sprintf('VTS_%02d_0.BUP', title);
+    else
+      ifo_filename = 'VIDEO_TS.BUP';
+
+    if (!ifofile.file) {
+      console.error("libdvdread: Can't open file %s.", ifo_filename);
+      return null;
+    }
+    bup_file_opened = true;
+
+    ifofile = parseIFO(ifofile);
+
+    // First check if this is a VMGI file.
+    if (ifofile.vmgi_mat) {
+      // These are both mandatory.
+      if (!ifofile || !ifofile.first_play_pgc || !ifofile.tt_srpt || !ifofile || !ifofile.vts_atrt) {
+        return ifoOpen_fail();
+      }
+
+      console.log('ifofile', ifofile);
+
+      return ifofile;
+    }
+
+    if (ifofile.vtsi_mat) {
+      if (!ifofile.vts_ptt_srpt || !ifofile.vts_pgcit || !ifofile.vts_c_adt || !ifofile.vts_vobu_admap) {
+        return ifoOpen_fail();
+      }
+
+      console.log('ifofile', ifofile);
+
+      return ifofile;
+    }
+
+    return null;
+  }
+
+  function ifoOpen_fail() {
+    console.error('libdvdread: Invalid IFO for title %d (%s)', title, ifo_filename);
+    ifofile = null;
+    return null;
+  }
+}
+
+export function parseIFO(ifofile) {
   // First check if this is a VMGI file.
   ifofile = ifoRead_VMG(ifofile);
   if (ifofile.vmgi_mat) {
@@ -83,7 +171,6 @@ export function ifoOpen(dvd, title) {
     return ifofile;
   }
 
-  console.log('2');
   ifofile = ifoRead_VTS(ifofile);
   if (ifofile.vtsi_mat) {
     console.log('VTSI');
@@ -106,85 +193,6 @@ export function ifoOpen(dvd, title) {
     console.log('ifofile', ifofile);
 
     return ifofile;
-  }
-
-  console.log('3', ifofile);
-  return null;
-
-  function ifoOpen_try_bup() {
-    if (bup_file_opened)
-      return ifoOpen_fail();
-
-    // Try BUP instead
-    ifofile = null;
-
-    ifofile = new ifo_handle_t();
-    if (!ifofile)
-      return null;
-
-    ifofile.file = dvd.openFile(title, dvd_read_domain_t.DVD_READ_INFO_BACKUP_FILE);
-
-    if (title)
-      ifo_filename = sprintf('VTS_%02d_0.BUP', title);
-    else
-      ifo_filename = 'VIDEO_TS.BUP';
-
-    if (!ifofile.file) {
-      console.error("libdvdread: Can't open file %s.", ifo_filename);
-      return null;
-    }
-    bup_file_opened = true;
-
-    // First check if this is a VMGI file.
-    if (ifofile = ifoRead_VMG(ifofile)) {
-      // These are both mandatory.
-      ifofile = ifoRead_FP_PGC(ifofile);
-      ifofile = ifoRead_TT_SRPT(ifofile);
-      if (!ifofile || !ifofile.first_play_pgc || !ifofile.tt_srpt)
-        return ifoOpen_fail();
-
-      ifofile = ifoRead_PGCI_UT(ifofile);
-      ifofile = ifoRead_PTL_MAIT(ifofile);
-
-      // This is also mandatory.
-      ifofile = ifoRead_VTS_ATRT(ifofile);
-      if (!ifofile || !ifofile.vts_atrt)
-        return ifoOpen_fail();
-
-      ifofile = ifoRead_TXTDT_MGI(ifofile);
-      ifofile = ifoRead_C_ADT(ifofile);
-      ifofile = ifoRead_VOBU_ADMAP(ifofile);
-
-      return ifofile;
-    }
-
-    if (ifoRead_VTS(ifofile)) {
-      ifofile = ifoRead_VTS_PTT_SRPT(ifofile);
-      ifofile = ifoRead_PGCIT(ifofile);
-      if (!ifofile.vts_ptt_srpt || !ifofile.vts_pgcit)
-        return ifoOpen_fail();
-
-      ifofile = ifoRead_PGCI_UT(ifofile);
-      ifofile = ifoRead_VTS_TMAPT(ifofile);
-      ifofile = ifoRead_C_ADT(ifofile);
-      ifofile = ifoRead_VOBU_ADMAP(ifofile);
-
-      ifofile = ifoRead_TITLE_C_ADT(ifofile);
-      ifofile = ifoRead_TITLE_VOBU_ADMAP(ifofile);
-      if (!ifofile.vts_c_adt || !ifofile.vts_vobu_admap)
-        return ifoOpen_fail();
-
-      return ifofile;
-    }
-
-    return null;
-  }
-
-  function ifoOpen_fail() {
-    console.error('libdvdread: Invalid IFO for title %d (%s)',
-      title, ifo_filename);
-    ifofile = null;
-    return null;
   }
 }
 
@@ -740,7 +748,9 @@ export function ifoRead_VTS_PTT_SRPT(ifofile) {
 
     console.log('vts_ptt_srpt.title[i].nr_of_ptts', vts_ptt_srpt.title[i].nr_of_ptts, n / 4);
     vts_ptt_srpt.title[i].nr_of_ptts = n / 4;
-    //vts_ptt_srpt.title[i].ptt = Array(vts_ptt_srpt.title[i].nr_of_ptts);
+    if (!vts_ptt_srpt.title[i].ptt) {
+      vts_ptt_srpt.title[i].ptt = Array(vts_ptt_srpt.title[i].nr_of_ptts);
+    }
     for (j = 0; j < vts_ptt_srpt.title[i].nr_of_ptts; j++) {
       if (!vts_ptt_srpt.title[i].ptt[j]) {
         // @todo Fixme: This is just a quick fix.
@@ -759,14 +769,14 @@ export function ifoRead_VTS_PTT_SRPT(ifofile) {
       //vts_ptt_srpt.title[i].ptt[j].pgn = (vts_ptt_srpt.ttu_offset[i] + 4 * j + 2 - ifoTypes.VTS_PTT_SRPT_SIZE);
     }
 
-    console.log(vts_ptt_srpt);
-    CHECK_VALUE(vts_ptt_srpt.title[i].nr_of_ptts < 1000); // ??
-    for (j = 0; j < vts_ptt_srpt.title[i].nr_of_ptts; j++) {
-      CHECK_VALUE(vts_ptt_srpt.title[i].ptt[j].pgcn != 0);
-      CHECK_VALUE(vts_ptt_srpt.title[i].ptt[j].pgcn < 1000); // ??
-      CHECK_VALUE(vts_ptt_srpt.title[i].ptt[j].pgn != 0);
-      CHECK_VALUE(vts_ptt_srpt.title[i].ptt[j].pgn < 100); // ??
-    }
+    /*console.log(vts_ptt_srpt);
+     CHECK_VALUE(vts_ptt_srpt.title[i].nr_of_ptts < 1000); // ??
+     for (j = 0; j < vts_ptt_srpt.title[i].nr_of_ptts; j++) {
+     CHECK_VALUE(vts_ptt_srpt.title[i].ptt[j].pgcn != 0);
+     CHECK_VALUE(vts_ptt_srpt.title[i].ptt[j].pgcn < 1000); // ??
+     CHECK_VALUE(vts_ptt_srpt.title[i].ptt[j].pgn != 0);
+     CHECK_VALUE(vts_ptt_srpt.title[i].ptt[j].pgn < 100); // ??
+     }*/
   }
 
   ifofile.vts_ptt_srpt = vts_ptt_srpt;

@@ -9,7 +9,10 @@
  * Bitfields parser looks OK to me, but is not optimized.
  */
 
+'use strict';
 
+
+export = BinaryParser;
 
 /**
  * @constructor

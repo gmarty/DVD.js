@@ -26,6 +26,7 @@ module.exports = function(grunt) {
       server: {
         src: [
           'src/server/*.ts',
+          'src/lib/*/*.ts',
           'src/utils/*.ts',
           'src/utils.ts'
         ],
@@ -57,6 +58,7 @@ module.exports = function(grunt) {
       server: {
         files: [
           'src/server/*.ts',
+          'src/lib/*/*.ts',
           'src/utils/*.ts',
           'src/utils.ts'
         ],
