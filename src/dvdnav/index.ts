@@ -8,7 +8,6 @@ import dvdEvents = require('./dvdnav_events');
 import config = require('../config');
 import utils = require('../utils');
 import vm = require('../vm/index');
-import navRead = require('../dvdread/nav_read');
 import dvdReader = require('../dvdread/index');
 import EventEmitter = require('../../../bower_components/eventEmitter/EventEmitter.min.js');
 
@@ -348,8 +347,8 @@ dvdnav.prototype.get_next_cache_block = function() {
             return;
           }
 
-          this.pci = navRead.PCI(pci);
-          this.dsi = navRead.DSI(dsi);
+          this.pci = pci;
+          this.dsi = dsi;
 
           this.get_vobu();
           // Skip to next, if there is a next.
@@ -685,15 +684,13 @@ dvdnav.prototype.get_next_cache_block = function() {
       console.log('%cdvdnav#get_next_cache_block() dvd_reader#read_cache_block() callback for navPacket event', 'color: green;', pci, dsi);
 
       // Decode nav into pci and dsi. Then get next VOBU info.
-      if (!pci && !dsi) {
+      if (!pci || !dsi) {
         console.error('Expected NAV packet but none found.');
         return;
       }
 
-      //utils.dumpBuffer(dsi);
-
-      this.pci = navRead.PCI(pci);
-      this.dsi = navRead.DSI(dsi);
+      this.pci = pci;
+      this.dsi = dsi;
 
       // We need to update the vm state.blockN with which VOBU we are in.
       // This is so RSM resumes to the VOBU level and not just the CELL level.

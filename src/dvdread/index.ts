@@ -4,10 +4,10 @@
 'use strict';
 
 
+import navRead = require('../dvdread/nav_read');
 import utils = require('../utils');
 
 var sprintf = utils.sprintf;
-
 
 /**
  * The DVD access interface.
@@ -224,7 +224,10 @@ dvd_reader.prototype.open = function(path, cb) {
           }
 
           if (cbPool[cbId].pciLoaded && cbPool[cbId].dsiLoaded) {
-            cbPool[cbId].cb(cbPool[cbId].pci, cbPool[cbId].dsi);
+            var pci = navRead.PCI(cbPool[cbId].pci);
+            var dsi = navRead.DSI(cbPool[cbId].dsi);
+
+            cbPool[cbId].cb(pci, dsi);
             delete cbPool[cbId];
           }
           break;
