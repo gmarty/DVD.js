@@ -425,7 +425,7 @@ dvd_reader.prototype.openFile = function(titlenum, domain) {
       return this.openVOBPath(titlenum, 0);
       break;
     default:
-      console.error('libdvdread: Invalid domain for file open.');
+      console.error('jsdvdnav: Invalid domain for file open.');
       return null;
       break;
   }
