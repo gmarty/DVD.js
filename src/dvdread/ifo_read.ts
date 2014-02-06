@@ -123,9 +123,11 @@ export function parseIFO(ifofile, title?) {
 
     return ifofile;
   }
+
+  return ifoOpen_fail(title);
 }
 
-function ifoOpen_fail(title) {
+function ifoOpen_fail(title?) {
   var ifo_filename = '';
 
   if (title) {
@@ -149,19 +151,17 @@ function ifoOpen_fail(title) {
 export function ifoOpenVMGI(dvd) {
   /** @type {ifo_handle_t} */ var ifofile = new ifo_handle_t();
 
-  ifofile.file = dvd.openFile(0, dvd_read_domain_t.DVD_READ_INFO_FILE);
-  if (!ifofile.file) { // Should really catch any error and try to fallback
-    ifofile.file = dvd.openFile(0, dvd_read_domain_t.DVD_READ_INFO_BACKUP_FILE);
+  ifofile = dvd.openFile(0, dvd_read_domain_t.DVD_READ_INFO_FILE);
+  if (!ifofile) { // Should really catch any error and try to fallback
+    ifofile = dvd.openFile(0, dvd_read_domain_t.DVD_READ_INFO_BACKUP_FILE);
   }
-  if (!ifofile.file) {
+  if (!ifofile) {
     console.error('jsdvdnav: Can\'t open file VIDEO_TS.IFO.');
     return null;
   }
 
-  var vmgi_mat = parseIFO(ifofile);
-
-  if (vmgi_mat) {
-    return vmgi_mat;
+  if (ifofile.vmgi_mat) {
+    return ifofile;
   }
 
   console.error('jsdvdnav: Invalid main menu IFO (VIDEO_TS.IFO).');
@@ -186,19 +186,17 @@ export function ifoOpenVTSI(dvd, title) {
     return null;
   }
 
-  ifofile.file = dvd.openFile(title, dvd_read_domain_t.DVD_READ_INFO_FILE);
-  if (!ifofile.file) { // Should really catch any error and try to fallback
-    ifofile.file = dvd.openFile(title, dvd_read_domain_t.DVD_READ_INFO_BACKUP_FILE);
+  ifofile = dvd.openFile(title, dvd_read_domain_t.DVD_READ_INFO_FILE);
+  if (!ifofile) { // Should really catch any error and try to fallback
+    ifofile = dvd.openFile(title, dvd_read_domain_t.DVD_READ_INFO_BACKUP_FILE);
   }
-  if (!ifofile.file) {
+  if (!ifofile) {
     console.error('jsdvdnav: Can\'t open file VTS_%02d_0.IFO.', title);
     return null;
   }
 
-  var vtsi_mat = parseIFO(ifofile, title);
-
-  if (vtsi_mat) {
-    return vtsi_mat;
+  if (ifofile.vtsi_mat) {
+    return ifofile;
   }
 
   console.error('jsdvdnav: Invalid IFO for title %d (VTS_%02d_0.IFO)).', title, title);
