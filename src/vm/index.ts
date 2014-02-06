@@ -244,40 +244,11 @@ vm.prototype.reset = function(dvdroot, cb) {
    }*/
 
   this.dvd.open(dvdroot, function() {
-    if (!this.dvd) {
-      console.error('jsdvdnav: Failed to open/read the DVD');
-      return false;
-    }
     this.vmgi = ifoRead.ifoOpenVMGI(this.dvd);
     if (!this.vmgi) {
       console.error('jsdvdnav: ifoOpenVMGI failed');
       return false;
     }
-    if (!ifoRead.ifoRead_FP_PGC(this.vmgi)) {
-      console.error('jsdvdnav: ifoRead_FP_PGC failed');
-      return false;
-    }
-    if (!ifoRead.ifoRead_TT_SRPT(this.vmgi)) {
-      console.error('jsdvdnav: ifoRead_TT_SRPT failed');
-      return false;
-    }
-    if (!ifoRead.ifoRead_PGCI_UT(this.vmgi)) {
-      console.error('jsdvdnav: ifoRead_PGCI_UT failed');
-      return false;
-    }
-    if (!ifoRead.ifoRead_PTL_MAIT(this.vmgi)) {
-      console.error('jsdvdnav: ifoRead_PTL_MAIT failed');
-      // return false; // Not really used for now.
-    }
-    if (!ifoRead.ifoRead_VTS_ATRT(this.vmgi)) {
-      console.error('jsdvdnav: ifoRead_VTS_ATRT failed');
-      // return false; // Not really used for now.
-    }
-    if (!ifoRead.ifoRead_VOBU_ADMAP(this.vmgi)) {
-      console.error('jsdvdnav: ifoRead_VOBU_ADMAP vgmi failed');
-      // return false; // Not really used for now.
-    }
-    // ifoRead_TXTDT_MGI(vmgi); // Not implemented yet.
 
     if (this.vmgi) {
       var msg = sprintf('jsdvdnav: DVD disc reports itself with Region mask %s. Regions:',
@@ -292,40 +263,17 @@ vm.prototype.reset = function(dvdroot, cb) {
   }.bind(this));
 };
 
-vm.prototype.ifoOpenNewVTSI = function(dvd, vtsN) {
-  if (this.state.vtsN == vtsN) {
+vm.prototype.ifoOpenNewVTSI = function(vtsN) {
+  if (this.state.vtsN === vtsN) {
     return true; // We already have it.
   }
 
-  if (this.vtsi != null) {
-    this.vtsi = null;
-  }
-
-  this.vtsi = ifoRead.ifoOpenVTSI(dvd, vtsN);
-  if (this.vtsi == null) {
+  this.vtsi = ifoRead.ifoOpenVTSI(this.dvd, vtsN);
+  if (!this.vtsi) {
     console.error('jsdvdnav: ifoOpenVTSI failed');
     return false;
   }
-  if (!ifoRead.ifoRead_VTS_PTT_SRPT(this.vtsi)) {
-    console.error('jsdvdnav: ifoRead_VTS_PTT_SRPT failed');
-    return false;
-  }
-  if (!ifoRead.ifoRead_PGCIT(this.vtsi)) {
-    console.error('jsdvdnav: ifoRead_PGCIT failed');
-    return false;
-  }
-  if (!ifoRead.ifoRead_PGCI_UT(this.vtsi)) {
-    console.error('jsdvdnav: ifoRead_PGCI_UT failed');
-    return false;
-  }
-  if (!ifoRead.ifoRead_VOBU_ADMAP(this.vtsi)) {
-    console.error('jsdvdnav: ifoRead_VOBU_ADMAP vtsi failed');
-    return false;
-  }
-  if (!ifoRead.ifoRead_TITLE_VOBU_ADMAP(this.vtsi)) {
-    console.error('jsdvdnav: ifoRead_TITLE_VOBU_ADMAP vtsi failed');
-    return false;
-  }
+
   this.state.vtsN = vtsN;
 
   return true;
@@ -351,7 +299,7 @@ vm.prototype.new_copy = function() {
   vtsN = (target.state).vtsN;
   if (vtsN > 0) {
     (target.state).vtsN = 0;
-    if (!this.ifoOpenNewVTSI(target, target.dvd, vtsN)) {
+    if (!this.ifoOpenNewVTSI(vtsN)) {
       fail();
       return null;
     }
@@ -1312,7 +1260,7 @@ vm.prototype.process_command = function(link_values) {
         }
 
         this.state.domain = DVDDomain_t.DVD_DOMAIN_VTSTitle;
-        if (!this.ifoOpenNewVTSI(this.dvd, this.state.rsm_vtsN))
+        if (!this.ifoOpenNewVTSI(this.state.rsm_vtsN))
           assert(0);
         this.set_PGCN(this.state.rsm_pgcN);
 
@@ -1454,7 +1402,7 @@ vm.prototype.process_command = function(link_values) {
           if (link_values.data1 != this.state.vtsN) {
             // the normal case
             assert(this.state.domain == DVDDomain_t.DVD_DOMAIN_VMGM || this.state.domain == DVDDomain_t.DVD_DOMAIN_FirstPlay); // ??
-            if (!this.ifoOpenNewVTSI(this.dvd, link_values.data1))  // Also sets this.state.vtsN
+            if (!this.ifoOpenNewVTSI(link_values.data1))  // Also sets this.state.vtsN
               assert(0);
             if (this.vtsi == null || this.vtsi.pgci_ut == null) {
               link_values.command = link_cmd_t.Exit;
@@ -1592,7 +1540,7 @@ vm.prototype.set_VTS_PTT = function(vtsN, vts_ttn, part) {
   this.state.domain = DVDDomain_t.DVD_DOMAIN_VTSTitle;
 
   if (vtsN != this.state.vtsN)
-    if (!this.ifoOpenNewVTSI(this.dvd, vtsN))  // Also sets this.state.vtsN
+    if (!this.ifoOpenNewVTSI(vtsN))  // Also sets this.state.vtsN
       return false;
 
   if ((vts_ttn < 1) || (vts_ttn > this.vtsi.vts_ptt_srpt.nr_of_srpts) ||
@@ -1630,7 +1578,7 @@ vm.prototype.set_VTS_PROG = function(vtsN, vts_ttn, pgcn, pgn) {
   this.state.domain = DVDDomain_t.DVD_DOMAIN_VTSTitle;
 
   if (vtsN != this.state.vtsN)
-    if (!this.ifoOpenNewVTSI(this.dvd, vtsN))  // Also sets this.state.vtsN
+    if (!this.ifoOpenNewVTSI(vtsN))  // Also sets this.state.vtsN
       return false;
 
   if ((vts_ttn < 1) || (vts_ttn > this.vtsi.vts_ptt_srpt.nr_of_srpts)) {
