@@ -20,10 +20,10 @@ export = BinaryParser;
  * @param {string|Object=} description
  * @param {Object=} caller
  */
-var BinaryParser = function(binaryReader, description, caller) {
+var BinaryParser = function(binaryReader, description, caller?) {
   this.binaryReader = binaryReader;
 
-  this.description = BinaryParser.stdDescription;
+  this.description = stdDescription;
   for (var i in description) {
     this.description[i] = description[i];
   }
@@ -32,7 +32,9 @@ var BinaryParser = function(binaryReader, description, caller) {
 
   var that = this;
   this.param = {
-    parse: function(desc, param) {return that.parse(desc, param);},
+    parse: function(desc, param) {
+      return that.parse(desc, param);
+    },
     binaryReader: binaryReader,
 
     // Back reference implementation.
@@ -44,22 +46,42 @@ var BinaryParser = function(binaryReader, description, caller) {
   };
 };
 
-BinaryParser.stdDescription = {
-  'uint8': function(config) {return config.binaryReader.getUint8();},
-  'int8': function(config) {return config.binaryReader.getInt8();},
-  'uint16': function(config) {return config.binaryReader.getUint16();},
-  'int16': function(config) {return config.binaryReader.getInt16();},
-  'uint32': function(config) {return config.binaryReader.getUint32();},
-  'int32': function(config) {return config.binaryReader.getInt32();},
-  'uint64': function(config) {return config.binaryReader.getUint64();},
-  'float': function(config) {return config.binaryReader.getFloat32();},
-  'char': function(config) {return config.binaryReader.getChar();},
-  'string': function(config, size) {return config.binaryReader.getString(size);},
+var stdDescription = {
+  'uint8': function(config) {
+    return config.binaryReader.getUint8();
+  },
+  'int8': function(config) {
+    return config.binaryReader.getInt8();
+  },
+  'uint16': function(config) {
+    return config.binaryReader.getUint16();
+  },
+  'int16': function(config) {
+    return config.binaryReader.getInt16();
+  },
+  'uint32': function(config) {
+    return config.binaryReader.getUint32();
+  },
+  'int32': function(config) {
+    return config.binaryReader.getInt32();
+  },
+  'uint64': function(config) {
+    return config.binaryReader.getUint64();
+  },
+  'float': function(config) {
+    return config.binaryReader.getFloat32();
+  },
+  'char': function(config) {
+    return config.binaryReader.getChar();
+  },
+  'string': function(config, size) {
+    return config.binaryReader.getString(size);
+  },
   'array': function(config, type, number) {
     var num_type = typeof number;
     var k = (num_type === 'number') ? number
-        : (num_type === 'function') ? number(config)
-        : 0;
+      : (num_type === 'function') ? number(config)
+      : 0;
     var array = [];
     var i = 0;
 
@@ -99,7 +121,7 @@ BinaryParser.stdDescription = {
  * @param {Array=} param
  * @return {*}
  */
-BinaryParser.prototype.parse = function(description, param) {
+BinaryParser.prototype.parse = function(description, param?) {
   var type = typeof description;
 
   if (type === 'function') {
@@ -116,9 +138,9 @@ BinaryParser.prototype.parse = function(description, param) {
   }
 
   if (type === 'object') {
-    var output = {},
-        value,
-        key;
+    var output = {};
+    var value;
+    var key;
 
     for (key in description) {
       if (!description.hasOwnProperty(key)) {
