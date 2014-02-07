@@ -3,19 +3,19 @@
 'use strict';
 
 
-import dvdReader = require('../dvdread/index');
-import dvdTypes = require('./dvd_types');
-import dvdEvents = require('./dvdnav_events');
-import vm = require('../vm/index');
+import DvdReader = require('../dvdread/index');
+import VM = require('../vm/index');
 import Player = require('../player/index');
+import dvdTypes = require('../dvdnav/dvd_types');
+import dvdEvents = require('../dvdnav/dvdnav_events');
 import config = require('../config');
 import utils = require('../utils');
 import EventEmitter = require('../../../bower_components/eventEmitter/EventEmitter.min.js');
 
 var LOG_DEBUG = config.DEBUG;
 var DVDDomain_t = dvdTypes.DVDDomain_t;
-var vm_position_t = vm.vm_position_t;
-var dvd_read_domain_t = dvdReader.dvd_read_domain_t;
+var dvd_read_domain_t = dvdTypes.dvd_read_domain_t;
+var vm_position_t = VM.vm_position_t;
 var sprintf = utils.sprintf;
 var toHex = utils.toHex;
 
@@ -39,7 +39,7 @@ function dvdnav(screen) {
   if (!(this instanceof dvdnav)) return new dvdnav(screen);
 
   // Not in original code:
-  this.dvd = new dvdReader.dvd_reader();
+  this.dvd = new DvdReader();
   //this.stream = null;             // Manage buffer.
   //this.event = 0;                 // Avoid passing by reference.
 
@@ -155,7 +155,7 @@ dvdnav.prototype.open = function(path, cb) {
   console.log('jsdvdnav: Using jsdvdnav version %s', config.VERSION);
 
   // Initialise the VM.
-  this.vm = new vm(this.dvd);
+  this.vm = new VM(this.dvd);
   if (!this.vm) {
     console.error('Error initialising the DVD VM.');
     return;

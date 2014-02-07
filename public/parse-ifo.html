@@ -99,12 +99,12 @@ if (!window.File || !window.FileReader) {
 
 require([
   'js/dvdjs/dvdread/index',
+  'js/dvdjs/dvdnav/dvd_types',
   'js/dvdjs/dvdread/ifo_print_html'
-], function(dvdReader, ifoPrint) {
-  var dvd_reader = dvdReader.dvd_reader;
-  var dvd_file_t = dvdReader.dvd_file_t;
+], function(dvdReader, dvd_types, ifoPrint) {
+  var dvd_file_t = dvd_types.dvd_file_t;
 
-  var dvdFiles = new dvd_reader();
+  var dvdFiles = new dvdReader();
 
   document.getElementById('dvd_files').addEventListener('change', readFiles, false);
 

@@ -5,6 +5,16 @@
 'use strict';
 
 
+/**
+ *
+ */
+export enum dvd_read_domain_t {
+  DVD_READ_INFO_FILE,        // VIDEO_TS.IFO  or VTS_XX_0.IFO (title)
+  DVD_READ_INFO_BACKUP_FILE, // VIDEO_TS.BUP  or VTS_XX_0.BUP (title)
+  DVD_READ_MENU_VOBS,        // VIDEO_TS.VOB  or VTS_XX_0.VOB (title)
+  DVD_READ_TITLE_VOBS        // VTS_XX_[1-9].VOB (title). All files in the title set are opened and read as a single file.
+}
+
 /*
  * DVD Menu ID
  * (see dvdnav_menu_call())
@@ -55,4 +65,32 @@ export enum DVDAudioFormat_t {
   DVD_AUDIO_FORMAT_UNKNOWN_5,
   DVD_AUDIO_FORMAT_DTS,
   DVD_AUDIO_FORMAT_SDDS
+}
+
+/**
+ * Opaque type for a file read handle, much like a normal fd or FILE *.
+ *
+ * @constructor
+ */
+export function dvd_file_t() {
+  // Basic information.
+  //this.dvd = dvd_reader_t(); -> Better avoid recursion. The relation is inverted here.
+
+  // Hack for selecting the right css title.
+  //this.css_title = null;
+
+  // Information required for an image file.
+  //this.lb_start = null;
+  //this.seek_pos = null;
+  this.file = null; // File type
+  this.view = null; // jDataView
+
+  // Information required for a directory path drive.
+  //this.title_sizes = new Array(TITLES_MAX);
+  //this.title_devs = new Array(TITLES_MAX); // Array of dvd_input_t().
+
+  // Calculated at open-time, size in blocks.
+  //this.filesize = null; // ssize_t()
+
+  this.path = '';
 }
