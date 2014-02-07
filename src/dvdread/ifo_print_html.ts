@@ -1,8 +1,8 @@
 'use strict';
 
 
-import ifoTypes = require('./ifo_types');
-import ifoRead = require('./ifo_read');
+import ifoTypes = require('../dvdread/ifo_types');
+import ifoRead = require('../dvdread/ifo_read');
 import config = require('../config');
 import utils = require('../utils');
 import vm = require('../vm/index');
