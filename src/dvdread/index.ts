@@ -4,9 +4,12 @@
 'use strict';
 
 
+import ifoTypes = require('./ifo_types');
+import ifoRead = require('../dvdread/ifo_read');
 import navRead = require('../dvdread/nav_read');
 import utils = require('../utils');
 
+var ifo_handle_t = ifoTypes.ifo_handle_t;
 var sprintf = utils.sprintf;
 
 /**
@@ -79,7 +82,7 @@ export function dvd_reader() {
   //this.udfcache_level = null; // 0 - turned off, 1 - on
   //this.udfcache = null;
 
-  // An array of dvd_file_t().
+  // An array of ifo_handle_t().
   this.files = [];
   //this.filesNumber = 0; // The number of IFO files in the DVD. Used for async purpose.
 }
@@ -185,12 +188,17 @@ dvd_reader.prototype.open = function(path, cb) {
         case 'IFO':
           var data = utils.concatBuffer(parts);
 
-          var ifoFile = new dvd_file_t();
-          ifoFile.file = {
+          var ifoFile = new ifo_handle_t();
+          ifoFile.file = new dvd_file_t();
+          ifoFile.file.file = {
             name: meta.name,
             size: data.byteLength
           };
-          ifoFile.view = new jDataView(data, undefined, undefined, false);
+          ifoFile.file.view = new jDataView(data, undefined, undefined, false);
+          ifoFile = ifoRead.parseIFO(ifoFile);
+
+          console.log(ifoFile);
+
           self.files.push(ifoFile);
 
           // Check if we have received all the files. If so, execute callback.
@@ -212,9 +220,6 @@ dvd_reader.prototype.open = function(path, cb) {
           switch (meta.name) {
             case 'pci':
             case 'dsi':
-              if (data === 'null') {
-                data = undefined;
-              }
               cbPool[cbId][meta.name] = data;
               cbPool[cbId][meta.name + 'Loaded'] = true;
               break;
@@ -301,11 +306,11 @@ dvd_reader.prototype.read_cache_block = function(file, type, sector, block_count
  * Returns a File object from a File object collection.
  *
  * @param {string} filename
- * @return {?dvd_file_t}
+ * @return {?ifo_handle_t}
  */
 dvd_reader.prototype.openFilePath = function(filename) {
   for (var i = 0, len = this.files.length; i < len; i++) {
-    if ('/VIDEO_TS/' + this.files[i].file.name == filename) {
+    if ('/VIDEO_TS/' + this.files[i].file.file.name == filename) {
       /*dvd_file.title_sizes[0] = fileinfo.st_size / DVD_VIDEO_LB_LEN;
        dvd_file.title_devs[0] = dev;
        dvd_file.filesize = dvd_file.title_sizes[0];*/
@@ -331,7 +336,7 @@ dvd_reader.prototype.openFilePath = function(filename) {
 /**
  * @param {number} title
  * @param {number} menu
- * @return {?dvd_file_t}
+ * @return {string}
  */
 dvd_reader.prototype.openVOBPath = function(title, menu) {
   var filename = '';
@@ -339,14 +344,6 @@ dvd_reader.prototype.openVOBPath = function(title, menu) {
   var fileinfo;
   var dvd_file = new dvd_file_t();
   var i;
-
-  /*dvd_file.dvd = dvd;
-   dvd_file.css_title = title << 1 | menu; // Hack
-   dvd_file.lb_start = 0;
-   dvd_file.seek_pos = 0;
-   memset(dvd_file.title_sizes, 0, sizeof(dvd_file.title_sizes));
-   memset(dvd_file.title_devs, 0, sizeof(dvd_file.title_devs));
-   dvd_file.filesize = 0;*/
 
   if (menu) {
     if (title == 0) {
@@ -387,10 +384,9 @@ dvd_reader.prototype.openVOBPath = function(title, menu) {
 
 
 /**
- * Function passed as reference.
  * @param {number} titlenum
  * @param {number} domain
- * @return {?dvd_file_t}
+ * @return {?ifo_handle_t|string}
  */
 dvd_reader.prototype.openFile = function(titlenum, domain) {
   /** @type {string} */ var filename = '';
@@ -425,7 +421,7 @@ dvd_reader.prototype.openFile = function(titlenum, domain) {
       return this.openVOBPath(titlenum, 0);
       break;
     default:
-      console.error('libdvdread: Invalid domain for file open.');
+      console.error('jsdvdnav: Invalid domain for file open.');
       return null;
       break;
   }
@@ -435,7 +431,7 @@ dvd_reader.prototype.openFile = function(titlenum, domain) {
 
 
 /**
- * @param {dvd_file_t} dvd_file (passed as reference).
+ * @param {dvd_file_t} dvd_file.
  */
 dvd_reader.prototype.closeFile = function(dvd_file) {
   dvd_file = null;
