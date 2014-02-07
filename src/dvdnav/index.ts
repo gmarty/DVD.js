@@ -15,7 +15,7 @@ import EventEmitter = require('../../../bower_components/eventEmitter/EventEmitt
 var LOG_DEBUG = config.DEBUG;
 var DVDDomain_t = dvdTypes.DVDDomain_t;
 var dvd_read_domain_t = dvdTypes.dvd_read_domain_t;
-var vm_position_t = VM.vm_position_t;
+var vm_position_t = dvdTypes.vm_position_t;
 var sprintf = utils.sprintf;
 var toHex = utils.toHex;
 

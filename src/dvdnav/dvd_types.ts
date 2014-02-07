@@ -94,3 +94,23 @@ export function dvd_file_t() {
 
   this.path = '';
 }
+
+export function vm_position_t() {
+  this.button = 0;                // Button highlighted
+  this.vts = 0;                   // vts number to use
+  this.domain = 0;                // domain to use
+  this.spu_channel = 0;           // spu channel to use
+  this.angle_channel = 0;         // angle channel to use
+  this.audio_channel = 0;         // audio channel to use
+  this.hop_channel = 0;           // channel hopping. E.g menu button pressed
+
+  // Currently unused
+  //this.title = 0;                 // title number
+  //this.chapter = 0;               // chapter number
+
+  this.cell = 0;                  // cell number
+  this.cell_restart = 0;          // get cell to restart
+  this.cell_start = 0;            // sector number of start of current cell in use
+  this.still = 0;                 // is cell still
+  this.block = 0;                 // block number within cell in use
+}
