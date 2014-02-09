@@ -13,14 +13,10 @@ import getDVDList = require('../utils/dvd_list');
 import Stream = require('../utils/stream');
 import decodePacket = require('../utils/decode_packet');
 import utils = require('../utils');
-
-// Configuration
-var dvdPath = 'C:/DVD/';
-var staticServerPort = 3000;
-var wsServerPort = 9001;
+import config = require('../../config/config.json');
 
 // Start the server once we get the list of DVD.
-getDVDList(dvdPath, start);
+getDVDList(config.dvdPath, start);
 
 /**
  * Start the servers.
@@ -31,12 +27,12 @@ function start(availableDvds) {
   // Static asset server.
   var app = connect()
     .use(connect.static('public/'));
-  http.createServer(app).listen(staticServerPort);
+  http.createServer(app).listen(config.staticServerPort);
 
-  console.log('Server running at http://localhost:3000/');
+  console.log('Server running at http://localhost:%d/', config.staticServerPort);
 
   // WebSockets server.
-  var server = binaryjs.BinaryServer({port: wsServerPort});
+  var server = binaryjs.BinaryServer({port: config.wsServerPort});
 
   server.on('connection', function(client) {
     console.log('connection');
@@ -76,7 +72,7 @@ function start(availableDvds) {
 
           case 'IFO':
             // Send all IFO files.
-            var filePath = path.join(dvdPath, dvd, '/VIDEO_TS', '/*.IFO');
+            var filePath = path.join(config.dvdPath, dvd, '/VIDEO_TS', '/*.IFO');
 
             glob(filePath, function(err, files) {
               if (err) {
@@ -104,7 +100,7 @@ function start(availableDvds) {
 
           case 'NAV':
             // Extract NAV packets.
-            var filePath = path.join(dvdPath, dvd, meta.file);
+            var filePath = path.join(config.dvdPath, dvd, meta.file);
 
             fs.readFile(filePath, function(err, data) {
               if (err) {
@@ -146,7 +142,7 @@ function start(availableDvds) {
 
           case 'VID':
             // Send a video chunk.
-            var filePath = path.join(dvdPath, dvd, 'webm', meta.file + '.webm');
+            var filePath = path.join(config.dvdPath, dvd, 'webm', meta.file + '.webm');
 
             // First, we need to size of the video.
             // @todo This should really come from a metadata file generated beforehand.
