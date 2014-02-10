@@ -142,7 +142,7 @@ function start(availableDvds) {
 
           case 'VID':
             // Send a video chunk.
-            var filePath = path.join(config.dvdPath, dvd, 'webm', meta.file + '.webm');
+            var filePath = path.join(config.dvdPath, dvd, utils.convertVobPath(meta.file));
 
             // First, we need to size of the video.
             // @todo This should really come from a metadata file generated beforehand.

@@ -412,6 +412,21 @@ export function formatTitle(title: string): string {
 
 
 /**
+ * Convert a VOB file path to the web format through the following operations:
+ *  * Replace `VIDEO_TS` by `web`.
+ *  * Replace the `.VOB` extension by `.webm`.
+ *
+ * @param {string} path
+ * @returns {string} A formatted title.
+ */
+export function convertVobPath(path: string): string {
+  return path
+    .replace(/\/VIDEO_TS\//i, '/web/')
+    .replace(/\.VOB$/i, '.webm');
+}
+
+
+/**
  * @param {boolean} arg
  */
 export function assert(arg) {
