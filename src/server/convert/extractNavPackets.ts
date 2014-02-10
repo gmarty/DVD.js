@@ -26,6 +26,7 @@ export = extractNav;
  * Extract NAV packets from the VOB files located in a folder.
  *
  * @param {string} dvdPath
+ * @param {function} callback
  */
 function extractNav(dvdPath: string, callback) {
   process.stdout.write('\nExtract NAV packets:\n');

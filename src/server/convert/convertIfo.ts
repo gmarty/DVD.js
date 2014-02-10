@@ -22,6 +22,7 @@ export = convertIfo;
  * Convert IFO files from a folder to JSON files.
  *
  * @param {string} dvdPath
+ * @param {function} callback
  */
 function convertIfo(dvdPath: string, callback) {
   process.stdout.write('Convert IFO files:\n');

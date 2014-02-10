@@ -148,7 +148,7 @@ function encodeVideo(dvdPath: string) {
             }, 0);
           } else {
             // At the end of all iterations.
-            callback();
+            console.log('That\'s all folks!')
           }
         });
       });
