@@ -7,8 +7,9 @@ import fs = require('fs');
 import path = require('path');
 import glob = require('glob');
 import child_process = require('child_process');
-
 import _ = require('lodash');
+
+import utils = require('../../utils');
 
 var spawn = child_process.spawn;
 
@@ -49,8 +50,7 @@ function encodeVideo(dvdPath: string) {
 
     // There are better ways to do async...
     function next(vobFile) {
-      // @todo Move this to a helper function.
-      var dst = vobFile[0].replace(/\/VIDEO_TS\//i, '/web/') + '.webm';
+      var dst = utils.convertVobPath(vobFile[0]);
       var prefix = path.join(vobFile[0].replace(/\/VIDEO_TS\/.+/i, '/web/'), '/ffmpeg2pass');
       var inputFiles = [];
 
@@ -138,8 +138,6 @@ function encodeVideo(dvdPath: string) {
         });
 
         pass2.on('close', function() {
-          console.log('END');
-
           // Next iteration.
           pointer++;
           if (pointer < vobFiles.length) {
