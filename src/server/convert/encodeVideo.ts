@@ -31,7 +31,7 @@ function encodeVideo(dvdPath: string) {
 
     // Group by video (e.g. All VTS_01_xx.VOB together).
     vobFiles = _.groupBy(vobFiles, function(vobFile) {
-      return vobFile.replace(/_[0-9]\.VOB/i, '.VOB');
+      return vobFile.replace(/_[1-9]\.VOB/i, '.VOB');
     });
 
     // Retain the values only.
