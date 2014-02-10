@@ -420,7 +420,10 @@ dvdnav.prototype.get_next_cache_block = function() {
 
     debugger;
 
-    this.nextBlock();
+    setTimeout(function() {
+      this.nextBlock();
+    }.bind(this), 0);
+
     return;
   }
 
@@ -761,6 +764,8 @@ dvdnav.prototype.start = function() {
 };
 
 dvdnav.prototype.nextBlock = function() {
-  console.log('-----------------------------------------------------------');
+  if (LOG_DEBUG) {
+    console.log('-----------------------------------------------------------');
+  }
   this.get_next_cache_block();
 };
