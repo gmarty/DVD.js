@@ -420,7 +420,10 @@ dvdnav.prototype.get_next_cache_block = function() {
 
     debugger;
 
-    this.nextBlock();
+    setTimeout(function() {
+      this.nextBlock();
+    }.bind(this), 0);
+
     return;
   }
 
