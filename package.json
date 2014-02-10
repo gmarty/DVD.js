@@ -15,7 +15,8 @@
     "connect": "~2.12.0",
     "binaryjs": "~0.1.8",
     "glob": "~3.2.6",
-    "optimist": "~0.6.0"
+    "optimist": "~0.6.0",
+    "lodash": "~2.4.1"
   },
   "devDependencies": {
     "grunt": "~0.4.2",
