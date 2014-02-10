@@ -1059,7 +1059,7 @@ export function vts_tmapt_t() {
  * is read in from the VTS_XX_0.[IFO,BUP] files.
  */
 export function ifo_handle_t() {
-  this.file = null;
+  this.file = null; // dvd_file_t
 
   // VMGI
   this.vmgi_mat = null; // vmgi_mat_t

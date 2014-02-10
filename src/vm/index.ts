@@ -1,11 +1,14 @@
 'use strict';
 
 
-import config = require('../config');
-import utils = require('../utils');
 import dvdTypes = require('../dvdnav/dvd_types');
 import ifoRead = require('../dvdread/ifo_read');
+import config = require('../config');
+import utils = require('../utils');
 
+var DVDMenuID_t = dvdTypes.DVDMenuID_t;
+var DVDDomain_t = dvdTypes.DVDDomain_t;
+var vm_position_t = dvdTypes.vm_position_t;
 var TRACE = config.DEBUG;
 var DVD_MENU_LANGUAGE = config.DVD_MENU_LANGUAGE;
 var DVD_AUDIO_LANGUAGE = config.DVD_AUDIO_LANGUAGE;
@@ -14,8 +17,6 @@ var COUNTRY_CODE = config.COUNTRY_CODE;
 var deepEqual = utils.deepEqual;
 var sprintf = utils.sprintf;
 var assert = utils.assert;
-var DVDMenuID_t = dvdTypes.DVDMenuID_t;
-var DVDDomain_t = dvdTypes.DVDDomain_t;
 
 export = vm;
 
@@ -122,29 +123,6 @@ function command_t() {
   this.examined = null;
   this.registers = new registers_t();
 }
-
-function vm_position_t() {
-  this.button = 0;                // Button highlighted
-  this.vts = 0;                   // vts number to use
-  this.domain = 0;                // domain to use
-  this.spu_channel = 0;           // spu channel to use
-  this.angle_channel = 0;         // angle channel to use
-  this.audio_channel = 0;         // audio channel to use
-  this.hop_channel = 0;           // channel hopping. E.g menu button pressed
-
-  // Currently unused
-  //this.title = 0;                 // title number
-  //this.chapter = 0;               // chapter number
-
-  this.cell = 0;                  // cell number
-  this.cell_restart = 0;          // get cell to restart
-  this.cell_start = 0;            // sector number of start of current cell in use
-  this.still = 0;                 // is cell still
-  this.block = 0;                 // block number within cell in use
-}
-
-// @todo Move to another file and import in vm/index.ts and dvdnav/index.ts.
-vm.vm_position_t = vm_position_t; // We need to export it for dvdnav/index.ts.
 
 // Initialisation & Destruction
 vm.prototype.free_vm = function() {

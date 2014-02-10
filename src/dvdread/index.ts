@@ -4,12 +4,15 @@
 'use strict';
 
 
-import ifoTypes = require('./ifo_types');
+import ifoTypes = require('../dvdread/ifo_types');
+import dvdTypes = require('../dvdnav/dvd_types');
 import ifoRead = require('../dvdread/ifo_read');
 import navRead = require('../dvdread/nav_read');
 import utils = require('../utils');
 
 var ifo_handle_t = ifoTypes.ifo_handle_t;
+var dvd_read_domain_t = dvdTypes.dvd_read_domain_t;
+var dvd_file_t = dvdTypes.dvd_file_t;
 var sprintf = utils.sprintf;
 
 /**
@@ -19,51 +22,19 @@ var sprintf = utils.sprintf;
  * reading files located on a DVD.
  */
 
-/**
- * The current version.
- * @const
- */
-export var DVDREAD_VERSION = 904;
-
-/**
- * The length of one Logical Block of a DVD.
- * @const
- */
-export var DVD_VIDEO_LB_LEN = 2048;
-
 /** @const */ var TITLES_MAX = 9;
 
 /** @const */ var cBlue = 'color: #4AF;';
 /** @const */ var cPink = 'color: #F48;';
 
-/**
- * Public type that is used to provide statistics on a handle.
- */
-export function dvd_stat_t() {
-  return {
-    size: 'off_t',                    // Total size of file in bytes
-    nr_parts: 0,                      // Number of file parts
-    parts_size: ['array', 'off_t', 9] // Size of each part in bytes
-  };
-}
-
-/**
- *
- */
-export enum dvd_read_domain_t {
-  DVD_READ_INFO_FILE,        // VIDEO_TS.IFO  or VTS_XX_0.IFO (title)
-  DVD_READ_INFO_BACKUP_FILE, // VIDEO_TS.BUP  or VTS_XX_0.BUP (title)
-  DVD_READ_MENU_VOBS,        // VIDEO_TS.VOB  or VTS_XX_0.VOB (title)
-  DVD_READ_TITLE_VOBS        // VTS_XX_[1-9].VOB (title). All files in the title set are opened and read as a single file.
-}
-
+export = dvd_reader;
 
 /**
  * Opaque type that is used as a handle for one instance of an opened DVD.
  *
  * @constructor
  */
-export function dvd_reader() {
+function dvd_reader() {
   // Basic information.
   //this.isImageFile = null;
 
@@ -92,35 +63,6 @@ export function dvd_reader() {
  * @private
  */
 var cbPool = Object.create(null);
-
-
-/**
- * Opaque type for a file read handle, much like a normal fd or FILE *.
- *
- * @constructor
- */
-export function dvd_file_t() {
-  // Basic information.
-  //this.dvd = dvd_reader_t(); -> Better avoid recursion. The relation is inverted here.
-
-  // Hack for selecting the right css title.
-  //this.css_title = null;
-
-  // Information required for an image file.
-  //this.lb_start = null;
-  //this.seek_pos = null;
-  this.file = null; // File type
-  this.view = null; // jDataView
-
-  // Information required for a directory path drive.
-  //this.title_sizes = new Array(TITLES_MAX);
-  //this.title_devs = new Array(TITLES_MAX); // Array of dvd_input_t().
-
-  // Calculated at open-time, size in blocks.
-  //this.filesize = null; // ssize_t()
-
-  this.path = '';
-}
 
 /**
  * Opens a block device of a DVD-ROM file, or an image file, or a directory

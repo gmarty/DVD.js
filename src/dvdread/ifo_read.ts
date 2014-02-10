@@ -3,19 +3,18 @@
 'use strict';
 
 
-import dvdReader = require('./index');
-import ifoTypes = require('./ifo_types');
+import dvdReader = require('../dvdread/index');
+import ifoTypes = require('../dvdread/ifo_types');
+import dvdTypes = require('../dvdnav/dvd_types');
 import BinaryParser = require('../lib/binaryParser/index');
 import utils = require('../utils');
 
+var ifo_handle_t = ifoTypes.ifo_handle_t;
+var dvd_read_domain_t = dvdTypes.dvd_read_domain_t;
 var sprintf = utils.sprintf;
 var CHECK_ZERO = utils.CHECK_ZERO;
 var CHECK_ZERO0 = utils.CHECK_ZERO0;
 var CHECK_VALUE = utils.CHECK_VALUE;
-
-var ifo_handle_t = ifoTypes.ifo_handle_t;
-
-var dvd_read_domain_t = dvdReader.dvd_read_domain_t;
 
 /** @const */ var DVD_BLOCK_LEN = 2048;
 

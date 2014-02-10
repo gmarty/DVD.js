@@ -30,7 +30,7 @@ module.exports = function(grunt) {
           'src/utils/*.ts',
           'src/utils.ts'
         ],
-        dest: 'dist/server',
+        dest: 'dist',
         options: {
           module: 'commonjs',
           target: 'es5',

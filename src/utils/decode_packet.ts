@@ -18,7 +18,7 @@ var toHex = utils.toHex;
  * @return {Object}
  */
 function decodePacket(p: Stream) {
-  console.log('p.position', toHex(p.position));
+  //console.log('p.position', toHex(p.position));
 
   var packets = {
     pci: null,
@@ -57,7 +57,7 @@ function decodePacket(p: Stream) {
     p.forward(0x06);
 
     if (p.getUint8(0x00) === 0x00) {
-      console.log('PCI: %s -> %s', toHex(p.position + 1), toHex(p.position + 1 + packetLength));
+      //console.log('PCI: %s -> %s', toHex(p.position + 1), toHex(p.position + 1 + packetLength));
       packets.pci = p.slice(p.position + 1, p.position + 1 + packetLength);
     }
 
@@ -68,7 +68,7 @@ function decodePacket(p: Stream) {
     p.forward(0x06);
 
     if (p.getUint8(0x00) === 0x01) {
-      console.log('DSI: %s -> %s', toHex(p.position + 1), toHex(p.position + 1 + packetLength));
+      //console.log('DSI: %s -> %s', toHex(p.position + 1), toHex(p.position + 1 + packetLength));
       packets.dsi = p.slice(p.position + 1, p.position + 1 + packetLength);
     }
   }

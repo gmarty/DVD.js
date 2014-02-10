@@ -1,0 +1,5 @@
+{
+  "dvdPath": "/home/user/dvd",
+  "staticServerPort": 3000,
+  "wsServerPort": 9001
+}

@@ -77,7 +77,6 @@ body {
 </div>
 <script src="bower_components/requirejs/require.js"></script>
 <script src="lib/jDataView/src/jdataview.js"></script>
-<script src="lib/binaryParser/binaryParser.js"></script>
 <script>
 'use strict';
 
@@ -100,19 +99,21 @@ if (!window.File || !window.FileReader) {
 
 require([
   'js/dvdjs/dvdread/index',
+  'js/dvdjs/dvdread/ifo_types',
+  'js/dvdjs/dvdnav/dvd_types',
   'js/dvdjs/dvdread/ifo_print_html'
-], function(dvdReader, ifoPrint) {
-  var dvd_reader = dvdReader.dvd_reader;
-  var dvd_file_t = dvdReader.dvd_file_t;
+], function(dvdReader, ifoTypes, dvdTypes, ifoPrint) {
+  var ifo_handle_t = ifoTypes.ifo_handle_t;
+  var dvd_file_t = dvdTypes.dvd_file_t;
 
-  var dvdFiles = new dvd_reader();
+  var dvdFiles = new dvdReader();
 
   document.getElementById('dvd_files').addEventListener('change', readFiles, false);
 
   function readFiles(event) {
     var files = event.target.files,
         fileNum = files.length,
-        file,
+        ifoFile,
         totalWeight = 0,
         loadedWeight = 0,
         $progress = document.getElementById('loading'),
@@ -121,20 +122,20 @@ require([
             'readAsArrayBuffer' : 'readAsBinaryString';
 
     // Set reader events.
-    reader.onprogress = function(e) {
-      if (e.lengthComputable && e.loaded >= 0) {
-        var percent = Math.round((loadedWeight + e.loaded) / totalWeight * 100);
+    reader.onprogress = function(event) {
+      if (event.lengthComputable && event.loaded >= 0) {
+        var percent = Math.round((loadedWeight + event.loaded) / totalWeight * 100);
         $progress.style.width = percent + '%';
       }
     };
 
-    reader.onloadend = function(e) {
-      if (e.target.result == null) {
+    reader.onloadend = function(event) {
+      if (event.target.result === null) {
         return;
       }
 
-      dvdFiles.files[fileNum].view = new jDataView(e.target.result, undefined, undefined, false);
-      loadedWeight += e.target.result.byteLength;
+      dvdFiles.files[fileNum].view = new jDataView(event.target.result, undefined, undefined, false);
+      loadedWeight += event.target.result.byteLength;
       var percent = Math.round(loadedWeight / totalWeight * 100);
       $progress.style.width = percent + '%';
 
@@ -142,13 +143,13 @@ require([
 
       if (fileNum >= 0) {
         // Read the next file if present.
-        reader[readMethod](dvdFiles.files[fileNum].file);
+        reader[readMethod](dvdFiles.files[fileNum].file.file);
       } else {
         populateSelect(dvdFiles);
       }
     };
 
-    reader.onerror = function(e) {
+    reader.onerror = function(event) {
       throw new Error('An error occurred.');
     };
 
@@ -159,19 +160,20 @@ require([
         continue;
       }
 
-      file = new dvd_file_t();
-      file.file = files[fileNum];
-      dvdFiles.files.push(file);
+      ifoFile = new ifo_handle_t();
+      ifoFile.file = new dvd_file_t();
+      ifoFile.file.file = files[fileNum];
+      dvdFiles.files.push(ifoFile);
     }
 
     dvdFiles.files.forEach(function(dvd_file) {
-      totalWeight += dvd_file.file.size;
+      totalWeight += dvd_file.file.file.size;
     });
 
     fileNum = dvdFiles.files.length - 1;
 
     // Read the first file.
-    reader[readMethod](dvdFiles.files[fileNum].file);
+    reader[readMethod](dvdFiles.files[fileNum].file.file);
   }
 
   /**
@@ -185,12 +187,12 @@ require([
 
     var files = [];
     dvdFiles.files.forEach(function(file) {
-      var label = file.file.name;
+      var label = file.file.file.name;
       if (label.match(/\.BUP$/)) {
         return;
       }
 
-      var value = label == 'VIDEO_TS.IFO' ? 0 : +label.replace(/^VTS_/, '').replace(/_0\.IFO$/, '');
+      var value = label === 'VIDEO_TS.IFO' ? 0 : +label.replace(/^VTS_/, '').replace(/_0\.IFO$/, '');
 
       files.push({value: value, label: label});
     });
