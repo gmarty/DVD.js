@@ -4,3 +4,4 @@ outputs/
 dist/
 public/js/
 public/bower_components/
+config/
