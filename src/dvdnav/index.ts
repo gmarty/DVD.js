@@ -154,6 +154,8 @@ dvdnav.prototype.open = function(path, cb) {
   // Create a new structure.
   console.log('jsdvdnav: Using jsdvdnav version %s', config.VERSION);
 
+  this.path = path;
+
   // Initialise the VM.
   this.vm = new VM(this.dvd);
   if (!this.vm) {
@@ -496,7 +498,7 @@ dvdnav.prototype.get_next_cache_block = function() {
     }
     this.emit('vtsChange', vts_change_event);
 
-    this.player.initializeVideoSource(function() {
+    this.player.initializeVideoSource(this.path, this.file, function() {
       this.nextBlock();
     }.bind(this));
 
