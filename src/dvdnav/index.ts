@@ -318,6 +318,12 @@ dvdnav.prototype.get_next_cache_block = function() {
     return;
   }
 
+  /*console.log('this.vobu.vobu_start', this.vobu.vobu_start);
+  console.log('this.vobu.blockN', this.vobu.blockN);
+  console.log('this.vobu.vobu_length', this.vobu.vobu_length);
+  console.log('this.vobu.vobu_next', this.vobu.vobu_next);
+  console.log('this.vobu.vobu', this.vobu.vobu);*/
+
   this.position_next = this.vm.position_get();
 
   if (LOG_DEBUG) {
@@ -327,20 +333,14 @@ dvdnav.prototype.get_next_cache_block = function() {
 
   // Did we hop?
   if (this.position_current.hop_channel != this.position_next.hop_channel) {
-    console.log('%cdvdnav#get_next_cache_block()', 'color: green;', this.position_current.hop_channel, this.position_next.hop_channel);
-
     if (this.position_next.hop_channel - this.position_current.hop_channel >= HOP_SEEK) {
-      console.log('%cdvdnav#get_next_cache_block()', 'color: green;', this.position_next.hop_channel - this.position_current.hop_channel, '>=', HOP_SEEK);
-
       // We seeked -> check for multiple angles.
       var obj = this.vm.get_angle_info();
       var current = obj.current;
       var num_angles = obj.num_angles;
       if (num_angles > 1) {
         // We have to skip the first VOBU when seeking in a multiangle feature, because it might belong to the wrong angle.
-        console.log('%cdvdnav#get_next_cache_block()', 'color: green;', toHex(this.position_next.cell_start + this.position_next.block), 1);
         this.dvd.read_cache_block(this.file, 'NAV', this.position_next.cell_start + this.position_next.block, 1, function(pci, dsi) {
-          console.log('%cdvdnav#get_next_cache_block() dvd_reader#read_cache_block() callback', 'color: green;', pci, dsi);
 
           // Decode nav into pci and dsi. Then get next VOBU info.
           if (!pci || !dsi) {
@@ -396,7 +396,6 @@ dvdnav.prototype.get_next_cache_block = function() {
 
   // Check the HIGHLIGHT flag.
   if (this.position_current.button != this.position_next.button) {
-    console.log('%cdvdnav#get_next_cache_block()', 'color: green;', this.position_current.button, this.position_next.button);
     var highlight_event = new dvdEvents.dvdnav_highlight_event_t();
 
     highlight_event.display = 1;
@@ -431,7 +430,6 @@ dvdnav.prototype.get_next_cache_block = function() {
 
   // Check to see if we need to change the currently opened VOB or open a new one because we don't currently have an opened VOB.
   if (!this.file || this.position_current.vts != this.position_next.vts || this.position_current.domain != this.position_next.domain) {
-    console.log('%cdvdnav#get_next_cache_block()', 'color: green;', this.position_current.vts, this.position_next.vts, this.position_current.domain, this.position_next.domain);
     var domain;
     var vtsN;
     var vts_change_event = new dvdEvents.dvdnav_vts_change_event_t();
@@ -637,18 +635,10 @@ dvdnav.prototype.get_next_cache_block = function() {
     return;
   }
 
-  /*console.log('this.vobu.vobu_start', this.vobu.vobu_start);
-   console.log('this.vobu.blockN', this.vobu.blockN);
-   console.log('this.vobu.vobu_length', this.vobu.vobu_length);
-   console.log('this.vobu.vobu_next', this.vobu.vobu_next);
-   console.log('this.vobu.vobu', this.vobu.vobu);*/
-
   // Have we reached the end of a VOBU?
   if (this.vobu.blockN >= this.vobu.vobu_length) {
-    console.log('%cdvdnav#get_next_cache_block()', 'color: green;', this.vobu.blockN, '>=', this.vobu.vobu_length);
     // Have we reached the end of a cell?
     if (this.vobu.vobu_next == SRI_END_OF_CELL) {
-      console.log('%cdvdnav#get_next_cache_block()', 'color: green;', this.vobu.vobu_next, '==', 'SRI_END_OF_CELL');
       // End of Cell from NAV DSI info.
       // Handle related state changes in next iteration.
       this.position_current.still = this.position_next.still;
@@ -661,7 +651,6 @@ dvdnav.prototype.get_next_cache_block = function() {
       }
 
       if (!this.position_current.still || this.skip_still) {
-        console.log('%cdvdnav#get_next_cache_block()', 'color: green;', !this.position_current.still, '||', !!this.skip_still);
         // No active cell still -> get us to the next cell.
         this.vm.get_next_cell();
         this.position_current.still = 0; // Still gets activated at end of cell.
@@ -683,10 +672,7 @@ dvdnav.prototype.get_next_cache_block = function() {
 
     // At the start of the next VOBU -> expecting NAV packet.
     // The following instruction should return pci and dsi binary packets from the server.
-    console.log('%cdvdnav#get_next_cache_block()', 'color: green;', toHex(this.vobu.vobu_start + this.vobu.vobu_next), 1);
     this.dvd.read_cache_block(this.file, 'NAV', this.vobu.vobu_start + this.vobu.vobu_next, 1, function(pci, dsi) {
-      console.log('%cdvdnav#get_next_cache_block() dvd_reader#read_cache_block() callback for navPacket event', 'color: green;', pci, dsi);
-
       // Decode nav into pci and dsi. Then get next VOBU info.
       if (!pci || !dsi) {
         console.error('Expected NAV packet but none found.');
@@ -717,10 +703,7 @@ dvdnav.prototype.get_next_cache_block = function() {
 
       // At each VOBU, requests the corresponding bit of the encoded video file.
       // We probably need to add the cell number too.
-      console.log('%cdvdnav#get_next_cache_block()', 'color: green;', this.vobu.vobu, this.vobu.vobuNb);
       this.dvd.read_cache_block(this.file, 'VID', this.vobu.vobu, this.vobu.vobuNb, function(buffer) {
-        console.log('%cdvdnav#get_next_cache_block() dvd_reader#read_cache_block() callback for video event', 'color: green;');
-
         // We append the video chunk.
         this.player.appendVideoChunk(buffer);
 

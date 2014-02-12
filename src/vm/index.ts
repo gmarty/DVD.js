@@ -158,8 +158,6 @@ vm.prototype.start = function() {
   this.set_FP_PGC();
   this.process_command(this.play_PGC());
 
-  console.log(this);
-
   return !this.stopped;
 };
 
@@ -551,8 +549,6 @@ vm.prototype.get_current_title_part = function(title_result, part_result) {
   vts_ptt_srpt = this.vtsi.vts_ptt_srpt;
   pgcN = this.get_PGCN();
   pgN = this.state.pgN;
-
-  console.log(vts_ptt_srpt, pgcN, pgN);
 
   found = 0;
   for (vts_ttn = 0; (vts_ttn < vts_ptt_srpt.nr_of_srpts) && !found; vts_ttn++) {
@@ -1731,7 +1727,6 @@ vm.prototype.get_PGCN = function() {
   var pgcit = this.get_PGCIT();
   if (pgcit) {
     while (pgcN <= pgcit.nr_of_pgci_srp) {
-      console.log('%cvm#get_PGCN()', 'color: green;', pgcit.pgci_srp[pgcN - 1].pgc, this.state.pgc);
       if (deepEqual(pgcit.pgci_srp[pgcN - 1].pgc, this.state.pgc)) {
         return pgcN;
       }
@@ -1744,7 +1739,6 @@ vm.prototype.get_PGCN = function() {
 };
 
 vm.prototype.get_MENU_PGCIT = function(h, lang) {
-  console.log('%cvm#get_MENU_PGCIT()', 'color: green;', h, lang);
   var i;
 
   if (h == null || h.pgci_ut == null) {
@@ -1770,8 +1764,6 @@ vm.prototype.get_MENU_PGCIT = function(h, lang) {
 
 // Uses state to decide what to return
 vm.prototype.get_PGCIT = function() {
-  console.log('%cvm#get_PGCIT()', 'color: green;', this.state.domain);
-
   switch (this.state.domain) {
     case DVDDomain_t.DVD_DOMAIN_VTSTitle:
       if (!this.vtsi) return null;
@@ -1815,8 +1807,6 @@ vm.prototype.get_title_ifo = function(title) {
  * @return {boolean} Whether a Jump, Link or Call just happened.
  */
 vm.prototype.evalCMD = function(commands, num_commands, return_values) {
-  console.log('%cvm#evalCMD()', 'color: green;', JSON.stringify(commands), num_commands);
-
   var i = 0;
   var total = 0;
 
@@ -1841,7 +1831,6 @@ vm.prototype.evalCMD = function(commands, num_commands, return_values) {
     }
 
     line = this.eval_command(commands[i].bytes, return_values);
-    console.log('%cvm#evalCMD()', 'color: green;', line, return_values);
 
     if (line < 0) { // Link command
       if (TRACE) {
