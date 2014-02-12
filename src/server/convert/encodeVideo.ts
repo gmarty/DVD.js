@@ -17,6 +17,7 @@ export = encodeVideo;
 
 /**
  * Encode VOB files from a folder to webm.
+ * @todo At the end, delete the ffmpeg2pass-0.log file.
  *
  * @param {string} dvdPath
  */

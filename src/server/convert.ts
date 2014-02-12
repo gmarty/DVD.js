@@ -5,6 +5,7 @@
 
 import optimist = require('optimist');
 
+import generateCatalogue = require('./convert/generateCatalogue');
 import convertIfo = require('./convert/convertIfo');
 import extractNavPackets = require('./convert/extractNavPackets');
 import encodeVideo = require('./convert/encodeVideo');
@@ -21,12 +22,15 @@ if (!dvdPath) {
 }
 
 function convertDVD(dvdPath) {
-  // Convert IFO files.
-  convertIfo(dvdPath, function() {
-    // Extract NAV packets.
-    extractNavPackets(dvdPath, function() {
-      // Convert video.
-      encodeVideo(dvdPath);
+  // Regenerate the list of DVD.
+  generateCatalogue(function() {
+    // Convert IFO files.
+    convertIfo(dvdPath, function() {
+      // Extract NAV packets.
+      extractNavPackets(dvdPath, function() {
+        // Convert video.
+        encodeVideo(dvdPath);
+      });
     });
   });
 }

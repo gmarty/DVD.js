@@ -25,7 +25,7 @@ export = convertIfo;
  * @param {function} callback
  */
 function convertIfo(dvdPath: string, callback) {
-  process.stdout.write('Convert IFO files:\n');
+  process.stdout.write('\nConvert IFO files:\n');
 
   var ifoPath = path.join(dvdPath, '/VIDEO_TS', '/*.IFO');
   glob(ifoPath, function(err, ifoFiles) {
