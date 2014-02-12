@@ -65,6 +65,33 @@ function dvd_reader() {
 var cbPool = Object.create(null);
 
 /**
+ * Request the list of available DVD from the server, then execute a callback function.
+ * @todo Integrate gracefully into the rest of the API to avoid instantiate BinaryClient twice.
+ *
+ * @param {Function} callback
+ */
+dvd_reader.prototype.getDVDList = function(callback) {
+  var client = new BinaryClient('ws://localhost:9001');
+
+  client.on('open', function() {
+    client.send('', {req: 'DVD'});
+  });
+
+  client.on('stream', function(stream, meta) {
+    stream.on('data', function(data) {
+      if (meta.req === 'DVD') {
+        callback(data);
+        client.close();
+      }
+    });
+
+    stream.on('error', function() {
+      console.error('BinaryClient: error');
+    });
+  });
+};
+
+/**
  * Opens a block device of a DVD-ROM file, or an image file, or a directory
  * name for a mounted DVD or HD copy of a DVD.
  *

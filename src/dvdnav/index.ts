@@ -109,24 +109,7 @@ function dvdnav_vobu_t() {
  * @param {Function} callback
  */
 dvdnav.prototype.getDVDList = function(callback) {
-  var client = new BinaryClient('ws://localhost:9001');
-
-  client.on('open', function() {
-    client.send('', {req: 'DVD'});
-  });
-
-  client.on('stream', function(stream, meta) {
-    stream.on('data', function(data) {
-      if (meta.req === 'DVD') {
-        callback(data);
-        client.close();
-      }
-    });
-
-    stream.on('error', function() {
-      console.error('BinaryClient: error');
-    });
-  });
+  this.dvd.getDVDList(callback);
 };
 
 
