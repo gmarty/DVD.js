@@ -6,6 +6,8 @@
 import fs = require('fs');
 import path = require('path');
 
+export = getDVDList;
+
 /**
  * Return the list of directory given a directory.
  * @todo Refactor to use asynchronous API.
@@ -13,7 +15,7 @@ import path = require('path');
  * @param {string} dvdPath
  * @param {function(Array.<string>)} callback
  */
-function getDVDList(dvdPath, callback) {
+function getDVDList(dvdPath: string, callback) {
   var dvds = fs.readdirSync(dvdPath)
     .filter(function(file) {
       var stats = fs.statSync(path.normalize(dvdPath, file));
@@ -22,5 +24,3 @@ function getDVDList(dvdPath, callback) {
 
   callback(dvds);
 }
-
-export = getDVDList;
