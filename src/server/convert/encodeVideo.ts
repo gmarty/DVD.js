@@ -22,7 +22,7 @@ export = encodeVideo;
  * @param {string} dvdPath
  */
 function encodeVideo(dvdPath: string) {
-  process.stdout.write('\nEncode VOB files:\n');
+  process.stdout.write('\nEncoding VOB files:\n');
 
   var vobPath = path.join(dvdPath, '/VIDEO_TS', '/*.VOB');
   glob(vobPath, function(err, vobFiles) {

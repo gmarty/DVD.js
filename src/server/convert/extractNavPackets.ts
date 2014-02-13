@@ -29,7 +29,7 @@ export = extractNav;
  * @param {function} callback
  */
 function extractNav(dvdPath: string, callback) {
-  process.stdout.write('\nExtract NAV packets:\n');
+  process.stdout.write('\nExtracting NAV packets:\n');
 
   var ifoPath = path.join(dvdPath, '/VIDEO_TS', '/*.VOB');
   glob(ifoPath, function(err, vobFiles) {

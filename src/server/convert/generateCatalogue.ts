@@ -12,16 +12,16 @@ import config = require('../../../config/config.json');
 export = generateCatalogue;
 
 function generateCatalogue(callback) {
-  process.stdout.write('Regenerate the list of DVD:\n');
+  process.stdout.write('\nRegenerating the list of DVD:\n');
 
   getDVDList(config.dvdPath, function(availableDvds) {
-    console.log(availableDvds);
-
     var metaPath = path.join(config.dvdPath, '/metadata.json');
     fs.writeFile(metaPath, JSON.stringify(availableDvds), function(err) {
       if (err) {
         console.error(err);
       }
+
+      process.stdout.write('Done');
 
       callback();
     });
