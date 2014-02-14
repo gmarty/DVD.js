@@ -1,5 +1,3 @@
-///<reference path='../declarations/BinaryParser.d.ts'/>
-
 'use strict';
 
 
@@ -224,7 +222,7 @@ function ifoRead_VMG(ifofile) {
    }*/
 
   // Do we need this test before actual parsing?
-  if (vmgi_mat.vmg_identifier != 'DVDVIDEO-VMG') {
+  if (vmgi_mat.vmg_identifier !== 'DVDVIDEO-VMG') {
     ifofile.vmgi_mat = null;
     return ifofile;
   }
@@ -239,21 +237,21 @@ function ifoRead_VMG(ifofile) {
   CHECK_ZERO(vmgi_mat.zero_8);
   CHECK_ZERO(vmgi_mat.zero_9);
   CHECK_ZERO(vmgi_mat.zero_10);
-  CHECK_VALUE(vmgi_mat.vmg_last_sector != 0);
-  CHECK_VALUE(vmgi_mat.vmgi_last_sector != 0);
+  CHECK_VALUE(vmgi_mat.vmg_last_sector !== 0);
+  CHECK_VALUE(vmgi_mat.vmgi_last_sector !== 0);
   CHECK_VALUE(vmgi_mat.vmgi_last_sector * 2 <= vmgi_mat.vmg_last_sector);
   CHECK_VALUE(vmgi_mat.vmgi_last_sector * 2 <= vmgi_mat.vmg_last_sector);
-  CHECK_VALUE(vmgi_mat.vmg_nr_of_volumes != 0);
-  CHECK_VALUE(vmgi_mat.vmg_this_volume_nr != 0);
+  CHECK_VALUE(vmgi_mat.vmg_nr_of_volumes !== 0);
+  CHECK_VALUE(vmgi_mat.vmg_this_volume_nr !== 0);
   CHECK_VALUE(vmgi_mat.vmg_this_volume_nr <= vmgi_mat.vmg_nr_of_volumes);
-  CHECK_VALUE(vmgi_mat.disc_side == 1 || vmgi_mat.disc_side == 2);
-  CHECK_VALUE(vmgi_mat.vmg_nr_of_title_sets != 0);
+  CHECK_VALUE(vmgi_mat.disc_side === 1 || vmgi_mat.disc_side === 2);
+  CHECK_VALUE(vmgi_mat.vmg_nr_of_title_sets !== 0);
   CHECK_VALUE(vmgi_mat.vmgi_last_byte >= 341);
   CHECK_VALUE(vmgi_mat.vmgi_last_byte / DVD_BLOCK_LEN <=
     vmgi_mat.vmgi_last_sector);
   // It seems that first_play_pgc is optional.
   CHECK_VALUE(vmgi_mat.first_play_pgc < vmgi_mat.vmgi_last_byte);
-  CHECK_VALUE(vmgi_mat.vmgm_vobs == 0 ||
+  CHECK_VALUE(vmgi_mat.vmgm_vobs === 0 ||
     (vmgi_mat.vmgm_vobs > vmgi_mat.vmgi_last_sector &&
       vmgi_mat.vmgm_vobs < vmgi_mat.vmg_last_sector));
   CHECK_VALUE(vmgi_mat.tt_srpt <= vmgi_mat.vmgi_last_sector);
@@ -289,7 +287,7 @@ function ifoRead_VTS(ifofile) {
    }*/
 
   // Do we need this test before actual parsing?
-  if (vtsi_mat.vts_identifier != 'DVDVIDEO-VTS') {
+  if (vtsi_mat.vts_identifier !== 'DVDVIDEO-VTS') {
     return null;
   }
 
@@ -316,10 +314,10 @@ function ifoRead_VTS(ifofile) {
   CHECK_ZERO(vtsi_mat.zero_21);
   CHECK_VALUE(vtsi_mat.vtsi_last_sector * 2 <= vtsi_mat.vts_last_sector);
   CHECK_VALUE(vtsi_mat.vtsi_last_byte / DVD_BLOCK_LEN <= vtsi_mat.vtsi_last_sector);
-  CHECK_VALUE(vtsi_mat.vtsm_vobs == 0 ||
+  CHECK_VALUE(vtsi_mat.vtsm_vobs === 0 ||
     (vtsi_mat.vtsm_vobs > vtsi_mat.vtsi_last_sector &&
       vtsi_mat.vtsm_vobs < vtsi_mat.vts_last_sector));
-  CHECK_VALUE(vtsi_mat.vtstt_vobs == 0 ||
+  CHECK_VALUE(vtsi_mat.vtstt_vobs === 0 ||
     (vtsi_mat.vtstt_vobs > vtsi_mat.vtsi_last_sector &&
       vtsi_mat.vtstt_vobs < vtsi_mat.vts_last_sector));
   CHECK_VALUE(vtsi_mat.vts_ptt_srpt <= vtsi_mat.vtsi_last_sector);
@@ -477,36 +475,37 @@ function ifoRead_PGC(ifofile, offset) {
 
   // verify time (look at print_time)
   for (i = 0; i < 8; i++) {
-    if (!(pgc.audio_control[i] & 0x8000)) // The 'is present' bit
+    if (!(pgc.audio_control[i] & 0x8000)) { // The 'is present' bit
       CHECK_ZERO(pgc.audio_control[i]);
+    }
   }
   for (i = 0; i < 32; i++) {
-    if (!(pgc.subp_control[i] & 0x80000000)) // The 'is present' bit
+    if (!(pgc.subp_control[i] & 0x80000000)) { // The 'is present' bit
       CHECK_ZERO(pgc.subp_control[i]);
+    }
   }
 
-  // Check that time is 0:0:0:0 also if nr_of_programs == 0
-  if (pgc.nr_of_programs == 0) {
+  // Check that time is 0:0:0:0 also if nr_of_programs === 0
+  if (pgc.nr_of_programs === 0) {
     CHECK_ZERO(pgc.still_time);
     CHECK_ZERO(pgc.pg_playback_mode); // ??
-    CHECK_VALUE(pgc.program_map_offset == 0);
-    CHECK_VALUE(pgc.cell_playback_offset == 0);
-    CHECK_VALUE(pgc.cell_position_offset == 0);
+    CHECK_VALUE(pgc.program_map_offset === 0);
+    CHECK_VALUE(pgc.cell_playback_offset === 0);
+    CHECK_VALUE(pgc.cell_position_offset === 0);
   } else {
-    CHECK_VALUE(pgc.program_map_offset != 0);
-    CHECK_VALUE(pgc.cell_playback_offset != 0);
-    CHECK_VALUE(pgc.cell_position_offset != 0);
+    CHECK_VALUE(pgc.program_map_offset !== 0);
+    CHECK_VALUE(pgc.cell_playback_offset !== 0);
+    CHECK_VALUE(pgc.cell_position_offset !== 0);
   }
 
-  if (pgc.command_tbl_offset != 0) {
-    pgc.command_tbl = ifoRead_PGC_COMMAND_TBL(ifofile,
-      offset + pgc.command_tbl_offset);
+  if (pgc.command_tbl_offset !== 0) {
+    pgc.command_tbl = ifoRead_PGC_COMMAND_TBL(ifofile, offset + pgc.command_tbl_offset);
   } else {
     pgc.command_tbl = null;
   }
 
   // Untested yet.
-  if (pgc.program_map_offset != 0 && pgc.nr_of_programs > 0) {
+  if (pgc.program_map_offset !== 0 && pgc.nr_of_programs > 0) {
     pgc.program_map = ifoRead_PGC_PROGRAM_MAP(ifofile, pgc.nr_of_programs,
       offset + pgc.program_map_offset);
   } else {
@@ -514,19 +513,18 @@ function ifoRead_PGC(ifofile, offset) {
   }
 
   // Untested yet.
-  if (pgc.cell_playback_offset != 0 && pgc.nr_of_cells > 0) {
+  if (pgc.cell_playback_offset !== 0 && pgc.nr_of_cells > 0) {
     pgc.cell_playback = ifoRead_CELL_PLAYBACK_TBL(ifofile, pgc.nr_of_cells,
       offset + pgc.cell_playback_offset);
-    if (pgc.cell_playback == null) {
-      if (pgc.program_map)
-        pgc.program_map = null;
+    if (!pgc.cell_playback && pgc.program_map) {
+      pgc.program_map = null;
     }
   } else {
     pgc.cell_playback = null;
   }
 
   // Untested yet.
-  if (pgc.cell_position_offset != 0 && pgc.nr_of_cells > 0) {
+  if (pgc.cell_position_offset !== 0 && pgc.nr_of_cells > 0) {
     pgc.cell_position = ifoRead_CELL_POSITION_TBL(ifofile, pgc.nr_of_cells,
       offset + pgc.cell_position_offset);
   } else {
@@ -551,12 +549,12 @@ export function ifoRead_FP_PGC(ifofile) {
 
   // It seems that first_play_pgc is optional after all.
   ifofile.first_play_pgc = 0;
-  if (ifofile.vmgi_mat.first_play_pgc == 0)
+  if (ifofile.vmgi_mat.first_play_pgc === 0)
     return ifofile;
 
   ifofile.first_play_pgc = ifoRead_PGC(ifofile, ifofile.vmgi_mat.first_play_pgc);
 
-  if (ifofile.first_play_pgc == null) {
+  if (!ifofile.first_play_pgc) {
     ifofile.first_play_pgc = null;
     return null;
   }
@@ -577,7 +575,7 @@ export function ifoRead_TT_SRPT(ifofile) {
   if (!ifofile || !ifofile.vmgi_mat)
     return null;
 
-  if (ifofile.vmgi_mat.tt_srpt == 0) // mandatory
+  if (ifofile.vmgi_mat.tt_srpt === 0) // mandatory
     return null;
 
   ifofile.file.view.seek(ifofile.vmgi_mat.tt_srpt * DVD_BLOCK_LEN);
@@ -593,22 +591,22 @@ export function ifoRead_TT_SRPT(ifofile) {
   var info_length = tt_srpt.last_byte + 1 - ifoTypes.TT_SRPT_SIZE;
 
   CHECK_ZERO(tt_srpt.zero_1);
-  CHECK_VALUE(tt_srpt.nr_of_srpts != 0);
+  CHECK_VALUE(tt_srpt.nr_of_srpts !== 0);
   CHECK_VALUE(tt_srpt.nr_of_srpts < 100); // ??
   CHECK_VALUE(tt_srpt.nr_of_srpts * ifoTypes.TITLE_INFO_SIZE <= info_length);
 
   for (i = 0; i < tt_srpt.nr_of_srpts; i++) {
-    CHECK_VALUE(tt_srpt.title[i].pb_ty.zero_1 == 0);
-    CHECK_VALUE(tt_srpt.title[i].nr_of_angles != 0);
+    CHECK_VALUE(tt_srpt.title[i].pb_ty.zero_1 === 0);
+    CHECK_VALUE(tt_srpt.title[i].nr_of_angles !== 0);
     CHECK_VALUE(tt_srpt.title[i].nr_of_angles < 10);
-    // CHECK_VALUE(tt_srpt.title[i].nr_of_ptts != 0);
+    // CHECK_VALUE(tt_srpt.title[i].nr_of_ptts !== 0);
     // XXX: this assertion breaks Ghostbusters:
     CHECK_VALUE(tt_srpt.title[i].nr_of_ptts < 1000); // ??
-    CHECK_VALUE(tt_srpt.title[i].title_set_nr != 0);
+    CHECK_VALUE(tt_srpt.title[i].title_set_nr !== 0);
     CHECK_VALUE(tt_srpt.title[i].title_set_nr < 100); // ??
-    CHECK_VALUE(tt_srpt.title[i].vts_ttn != 0);
+    CHECK_VALUE(tt_srpt.title[i].vts_ttn !== 0);
     CHECK_VALUE(tt_srpt.title[i].vts_ttn < 100); // ??
-    // CHECK_VALUE(tt_srpt.title[i].title_set_sector != 0);
+    // CHECK_VALUE(tt_srpt.title[i].title_set_sector !== 0);
   }
 
   // Make this a function
@@ -617,7 +615,7 @@ export function ifoRead_TT_SRPT(ifofile) {
    tt_srpt.nr_of_srpts * sizeof(title_info_t),
    my_friendly_zeros,
    info_length - tt_srpt.nr_of_srpts * sizeof(title_info_t))) {
-   console.error('jsdvdnav: VMG_PTT_SRPT slack is != 0, ');*/
+   console.error('jsdvdnav: VMG_PTT_SRPT slack is !== 0, ');*/
   /*function hexdump(()tt_srpt.title +
    tt_srpt.nr_of_srpts * sizeof(title_info_t),
    info_length - tt_srpt.nr_of_srpts * sizeof(title_info_t));
@@ -642,7 +640,7 @@ export function ifoRead_VTS_PTT_SRPT(ifofile) {
   if (!ifofile || !ifofile.vtsi_mat)
     return null;
 
-  if (ifofile.vtsi_mat.vts_ptt_srpt == 0) // mandatory
+  if (ifofile.vtsi_mat.vts_ptt_srpt === 0) // mandatory
     return null;
 
   ifofile.file.view.seek(ifofile.vtsi_mat.vts_ptt_srpt * DVD_BLOCK_LEN);
@@ -656,7 +654,7 @@ export function ifoRead_VTS_PTT_SRPT(ifofile) {
    }*/
 
   CHECK_ZERO(vts_ptt_srpt.zero_1);
-  CHECK_VALUE(vts_ptt_srpt.nr_of_srpts != 0);
+  CHECK_VALUE(vts_ptt_srpt.nr_of_srpts !== 0);
   CHECK_VALUE(vts_ptt_srpt.nr_of_srpts < 100); // ??
 
   info_length = vts_ptt_srpt.last_byte + 1 - ifoTypes.VTS_PTT_SRPT_SIZE;
@@ -678,14 +676,14 @@ export function ifoRead_VTS_PTT_SRPT(ifofile) {
       n = vts_ptt_srpt.last_byte + 1 - vts_ptt_srpt.ttu_offset[i];
     }
 
-    /* assert(n > 0 && (n % 4) == 0);
+    /* assert(n > 0 && (n % 4) === 0);
      Magic Knight Rayearth Daybreak is mastered very strange and has
      Titles with 0 PTTs. */
     if (n < 0) {
       n = 0;
     }
 
-    CHECK_VALUE(n % 4 == 0);
+    CHECK_VALUE(n % 4 === 0);
 
     vts_ptt_srpt.title[i] = new BinaryParser(ifofile.file.view, ifoTypes.ttu_t()).parse('main');
 
@@ -715,9 +713,9 @@ export function ifoRead_VTS_PTT_SRPT(ifofile) {
     /*console.log(vts_ptt_srpt);
      CHECK_VALUE(vts_ptt_srpt.title[i].nr_of_ptts < 1000); // ??
      for (j = 0; j < vts_ptt_srpt.title[i].nr_of_ptts; j++) {
-     CHECK_VALUE(vts_ptt_srpt.title[i].ptt[j].pgcn != 0);
+     CHECK_VALUE(vts_ptt_srpt.title[i].ptt[j].pgcn !== 0);
      CHECK_VALUE(vts_ptt_srpt.title[i].ptt[j].pgcn < 1000); // ??
-     CHECK_VALUE(vts_ptt_srpt.title[i].ptt[j].pgn != 0);
+     CHECK_VALUE(vts_ptt_srpt.title[i].ptt[j].pgn !== 0);
      CHECK_VALUE(vts_ptt_srpt.title[i].ptt[j].pgn < 100); // ??
      }*/
   }
@@ -745,7 +743,7 @@ export function ifoRead_PTL_MAIT(ifofile) {
   if (!ifofile || !ifofile.vmgi_mat)
     return null;
 
-  if (ifofile.vmgi_mat.ptl_mait == 0) {
+  if (ifofile.vmgi_mat.ptl_mait === 0) {
     ifofile.ptl_mait = null;
     return ifofile;
   }
@@ -762,9 +760,9 @@ export function ifoRead_PTL_MAIT(ifofile) {
    return ifofile;
    }*/
 
-  CHECK_VALUE(ptl_mait.nr_of_countries != 0);
+  CHECK_VALUE(ptl_mait.nr_of_countries !== 0);
   CHECK_VALUE(ptl_mait.nr_of_countries < 100); // ??
-  CHECK_VALUE(ptl_mait.nr_of_vtss != 0);
+  CHECK_VALUE(ptl_mait.nr_of_vtss !== 0);
   CHECK_VALUE(ptl_mait.nr_of_vtss < 100); // ??
   CHECK_VALUE(ptl_mait.nr_of_countries * ifoTypes.PTL_MAIT_COUNTRY_SIZE
     <= ptl_mait.last_byte + 1 - ifoTypes.PTL_MAIT_SIZE);
@@ -819,7 +817,7 @@ function ifoRead_VTS_TMAPT(ifofile) {
   if (!ifofile || !ifofile.vtsi_mat)
     return null;
 
-  if (ifofile.vtsi_mat.vts_tmapt == 0) { // optional(?)
+  if (ifofile.vtsi_mat.vts_tmapt === 0) { // optional(?)
     console.error('jsdvdnav: Please send bug report - no VTS_TMAPT ??');
     ifofile.vts_tmapt = null;
     return ifofile;
@@ -855,7 +853,7 @@ function ifoRead_VTS_TMAPT(ifofile) {
 
     CHECK_ZERO(vts_tmapt.tmap[i].zero_1);
 
-    if (vts_tmapt.tmap[i].nr_of_entries == 0) { // Early out if zero entries
+    if (vts_tmapt.tmap[i].nr_of_entries === 0) { // Early out if zero entries
       vts_tmapt.tmap[i].map_ent = null;
     }
   }
@@ -878,7 +876,7 @@ function ifoRead_TITLE_C_ADT(ifofile) {
   if (!ifofile || !ifofile.vtsi_mat)
     return null;
 
-  if (ifofile.vtsi_mat.vts_c_adt == 0) // mandatory
+  if (ifofile.vtsi_mat.vts_c_adt === 0) // mandatory
     return null;
 
   ifofile.vts_c_adt = ifoRead_C_ADT_internal(ifofile,
@@ -906,11 +904,11 @@ function ifoRead_C_ADT(ifofile) {
     return null;
 
   if (ifofile.vmgi_mat) {
-    if (ifofile.vmgi_mat.vmgm_c_adt == 0)
+    if (ifofile.vmgi_mat.vmgm_c_adt === 0)
       return ifofile;
     sector = ifofile.vmgi_mat.vmgm_c_adt;
   } else if (ifofile.vtsi_mat) {
-    if (ifofile.vtsi_mat.vtsm_c_adt == 0)
+    if (ifofile.vtsi_mat.vtsm_c_adt === 0)
       return ifofile;
     sector = ifofile.vtsi_mat.vtsm_c_adt;
   } else {
@@ -944,7 +942,7 @@ function ifoRead_C_ADT_internal(ifofile, sector) {
   /* assert(c_adt.nr_of_vobs > 0);
    Magic Knight Rayearth Daybreak is mastered very strange and has
    Titles with a VOBS that has no cells. */
-  CHECK_VALUE(info_length % ifoTypes.CELL_ADR_SIZE == 0);
+  CHECK_VALUE(info_length % ifoTypes.CELL_ADR_SIZE === 0);
 
   /* assert(info_length / ifoTypes.CELL_ADR_SIZE >= c_adt.nr_of_vobs);
    Enemy of the State region 2 (de) has Titles where nr_of_vobs field
@@ -980,7 +978,7 @@ export function ifoRead_TITLE_VOBU_ADMAP(ifofile) {
   if (!ifofile || !ifofile.vtsi_mat)
     return null;
 
-  if (ifofile.vtsi_mat.vts_vobu_admap == 0) // mandatory
+  if (ifofile.vtsi_mat.vts_vobu_admap === 0) // mandatory
     return null;
 
   ifofile.vts_vobu_admap = ifoRead_VOBU_ADMAP_internal(ifofile,
@@ -1008,11 +1006,11 @@ export function ifoRead_VOBU_ADMAP(ifofile) {
     return null;
 
   if (ifofile.vmgi_mat) {
-    if (ifofile.vmgi_mat.vmgm_vobu_admap == 0)
+    if (ifofile.vmgi_mat.vmgm_vobu_admap === 0)
       return ifofile;
     sector = ifofile.vmgi_mat.vmgm_vobu_admap;
   } else if (ifofile.vtsi_mat) {
-    if (ifofile.vtsi_mat.vtsm_vobu_admap == 0)
+    if (ifofile.vtsi_mat.vtsm_vobu_admap === 0)
       return ifofile;
     sector = ifofile.vtsi_mat.vtsm_vobu_admap;
   } else {
@@ -1044,7 +1042,7 @@ function ifoRead_VOBU_ADMAP_internal(ifofile, sector) {
   /* assert(info_length > 0);
    Magic Knight Rayearth Daybreak is mastered very strange and has
    Titles with a VOBS that has no VOBUs. */
-  //CHECK_VALUE(info_length % UINT32_SIZE == 0);
+  //CHECK_VALUE(info_length % UINT32_SIZE === 0);
 
   return vobu_admap;
 }
@@ -1064,7 +1062,7 @@ export function ifoRead_PGCIT(ifofile) {
   if (!ifofile || !ifofile.vtsi_mat)
     return null;
 
-  if (ifofile.vtsi_mat.vts_pgcit == null) // mandatory
+  if (!ifofile.vtsi_mat.vts_pgcit) // mandatory
     return null;
 
   ifofile.vts_pgcit = ifoRead_PGCIT_internal(ifofile,
@@ -1090,21 +1088,21 @@ function ifoRead_PGCIT_internal(ifofile, offset) {
    }*/
 
   CHECK_ZERO(pgcit.zero_1);
-  /* assert(pgcit.nr_of_pgci_srp != 0);
+  /* assert(pgcit.nr_of_pgci_srp !== 0);
    Magic Knight Rayearth Daybreak is mastered very strange and has
    Titles with 0 PTTs. */
   CHECK_VALUE(pgcit.nr_of_pgci_srp < 10000); // ?? seen max of 1338
 
   for (i = 0; i < pgcit.nr_of_pgci_srp; i++) {
-    CHECK_VALUE(pgcit.pgci_srp[i].unknown1 == 0);
+    CHECK_VALUE(pgcit.pgci_srp[i].unknown1 === 0);
   }
 
-  for (i = 0; i < pgcit.nr_of_pgci_srp; i++)
+  for (i = 0; i < pgcit.nr_of_pgci_srp; i++) {
     CHECK_VALUE(pgcit.pgci_srp[i].pgc_start_byte + ifoTypes.PGC_SIZE <= pgcit.last_byte + 1);
+  }
 
   for (i = 0; i < pgcit.nr_of_pgci_srp; i++) {
-    pgcit.pgci_srp[i].pgc = ifoRead_PGC(ifofile,
-      offset + pgcit.pgci_srp[i].pgc_start_byte);
+    pgcit.pgci_srp[i].pgc = ifoRead_PGC(ifofile, offset + pgcit.pgci_srp[i].pgc_start_byte);
   }
 
   return pgcit;
@@ -1129,11 +1127,11 @@ export function ifoRead_PGCI_UT(ifofile) {
   var sector;
 
   if (ifofile.vmgi_mat) {
-    if (ifofile.vmgi_mat.vmgm_pgci_ut == 0)
+    if (ifofile.vmgi_mat.vmgm_pgci_ut === 0)
       return ifofile;
     sector = ifofile.vmgi_mat.vmgm_pgci_ut;
   } else if (ifofile.vtsi_mat) {
-    if (ifofile.vtsi_mat.vtsm_pgci_ut == 0)
+    if (ifofile.vtsi_mat.vtsm_pgci_ut === 0)
       return ifofile;
     sector = ifofile.vtsi_mat.vtsm_pgci_ut;
   } else {
@@ -1152,7 +1150,7 @@ export function ifoRead_PGCI_UT(ifofile) {
    }*/
 
   CHECK_ZERO(pgci_ut.zero_1);
-  CHECK_VALUE(pgci_ut.nr_of_lus != 0);
+  CHECK_VALUE(pgci_ut.nr_of_lus !== 0);
   CHECK_VALUE(pgci_ut.nr_of_lus < 100); // ?? 3-4 ?
   CHECK_VALUE(pgci_ut.nr_of_lus * ifoTypes.PGCI_LU_SIZE < pgci_ut.last_byte);
 
@@ -1160,19 +1158,19 @@ export function ifoRead_PGCI_UT(ifofile) {
     // Maybe this is only defined for v1.1 and later titles?
     /* If the bits in 'lu[i].exists' are enumerated abcd efgh then:
      VTS_x_yy.IFO        VIDEO_TS.IFO
-     a == 0x83 "Root"         0x82 "Title"
-     b == 0x84 "Subpicture"
-     c == 0x85 "Audio"
-     d == 0x86 "Angle"
-     e == 0x87 "PTT"
+     a === 0x83 "Root"         0x82 "Title"
+     b === 0x84 "Subpicture"
+     c === 0x85 "Audio"
+     d === 0x86 "Angle"
+     e === 0x87 "PTT"
      */
-    CHECK_VALUE((pgci_ut.lu[i].exists & 0x07) == 0);
+    CHECK_VALUE((pgci_ut.lu[i].exists & 0x07) === 0);
   }
 
   for (i = 0; i < pgci_ut.nr_of_lus; i++) {
     pgci_ut.lu[i].pgcit = ifoRead_PGCIT_internal(ifofile,
       sector * DVD_BLOCK_LEN + pgci_ut.lu[i].lang_start_byte);
-    if (pgci_ut.lu[i].pgcit == null) {
+    if (!pgci_ut.lu[i].pgcit) {
       ifofile.pgci_ut = null;
       return ifofile;
     }
@@ -1238,7 +1236,7 @@ function ifoRead_VTS_ATTRIBUTES(ifofile, offset) {
  * @return {?ifo_handle_t}
  */
 export function ifoRead_VTS_ATRT(ifofile) {
-  if (!ifofile || !ifofile.vmgi_mat || ifofile.vmgi_mat.vts_atrt == 0) // mandatory
+  if (!ifofile || !ifofile.vmgi_mat || ifofile.vmgi_mat.vts_atrt === 0) // mandatory
     return null;
 
   ifofile.file.view.seek(ifofile.vmgi_mat.vts_atrt * DVD_BLOCK_LEN);
@@ -1253,7 +1251,7 @@ export function ifoRead_VTS_ATRT(ifofile) {
    }*/
 
   CHECK_ZERO(vts_atrt.zero_1);
-  CHECK_VALUE(vts_atrt.nr_of_vtss != 0);
+  CHECK_VALUE(vts_atrt.nr_of_vtss !== 0);
   CHECK_VALUE(vts_atrt.nr_of_vtss < 100); // ??
   CHECK_VALUE(vts_atrt.nr_of_vtss * (4 + ifoTypes.VTS_ATTRIBUTES_MIN_SIZE) +
     ifoTypes.VTS_ATRT_SIZE < vts_atrt.last_byte + 1);
@@ -1294,7 +1292,7 @@ function ifoRead_TXTDT_MGI(ifofile) {
   if (!ifofile || !ifofile.vmgi_mat)
     return null;
 
-  if (ifofile.vmgi_mat.txtdt_mgi == 0) {
+  if (ifofile.vmgi_mat.txtdt_mgi === 0) {
     ifofile.txtdt_mgi = null;
     return ifofile;
   }

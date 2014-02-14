@@ -1,5 +1,3 @@
-///<reference path='../declarations/BinaryParser.d.ts'/>
-
 'use strict';
 
 
@@ -143,12 +141,12 @@ export function parsePCI(view) {
     CHECK_ZERO0(pci.hli.hl_gi.zero5);
 
     // Are there buttons defined here?
-    if ((pci.hli.hl_gi.hli_ss & 0x03) != 0) {
-      CHECK_VALUE(pci.hli.hl_gi.btn_ns != 0);
-      CHECK_VALUE(pci.hli.hl_gi.btngr_ns != 0);
+    if ((pci.hli.hl_gi.hli_ss & 0x03) !== 0) {
+      CHECK_VALUE(pci.hli.hl_gi.btn_ns !== 0);
+      CHECK_VALUE(pci.hli.hl_gi.btngr_ns !== 0);
     } else {
-      CHECK_VALUE((pci.hli.hl_gi.btn_ns != 0 && pci.hli.hl_gi.btngr_ns != 0)
-        || (pci.hli.hl_gi.btn_ns == 0 && pci.hli.hl_gi.btngr_ns == 0));
+      CHECK_VALUE((pci.hli.hl_gi.btn_ns !== 0 && pci.hli.hl_gi.btngr_ns !== 0)
+        || (pci.hli.hl_gi.btn_ns === 0 && pci.hli.hl_gi.btngr_ns === 0));
     }
 
     // pci hli btnit
@@ -172,18 +170,18 @@ export function parsePCI(view) {
           // vmcmd_verify(pci.hli.btnit[n].cmd);
         } else {
           var k = 0;
-          CHECK_VALUE(pci.hli.btnit[n].btn_coln == 0);
-          CHECK_VALUE(pci.hli.btnit[n].auto_action_mode == 0);
-          CHECK_VALUE(pci.hli.btnit[n].x_start == 0);
-          CHECK_VALUE(pci.hli.btnit[n].y_start == 0);
-          CHECK_VALUE(pci.hli.btnit[n].x_end == 0);
-          CHECK_VALUE(pci.hli.btnit[n].y_end == 0);
-          CHECK_VALUE(pci.hli.btnit[n].up == 0);
-          CHECK_VALUE(pci.hli.btnit[n].down == 0);
-          CHECK_VALUE(pci.hli.btnit[n].left == 0);
-          CHECK_VALUE(pci.hli.btnit[n].right == 0);
+          CHECK_VALUE(pci.hli.btnit[n].btn_coln === 0);
+          CHECK_VALUE(pci.hli.btnit[n].auto_action_mode === 0);
+          CHECK_VALUE(pci.hli.btnit[n].x_start === 0);
+          CHECK_VALUE(pci.hli.btnit[n].y_start === 0);
+          CHECK_VALUE(pci.hli.btnit[n].x_end === 0);
+          CHECK_VALUE(pci.hli.btnit[n].y_end === 0);
+          CHECK_VALUE(pci.hli.btnit[n].up === 0);
+          CHECK_VALUE(pci.hli.btnit[n].down === 0);
+          CHECK_VALUE(pci.hli.btnit[n].left === 0);
+          CHECK_VALUE(pci.hli.btnit[n].right === 0);
           for (k = 0; k < 8; k++) {
-            CHECK_VALUE(pci.hli.btnit[n].cmd.bytes[k] == 0);
+            CHECK_VALUE(pci.hli.btnit[n].cmd.bytes[k] === 0);
           }
           // CHECK_ZERO?
         }
