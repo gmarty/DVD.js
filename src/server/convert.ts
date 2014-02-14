@@ -5,11 +5,11 @@
 
 import optimist = require('optimist');
 
-import createDir = require('./convert/createDir');
-import generateCatalogue = require('./convert/generateCatalogue');
-import convertIfo = require('./convert/convertIfo');
-import extractNavPackets = require('./convert/extractNavPackets');
-import encodeVideo = require('./convert/encodeVideo');
+import createDir = require('../server/convert/createDir');
+import generateCatalogue = require('../server/convert/generateCatalogue');
+import convertIfo = require('../server/convert/convertIfo');
+import extractNavPackets = require('../server/convert/extractNavPackets');
+import encodeVideo = require('../server/convert/encodeVideo');
 
 var cli = optimist
   .usage('Convert a DVD for the web.\n' +
