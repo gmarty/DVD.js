@@ -10,9 +10,9 @@ import connect = require('connect');
 import binaryjs = require('binaryjs');
 import glob = require('glob');
 
-import getDVDList = require('../utils/dvd_list');
-import Stream = require('../utils/stream');
-import decodePacket = require('../utils/decode_packet');
+import getDVDList = require('../server/utils/dvd_list');
+import Stream = require('../server/utils/stream');
+import decodePacket = require('../server/utils/decode_packet');
 import utils = require('../utils');
 import config = require('../../config/config.json');
 

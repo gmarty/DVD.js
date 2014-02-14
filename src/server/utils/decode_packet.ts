@@ -3,7 +3,7 @@
 'use strict';
 
 
-import utils = require('../utils');
+import utils = require('../../utils');
 
 var toHex = utils.toHex;
 
