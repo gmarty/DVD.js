@@ -6,7 +6,7 @@
 import http = require('http');
 import connect = require('connect');
 
-import config = require('../../config/config.json');
+import config = require('../../config/app.json');
 
 /**
  * Start the server.

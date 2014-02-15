@@ -7,7 +7,7 @@ import fs = require('fs');
 import path = require('path');
 
 import getDVDList = require('../../server/utils/dvd_list');
-import config = require('../../../config/config.json');
+import config = require('../../../config/app.json');
 
 export = generateCatalogue;
 
