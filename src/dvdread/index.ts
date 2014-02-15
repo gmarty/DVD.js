@@ -129,7 +129,7 @@ dvd_reader.prototype.open = function(path, cb) {
         return $.ajax({
           dataType: 'json',
           url: ifoFile,
-          timeout: 500,
+          timeout: 3000,
           success: function(ifoFile) {
             self.files.push(ifoFile);
           }
