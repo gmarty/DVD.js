@@ -14,7 +14,7 @@ import getDVDList = require('../server/utils/dvd_list');
 import Stream = require('../server/utils/stream');
 import decodePacket = require('../server/utils/decode_packet');
 import utils = require('../utils');
-import config = require('../../config/config.json');
+import config = require('../../config/app.json');
 
 var statCache = Object.create(null); // Store the file path / file size pairs.
 
