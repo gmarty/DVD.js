@@ -1,4 +1,4 @@
-///<reference path='../declarations/Buffer.d.ts'/>
+///<reference path='../../declarations/Buffer.d.ts'/>
 
 'use strict';
 
