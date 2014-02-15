@@ -9,8 +9,7 @@ module.exports = function(grunt) {
       client: {
         src: [
           'src/**/*.ts',
-          '!src/server/*.ts',
-          '!src/utils/*.ts'
+          '!src/server/*.ts'
         ],
         dest: 'public/js/dvdjs',
         options: {
@@ -25,9 +24,8 @@ module.exports = function(grunt) {
       // Node.js code uses commonjs modules and no sourcemap generated.
       server: {
         src: [
+          'src/dvdread/*.ts',
           'src/server/*.ts',
-          'src/lib/*/*.ts',
-          'src/utils/*.ts',
           'src/utils.ts'
         ],
         dest: 'dist',
@@ -47,8 +45,7 @@ module.exports = function(grunt) {
       client: {
         files: [
           'src/**/*.ts',
-          '!src/server/*.ts',
-          '!src/utils/*.ts'
+          '!src/server/*.ts'
         ],
         tasks: ['typescript:client'],
         options: {
@@ -57,9 +54,8 @@ module.exports = function(grunt) {
       },
       server: {
         files: [
+          'src/dvdread/*.ts',
           'src/server/*.ts',
-          'src/lib/*/*.ts',
-          'src/utils/*.ts',
           'src/utils.ts'
         ],
         tasks: ['typescript:server'],
