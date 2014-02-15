@@ -51,16 +51,20 @@ function encodeVideo(dvdPath: string) {
 
     // There are better ways to do async...
     function next(vobFile) {
-      var dst = utils.convertVobPath(vobFile[0]);
+      var output = utils.convertVobPath(vobFile[0]);
       var prefix = path.join(vobFile[0].replace(/\/VIDEO_TS\/.+/i, '/web/'), '/ffmpeg2pass');
-      var inputFiles = [];
+      var input = '';
 
-      vobFile.forEach(function(file) {
-        inputFiles.push('-i');
-        inputFiles.push(path.normalize(file));
-      });
+      if (vobFile.length === 1) {
+        input = path.normalize(vobFile[0]);
+      } else {
+        input = 'concat:' + vobFile.map(function(file) {
+          return path.normalize(file);
+        }).join('|');
+      }
 
-      var pass1Cmd = inputFiles.concat([
+      var pass1Cmd = [
+        '-i', input,
         '-pass', '1',
         '-passlogfile', prefix,
         // Video
@@ -84,10 +88,11 @@ function encodeVideo(dvdPath: string) {
         '-an', // Disable audio for pass 1.
         '-f', 'rawvideo',
         '-y', // Overwrite by default.
-        'NUL'
-      ]); // /dev/null
+        'NUL' // /dev/null
+      ];
 
-      var pass2Cmd = inputFiles.concat([
+      var pass2Cmd = [
+        '-i', input,
         '-pass', '2',
         '-passlogfile', prefix,
         // Video
@@ -111,11 +116,11 @@ function encodeVideo(dvdPath: string) {
         '-threads', '16',
         '-vf', 'yadif=1:1:0', // Deinterlace
         '-y', // Overwrite by default.
-        dst
-      ]);
+        output
+      ];
 
-      console.log(pass1Cmd);
-      console.log(pass2Cmd);
+      console.log(pass1Cmd.join(' '));
+      console.log(pass2Cmd.join(' '));
 
       var pass1 = spawn('ffmpeg', pass1Cmd);
 
