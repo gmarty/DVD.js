@@ -3,7 +3,6 @@
 
 import navTypes = require('../dvdread/nav_types');
 import BinaryParser = require('../lib/binaryParser/index');
-import Stream = require('../utils/stream');
 import config = require('../config');
 import utils = require('../utils');
 
