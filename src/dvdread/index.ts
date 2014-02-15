@@ -1,6 +1,3 @@
-///<reference path='../declarations/BinaryClient.d.ts'/>
-///<reference path='../declarations/jDataView.d.ts'/>
-
 'use strict';
 
 
@@ -23,9 +20,6 @@ var sprintf = utils.sprintf;
  */
 
 /** @const */ var TITLES_MAX = 9;
-
-/** @const */ var cBlue = 'color: #4AF;';
-/** @const */ var cPink = 'color: #F48;';
 
 export = dvd_reader;
 
@@ -59,10 +53,32 @@ function dvd_reader() {
 }
 
 /**
- * A pool of callbacks to be executed after asynchronous actions.
- * @private
+ * Load a single JSON file.
+ * See http://mathiasbynens.be/notes/xhr-responsetype-json
+ * @todo Use promises here.
+ * @todo Implement a mechanism for loading multiple files, then execute callback.
+ *
+ * @param {string} url
+ * @param {function=} successHandler
+ * @param {function=} errorHandler
  */
-var cbPool = Object.create(null);
+dvd_reader.prototype.loadJSON = function(url, successHandler, errorHandler) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('get', url, true);
+  xhr.responseType = 'json';
+  xhr.timeout = 500;
+  xhr.overrideMimeType && xhr.overrideMimeType('application/json');
+  xhr.setRequestHeader('Accept', 'application/json, text/javascript, */*; q=0.01');
+  xhr.onload = function() {
+    var status = xhr.status;
+    if (status === 200) {
+      successHandler && successHandler(xhr.response);
+    } else {
+      errorHandler && errorHandler(status);
+    }
+  };
+  xhr.send();
+};
 
 /**
  * Request the list of available DVD from the server, then execute a callback function.
@@ -71,24 +87,12 @@ var cbPool = Object.create(null);
  * @param {Function} callback
  */
 dvd_reader.prototype.getDVDList = function(callback) {
-  var client = new BinaryClient('ws://localhost:9001');
-
-  client.on('open', function() {
-    client.send('', {req: 'DVD'});
-  });
-
-  client.on('stream', function(stream, meta) {
-    stream.on('data', function(data) {
-      if (meta.req === 'DVD') {
-        callback(data);
-        client.close();
-      }
+  this.loadJSON('/metadata.json',
+    function(dvds) {
+      callback(dvds);
+    }, function(status) {
+      console.error('Can\'t retrieve the list of DVD (status code %s)', status);
     });
-
-    stream.on('error', function() {
-      console.error('BinaryClient: error');
-    });
-  });
 };
 
 /**
@@ -110,159 +114,48 @@ dvd_reader.prototype.getDVDList = function(callback) {
  *
  * @param {string} path Specifies the the device, file or directory to be used.
  * @param {Function} cb The callback function executed at the end.
- * @return If successful a a read handle is returned. Otherwise 0 is returned.
  */
 dvd_reader.prototype.open = function(path, cb) {
   var self = this;
-  var client = new BinaryClient('ws://localhost:9001');
-  this.client = client;
 
   this.path = path;
 
-  client.on('open', function() {
-    console.log('%cConnection established.', cBlue);
-    console.log('%cRequesting IFO files.', cPink);
-    client.send('', {req: 'IFO', path: path});
-  });
+  // First, we load the metadata.json file...
+  this.loadJSON('/' + this.path + '/web/metadata.json',
+    function(ifoFiles) {
+      // ... then, we load each IFO as a JSON file.
+      // Would be nice not to depend on jQuery.
+      var deferreds = ifoFiles.map(function(ifoFile) {
+        return $.ajax({
+          dataType: 'json',
+          url: ifoFile,
+          timeout: 500,
+          success: function(ifoFile) {
+            self.files.push(ifoFile);
+          }
+        });
+      });
 
-  client.on('stream', function(stream, meta) {
-    //console.log('BinaryClient: stream', stream, meta);
-    var parts = [];
-
-    stream.on('data', function(data) {
-      //console.log('BinaryClient: data');
-      /*console.dir(meta);
-       console.dir(data);*/
-
-      switch (meta.req) {
-        case 'IFO':
-        case 'NAV':
-        case 'VID':
-          parts.push(data);
-          break;
-
-        default:
-          console.error('Unknown instruction %s.', meta.req);
-          break;
-      }
+      $.when.apply(null, deferreds).then(function() {
+        cb.call();
+      });
     });
-
-    stream.on('end', function() {
-      //console.log('BinaryClient: end');
-      /*console.dir(stream);
-       console.dir(meta);
-       console.dir(parts);*/
-
-      switch (meta.req) {
-        case 'IFO':
-          var data = utils.concatBuffer(parts);
-
-          var ifoFile = new ifo_handle_t();
-          ifoFile.file = new dvd_file_t();
-          ifoFile.file.file = {
-            name: meta.name,
-            size: data.byteLength
-          };
-          ifoFile.file.view = new jDataView(data, undefined, undefined, false);
-          ifoFile = ifoRead.parseIFO(ifoFile);
-
-          console.log(ifoFile);
-
-          self.files.push(ifoFile);
-
-          // Check if we have received all the files. If so, execute callback.
-          if (meta.filesNumber != 0 && meta.filesNumber == self.files.length) {
-            console.log('%cAll IFO files received.', cBlue);
-            cb.call(); // Move where appropriate.
-          }
-          break;
-
-        case 'NAV':
-          var cbId = meta.cb;
-
-          if (cbId === undefined || cbPool[cbId] === undefined) {
-            console.error('NAV packet received with invalid callback hash.');
-          }
-
-          var data = utils.concatBuffer(parts);
-
-          switch (meta.name) {
-            case 'pci':
-            case 'dsi':
-              cbPool[cbId][meta.name] = data;
-              cbPool[cbId][meta.name + 'Loaded'] = true;
-              break;
-            default:
-              console.error('Unknown NAV packet type %s', meta.name);
-              break;
-          }
-
-          if (cbPool[cbId].pciLoaded && cbPool[cbId].dsiLoaded) {
-            var pci = navRead.PCI(cbPool[cbId].pci);
-            var dsi = navRead.DSI(cbPool[cbId].dsi);
-
-            cbPool[cbId].cb(pci, dsi);
-            delete cbPool[cbId];
-          }
-          break;
-
-        case 'VID':
-          var cbId = meta.cb;
-
-          if (cbId === undefined || cbPool[cbId] === undefined) {
-            console.error('NAV packet received with invalid callback hash.');
-          }
-
-          var data = utils.concatBuffer(parts);
-
-          cbPool[cbId].cb(data);
-          delete cbPool[cbId];
-          break;
-
-        default:
-          console.error('Unknown instruction %s.', meta.req);
-          break;
-      }
-    });
-  });
-
-  client.on('close', function() {
-    //console.log('%cConnection closed.', cBlue);
-  });
-
-  client.on('error', function(err) {
-    console.error('BinaryClient: An error occurred. Is the server even running?');
-  });
 };
 
-dvd_reader.prototype.read_cache_block = function(file, type, sector, block_count, cb) {
-  //console.log('%cdvd_reader#read_cache_block()', 'color: green;', file, sector, block_count);
-
-  // @todo Find a polyfill of the ES6 method to generate unique IDs.
-  var cbId = btoa('' + performance.now()); // Generate a unique key for the callback.
-
+dvd_reader.prototype.read_cache_block = function(file, type, sector, block_count, callback) {
   switch (type) {
     case 'NAV':
-      cbPool[cbId] = {
-        cb: cb,
-        pci: null,
-        dsi: null,
-        pciLoaded: false,
-        dsiLoaded: false
-      };
-
-      this.client.send('', {req: 'NAV', path: this.path, file: file, sector: sector, block_count: block_count, cb: cbId});
+      this.loadJSON('/' + this.path + '/web/VTS_01_1.VOB-' + utils.toHex(sector) + '.json',
+        function(navPacket) {
+          callback(navPacket.pci, navPacket.dsi);
+        },
+        function(status) {
+          console.error('Error loading file: status %s.', status);
+        });
       break;
 
     case 'VID':
-      cbPool[cbId] = {
-        cb: cb
-      };
-
-      var vobu = sector;        // The requested VOBU.
-      var vobuNb = block_count; // Total number of VOBU.
-
-      this.client.send('', {req: 'VID', path: this.path, file: file, vobu: vobu, vobuNb: vobuNb, cb: cbId});
+      setTimeout(callback, 0);
       break;
 
     default:
