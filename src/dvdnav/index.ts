@@ -645,7 +645,7 @@ dvdnav.prototype.get_next_cache_block = function() {
         console.log('%cjsdvdnav: NOP', 'font-weight: bold;');
       }
       if (LOG_DEBUG) {
-        console.log('jsdvdnav: Still set to %x', this.position_next.still);
+        console.log('jsdvdnav: Still set to %s', utils.toHex(this.position_next.still));
       }
       this.emit('nop');
 
