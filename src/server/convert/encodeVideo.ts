@@ -69,7 +69,7 @@ function encodeVideo(dvdPath: string) {
         '-passlogfile', prefix,
         // Video
         '-c:v', 'libvpx',
-        '-b:v', '500k',
+        '-b:v', '1000k',
         // Audio
         '-c:a', 'libvorbis',
         '-b:a', '128k',
@@ -84,7 +84,7 @@ function encodeVideo(dvdPath: string) {
         // ffmpeg options
         '-bufsize', '500k',
         '-threads', '16',
-        '-vf', 'yadif=1:1:0', // Deinterlace
+        '-vf', 'yadif=1:1:1', // Deinterlace
         '-an', // Disable audio for pass 1.
         '-f', 'rawvideo',
         '-y', // Overwrite by default.
@@ -97,7 +97,7 @@ function encodeVideo(dvdPath: string) {
         '-passlogfile', prefix,
         // Video
         '-c:v', 'libvpx',
-        '-b:v', '500k',
+        '-b:v', '1000k',
         // Audio
         '-c:a', 'libvorbis',
         '-b:a', '128k',
@@ -111,10 +111,10 @@ function encodeVideo(dvdPath: string) {
         '-qmax', '51',
         // libvpx options for pass 2
         '-auto-alt-ref', '1',
-        '-maxrate', '500k',  // pass 2
+        '-maxrate', '1000k',  // pass 2
         '-bufsize', '500k',
         '-threads', '16',
-        '-vf', 'yadif=1:1:0', // Deinterlace
+        '-vf', 'yadif=1:1:1', // Deinterlace
         '-y', // Overwrite by default.
         output
       ];
