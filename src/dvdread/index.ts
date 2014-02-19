@@ -64,19 +64,19 @@ function dvd_reader() {
  */
 dvd_reader.prototype.loadJSON = function(url, successHandler, errorHandler) {
   var xhr = new XMLHttpRequest();
-  xhr.open('get', url, true);
+  xhr.open('GET', url, true);
   xhr.responseType = 'json';
-  xhr.timeout = 500;
+  xhr.timeout = 3000;
   xhr.overrideMimeType && xhr.overrideMimeType('application/json');
   xhr.setRequestHeader('Accept', 'application/json, text/javascript, */*; q=0.01');
-  xhr.onload = function() {
-    var status = xhr.status;
+  xhr.addEventListener('load', function(event) {
+    var status = event.target.status;
     if (status === 200) {
-      successHandler && successHandler(xhr.response);
+      successHandler && successHandler(event.target.response);
     } else {
       errorHandler && errorHandler(status);
     }
-  };
+  }, false);
   xhr.send();
 };
 
