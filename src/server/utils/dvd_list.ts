@@ -18,8 +18,12 @@ export = getDVDList;
 function getDVDList(dvdPath: string, callback) {
   var dvds = fs.readdirSync(dvdPath)
     .filter(function(file) {
-      var stats = fs.statSync(path.normalize(dvdPath, file));
-      return stats.isDirectory();
+      var filePath = path.join(dvdPath, file);
+      // @todo Use asynchronous functions here.
+      var stats = fs.statSync(filePath);
+      var webFolderexists = fs.existsSync(path.join(filePath, 'web'));
+
+      return stats.isDirectory() && webFolderexists;
     });
 
   callback(dvds);
