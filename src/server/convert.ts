@@ -3,6 +3,7 @@
 'use strict';
 
 
+import path = require('path');
 import optimist = require('optimist');
 
 import createDir = require('../server/convert/createDir');
@@ -23,6 +24,15 @@ if (!dvdPath) {
 }
 
 function convertDVD(dvdPath) {
+  dvdPath = dvdPath.split(path.sep);
+
+  // We remove the trailing /.
+  var part = dvdPath.pop();
+  if (part !== '') {
+    dvdPath.push(part);
+  }
+  dvdPath = dvdPath.join(path.sep);
+
   // Regenerate the list of DVD.
   generateCatalogue(function() {
     // Convert IFO files.
