@@ -12,6 +12,7 @@ import ifoRead = require('../../dvdread/ifo_read');
 import dvdRead = require('../../dvdread/index');
 import ifoTypes = require('../../dvdread/ifo_types');
 import dvdTypes = require('../../dvdnav/dvd_types');
+import editMetadataFile = require('../../server/utils/editMetadataFile');
 
 var ifo_handle_t = ifoTypes.ifo_handle_t;
 var dvd_file_t = dvdTypes.dvd_file_t;
@@ -34,7 +35,7 @@ function convertIfo(dvdPath: string, callback) {
     }
 
     var dvdName = dvdPath.split(path.sep).pop();
-    var fileList = [];
+    var ifoFilesList = [];
     var pointer = 0;
 
     next(ifoFiles[pointer]);
@@ -42,7 +43,7 @@ function convertIfo(dvdPath: string, callback) {
     // There are better ways to do async...
     function next(ifoFile: string) {
       var name = path.basename(ifoFile);
-      fileList.push('/' + dvdName + '/web/' + name + '.json');
+      ifoFilesList.push('/' + dvdName + '/web/' + getFileName(name));
 
       fs.readFile(ifoFile, function(err, data) {
         if (err) {
@@ -110,13 +111,7 @@ function convertIfo(dvdPath: string, callback) {
           } else {
             // At the end of all iterations.
             // Save a metadata file containing the list of all IFO files.
-            fs.writeFile(getWebName('metadata'), JSON.stringify(fileList), function(err) {
-              if (err) {
-                console.error(err);
-              }
-
-              process.stdout.write('.');
-
+            editMetadataFile(getWebName('metadata'), 'ifo', ifoFilesList, function() {
               callback();
             });
           }
@@ -127,11 +122,22 @@ function convertIfo(dvdPath: string, callback) {
 
   /**
    * Return the file path for the web given a file.
+   * Used for naming both the IFO files and the metadata file.
    *
    * @param name A file name.
    * @returns {string}
    */
   function getWebName(name: string): string {
-    return path.join(dvdPath, '/web/', name + '.json');
+    return path.join(dvdPath, '/web/', getFileName(name));
   }
+}
+
+/**
+ * Transform the file name of a file.
+ *
+ * @param name A file name.
+ * @returns {string}
+ */
+function getFileName(name: string): string {
+  return name.replace(/\.IFO$/i, '') + '.json';
 }

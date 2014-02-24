@@ -122,10 +122,10 @@ dvd_reader.prototype.open = function(path, cb) {
 
   // First, we load the metadata.json file...
   this.loadJSON('/' + this.path + '/web/metadata.json',
-    function(ifoFiles) {
+    function(metadata) {
       // ... then, we load each IFO as a JSON file.
       // Would be nice not to depend on jQuery.
-      var deferreds = ifoFiles.map(function(ifoFile) {
+      var deferreds = metadata.ifo.map(function(ifoFile) {
         return $.ajax({
           dataType: 'json',
           url: ifoFile,
