@@ -230,7 +230,7 @@ vm.prototype.reset = function(dvdroot, cb) {
       var msg = sprintf('jsdvdnav: DVD disc reports itself with Region mask %s. Regions:',
         utils.toHex(this.vmgi.vmgi_mat.vmg_category));
       for (var i = 1, mask = 1; i <= 8; i++, mask <<= 1)
-        if (((this.vmgi.vmgi_mat.vmg_category >> 16) & mask) == 0)
+        if (((this.vmgi.vmgi_mat.vmg_category >> 16) & mask) === 0)
           msg += sprintf(' %d', i);
       console.log(msg);
     }
@@ -262,7 +262,7 @@ vm.prototype.new_copy = function() {
   var pgcN = this.get_PGCN();
   var pgN = this.state.pgN;
 
-  if (target == null || pgcN == 0) {
+  if (target === null || pgcN === 0) {
     fail();
     return null;
   }
@@ -292,7 +292,7 @@ vm.prototype.new_copy = function() {
   return target;
 
   function fail() {
-    if (target != null)
+    if (target !== null)
       this.free_vm(target);
   }
 };
@@ -330,7 +330,7 @@ vm.prototype.position_get = function() {
   position.block = this.state.blockN;
 
   // Handle PGC stills at PGC end.
-  if (this.state.cellN == this.state.pgc.nr_of_cells)
+  if (this.state.cellN === this.state.pgc.nr_of_cells)
     position.still += this.state.pgc.still_time;
   // Still already determined
   if (position.still)
@@ -382,7 +382,7 @@ vm.prototype.jump_cell_block = function(cell, block) {
   this.state.cellN = cell;
   this.process_command(this.play_Cell());
   // play_Cell can jump to a different cell in case of angles
-  if (this.state.cellN == cell)
+  if (this.state.cellN === cell)
     this.state.blockN = block;
   return true;
 };
@@ -397,7 +397,7 @@ vm.prototype.jump_title_program = function(title, pgcn, pgn) {
    * we do not execute PGC pre commands that would do a jump. */
   // this.process_command(this.play_PGC_PG(this.state.pgN));
   link = this.play_PGC_PG(this.state.pgN);
-  if (link.command != link_cmd_t.PlayThis)
+  if (link.command !== link_cmd_t.PlayThis)
   // jump occured. ignore it and play the PG anyway
     this.process_command(this.play_PG());
   else
@@ -415,7 +415,7 @@ vm.prototype.jump_title_part = function(title, part) {
    * we do not execute PGC pre commands that would do a jump. */
   // this.process_command(this.play_PGC_PG(this.state.pgN));
   link = this.play_PGC_PG(this.state.pgN);
-  if (link.command != link_cmd_t.PlayThis)
+  if (link.command !== link_cmd_t.PlayThis)
   // jump occured. ignore it and play the PG anyway
     this.process_command(this.play_PG());
   else
@@ -474,7 +474,7 @@ vm.prototype.jump_menu = function(menuid) {
       switch (menuid) {
         case DVDMenuID_t.DVD_MENU_Title:
         case DVDMenuID_t.DVD_MENU_Escape:
-          if (this.vmgi == null || this.vmgi.pgci_ut == null) {
+          if (this.vmgi === null || this.vmgi.pgci_ut === null) {
             return false;
           }
           this.state.domain = DVDDomain_t.DVD_DOMAIN_VMGM;
@@ -484,7 +484,7 @@ vm.prototype.jump_menu = function(menuid) {
         case DVDMenuID_t.DVD_MENU_Audio:
         case DVDMenuID_t.DVD_MENU_Angle:
         case DVDMenuID_t.DVD_MENU_Part:
-          if (this.vtsi == null || this.vtsi.pgci_ut == null) {
+          if (this.vtsi === null || this.vtsi.pgci_ut === null) {
             return false;
           }
           this.state.domain = DVDDomain_t.DVD_DOMAIN_VTSMenu;
@@ -553,8 +553,8 @@ vm.prototype.get_current_title_part = function(title_result, part_result) {
   found = 0;
   for (vts_ttn = 0; (vts_ttn < vts_ptt_srpt.nr_of_srpts) && !found; vts_ttn++) {
     for (part = 0; (part < vts_ptt_srpt.title[vts_ttn].nr_of_ptts) && !found; part++) {
-      if (vts_ptt_srpt.title[vts_ttn].ptt[part].pgcn == pgcN) {
-        if (vts_ptt_srpt.title[vts_ttn].ptt[part].pgn == pgN) {
+      if (vts_ptt_srpt.title[vts_ttn].ptt[part].pgcn === pgcN) {
+        if (vts_ptt_srpt.title[vts_ttn].ptt[part].pgn === pgN) {
           found = 1;
           break;
         }
@@ -600,7 +600,7 @@ vm.prototype.get_current_title_part = function(title_result, part_result) {
 vm.prototype.get_audio_stream = function(audioN) {
   var streamN = -1;
 
-  if (this.state.domain != DVDDomain_t.DVD_DOMAIN_VTSTitle)
+  if (this.state.domain !== DVDDomain_t.DVD_DOMAIN_VTSTitle)
     audioN = 0;
 
   if (audioN < 8) {
@@ -610,7 +610,7 @@ vm.prototype.get_audio_stream = function(audioN) {
     }
   }
 
-  if (this.state.domain != DVDDomain_t.DVD_DOMAIN_VTSTitle && streamN == -1)
+  if (this.state.domain !== DVDDomain_t.DVD_DOMAIN_VTSTitle && streamN === -1)
     streamN = 0;
 
   // FIXME: Should also check in vtsi/vmgi status what kind of stream it is (ac3/lpcm/dts/sdds...)
@@ -620,23 +620,23 @@ vm.prototype.get_audio_stream = function(audioN) {
 
 /* Return the substream id for 'logical' subpicture stream subpN and given mode.
  * 0 <= subpN < 32
- * mode == 0 - widescreen
- * mode == 1 - letterbox
- * mode == 2 - pan&scan
+ * mode === 0 - widescreen
+ * mode === 1 - letterbox
+ * mode === 2 - pan&scan
  */
 vm.prototype.get_subp_stream = function(subpN, mode) {
   var streamN = -1;
   var source_aspect = this.get_video_aspect();
 
-  if (this.state.domain != DVDDomain_t.DVD_DOMAIN_VTSTitle)
+  if (this.state.domain !== DVDDomain_t.DVD_DOMAIN_VTSTitle)
     subpN = 0;
 
   if (subpN < 32) { // a valid logical stream
     // Is this logical stream present
     if (this.state.pgc.subp_control[subpN] & (1 << 31)) {
-      if (source_aspect == 0) // 4:3
+      if (source_aspect === 0) // 4:3
         streamN = (this.state.pgc.subp_control[subpN] >> 24) & 0x1F;
-      if (source_aspect == 3) // 16:9
+      if (source_aspect === 3) // 16:9
         switch (mode) {
           case 0:
             streamN = (this.state.pgc.subp_control[subpN] >> 16) & 0x1F;
@@ -650,7 +650,7 @@ vm.prototype.get_subp_stream = function(subpN, mode) {
     }
   }
 
-  if (this.state.domain != DVDDomain_t.DVD_DOMAIN_VTSTitle && streamN == -1)
+  if (this.state.domain !== DVDDomain_t.DVD_DOMAIN_VTSTitle && streamN === -1)
     streamN = 0;
 
   // FIXME: Should also check in vtsi/vmgi status what kind of stream it is.
@@ -662,7 +662,7 @@ vm.prototype.get_audio_active_stream = function() {
   var streamN = this.get_audio_stream(audioN);
 
   // If no such stream, then select the first one that exists.
-  if (streamN == -1) {
+  if (streamN === -1) {
     for (audioN = 0; audioN < 8; audioN++) {
       if (this.state.pgc.audio_control[audioN] & (1 << 15)) {
         if ((streamN = this.get_audio_stream(audioN)) >= 0)
@@ -679,7 +679,7 @@ vm.prototype.get_subp_active_stream = function(mode) {
   var streamN = this.get_subp_stream(subpN, mode);
 
   // If no such stream, then select the first one that exists.
-  if (streamN == -1) {
+  if (streamN === -1) {
     for (subpN = 0; subpN < 32; subpN++) {
       if (this.state.pgc.subp_control[subpN] & (1 << 31)) {
         if ((streamN = this.get_subp_stream(subpN, mode)) >= 0)
@@ -688,7 +688,7 @@ vm.prototype.get_subp_active_stream = function(mode) {
     }
   }
 
-  if (this.state.domain == DVDDomain_t.DVD_DOMAIN_VTSTitle && !(this.state.SPST_REG & 0x40))
+  if (this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSTitle && !(this.state.SPST_REG & 0x40))
   // Bit 7 set means hide, and only let Forced display show.
     return (streamN | 0x80);
   else
@@ -699,13 +699,13 @@ vm.prototype.get_angle_info = function() {
   var current = 1;
   var num_avail = 1;
 
-  if (this.state.domain == DVDDomain_t.DVD_DOMAIN_VTSTitle) {
+  if (this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSTitle) {
     // TTN_REG does not always point to the correct title.
     if (this.state.TTN_REG > this.vmgi.tt_srpt.nr_of_srpts) {
       return {current: current, num_avail: num_avail};
     }
     var title = this.vmgi.tt_srpt.title[this.state.TTN_REG - 1];
-    if (title.title_set_nr != this.state.vtsN || title.vts_ttn != this.state.VTS_TTN_REG) {
+    if (title.title_set_nr !== this.state.vtsN || title.vts_ttn !== this.state.VTS_TTN_REG) {
       return {current: current, num_avail: num_avail};
     }
     current = this.state.AGL_REG;
@@ -756,7 +756,7 @@ vm.prototype.get_angle_info = function() {
 vm.prototype.get_video_res = function(width, height) {
   var attr = this.get_video_attr();
 
-  if (attr.video_format != 0)
+  if (attr.video_format !== 0)
     height = 576;
   else
     height = 480;
@@ -782,7 +782,7 @@ vm.prototype.get_video_res = function(width, height) {
 vm.prototype.get_video_aspect = function() {
   var aspect = this.get_video_attr().display_aspect_ratio;
 
-  assert(aspect == 0 || aspect == 3);
+  assert(aspect === 0 || aspect === 3);
   this.state.registers.SPRM[14] &= ~(0x03 << 10);
   this.state.registers.SPRM[14] |= aspect << 10;
 
@@ -842,7 +842,7 @@ vm.prototype.play_PGC = function() {
 
   if (TRACE) {
     var msg = 'jsdvdnav: play_PGC:';
-    if (this.state.domain != DVDDomain_t.DVD_DOMAIN_FirstPlay) {
+    if (this.state.domain !== DVDDomain_t.DVD_DOMAIN_FirstPlay) {
       //console.log(msg + ' this.state.pgcN (%i)', this.get_PGCN());
       console.log(msg + ' this.state.pgcN (%i)', this.state.pgcN); // Use a cached version.
     } else {
@@ -865,7 +865,7 @@ vm.prototype.play_PGC = function() {
    - or an error (are there more cases?) */
   if (this.state.pgc.command_tbl && this.state.pgc.command_tbl.nr_of_pre) {
     if (this.evalCMD(this.state.pgc.command_tbl.pre_cmds, this.state.pgc.command_tbl.nr_of_pre, link_values)) {
-      // link_values contains the 'jump' return value
+      // link_values contains the jump return value
       return link_values;
     } else if (TRACE) {
       console.log('jsdvdnav: PGC pre commands didn\'t do a Jump, Link or Call');
@@ -879,7 +879,7 @@ vm.prototype.play_PGC_PG = function(pgN) {
 
   if (TRACE) {
     var msg = 'jsdvdnav: play_PGC_PG:';
-    if (this.state.domain != DVDDomain_t.DVD_DOMAIN_FirstPlay) {
+    if (this.state.domain !== DVDDomain_t.DVD_DOMAIN_FirstPlay) {
       console.log(msg + ' this.state.pgcN (%i)', this.get_PGCN());
     } else {
       console.log(msg + ' first_play_pgc');
@@ -901,7 +901,7 @@ vm.prototype.play_PGC_PG = function(pgN) {
    - or an error (are there more cases?) */
   if (this.state.pgc.command_tbl && this.state.pgc.command_tbl.nr_of_pre) {
     if (this.evalCMD(this.state.pgc.command_tbl.pre_cmds, this.state.pgc.command_tbl.nr_of_pre, link_values)) {
-      // link_values contains the 'jump' return value
+      // link_values contains the jump return value
       return link_values;
     } else if (TRACE) {
       console.log('jsdvdnav: PGC pre commands didn\'t do a Jump, Link or Call');
@@ -950,7 +950,7 @@ vm.prototype.play_PG = function() {
     if (TRACE) {
       console.log('jsdvdnav: play_PG: this.state.pgN (%i) > pgc.nr_of_programs (%i)', this.state.pgN, this.state.pgc.nr_of_programs);
     }
-    assert(this.state.pgN == this.state.pgc.nr_of_programs + 1);
+    assert(this.state.pgN === this.state.pgc.nr_of_programs + 1);
     return this.play_PGC_post();
   }
 
@@ -976,14 +976,14 @@ vm.prototype.play_Cell = function() {
       console.log('jsdvdnav: this.state.cellN (%i) > pgc.nr_of_cells (%i)',
         this.state.cellN, this.state.pgc.nr_of_cells);
     }
-    assert(this.state.cellN == this.state.pgc.nr_of_cells + 1);
+    assert(this.state.cellN === this.state.pgc.nr_of_cells + 1);
     return this.play_PGC_post();
   }
 
   // Multi angle/Interleaved
   switch (this.state.pgc.cell_playback[this.state.cellN - 1].block_mode) {
     case 0: // Normal
-      assert(this.state.pgc.cell_playback[this.state.cellN - 1].block_type == 0);
+      assert(this.state.pgc.cell_playback[this.state.cellN - 1].block_type === 0);
       break;
     case 1: // The first cell in the block
       switch (this.state.pgc.cell_playback[this.state.cellN - 1].block_type) {
@@ -995,10 +995,10 @@ vm.prototype.play_Cell = function() {
           this.state.cellN += this.state.AGL_REG - 1;
           if (false) {
             assert(this.state.cellN <= this.state.pgc.nr_of_cells);
-            assert(this.state.pgc.cell_playback[this.state.cellN - 1].block_mode != 0);
-            assert(this.state.pgc.cell_playback[this.state.cellN - 1].block_type == 1);
+            assert(this.state.pgc.cell_playback[this.state.cellN - 1].block_mode !== 0);
+            assert(this.state.pgc.cell_playback[this.state.cellN - 1].block_type === 1);
           } else {
-            if (!(this.state.cellN <= this.state.pgc.nr_of_cells) || !(this.state.pgc.cell_playback[this.state.cellN - 1].block_mode != 0) || !(this.state.pgc.cell_playback[this.state.cellN - 1].block_type == 1)) {
+            if (!(this.state.cellN <= this.state.pgc.nr_of_cells) || !(this.state.pgc.cell_playback[this.state.cellN - 1].block_mode !== 0) || !(this.state.pgc.cell_playback[this.state.cellN - 1].block_type === 1)) {
               console.error('jsdvdnav: Invalid angle block');
               this.state.cellN -= this.state.AGL_REG - 1;
             }
@@ -1047,10 +1047,10 @@ vm.prototype.play_Cell_post = function() {
   // Still time is already taken care of before we get called.
 
   // Deal with a Cell command, if any
-  if (cell.cell_cmd_nr != 0) {
+  if (cell.cell_cmd_nr !== 0) {
     var link_values = new link_t();
 
-    if (this.state.pgc.command_tbl != null && this.state.pgc.command_tbl.nr_of_cell >= cell.cell_cmd_nr) {
+    if (this.state.pgc.command_tbl !== null && this.state.pgc.command_tbl.nr_of_cell >= cell.cell_cmd_nr) {
       if (TRACE) {
         console.log('jsdvdnav: Cell command present, executing');
       }
@@ -1068,7 +1068,7 @@ vm.prototype.play_Cell_post = function() {
   // Multi angle/Interleaved
   switch (this.state.pgc.cell_playback[this.state.cellN - 1].block_mode) {
     case 0: // Normal
-      assert(this.state.pgc.cell_playback[this.state.cellN - 1].block_type == 0);
+      assert(this.state.pgc.cell_playback[this.state.cellN - 1].block_type === 0);
       this.state.cellN++;
       break;
     case 1: // The first cell in the block
@@ -1080,7 +1080,7 @@ vm.prototype.play_Cell_post = function() {
           assert(0);
           break;
         case 1: // Angle block
-          // Skip the 'other' angles
+          // Skip the other angles
           this.state.cellN++;
           while (this.state.cellN <= this.state.pgc.nr_of_cells &&
             this.state.pgc.cell_playback[this.state.cellN - 1].block_mode >= 2) {
@@ -1112,7 +1112,7 @@ vm.prototype.play_Cell_post = function() {
 
 // link processing
 vm.prototype.process_command = function(link_values) {
-  while (link_values.command != link_cmd_t.PlayThis) {
+  while (link_values.command !== link_cmd_t.PlayThis) {
     if (TRACE) {
       console.group('Process command');
       this.print_link(link_values);
@@ -1124,20 +1124,20 @@ vm.prototype.process_command = function(link_values) {
     switch (link_values.command) {
       case link_cmd_t.LinkNoLink:
         // BUTTON number:data1
-        if (link_values.data1 != 0)
+        if (link_values.data1 !== 0)
           this.state.HL_BTNN_REG = link_values.data1 << 10;
         return false;  // no actual jump
       case link_cmd_t.LinkTopC:
         // Restart playing from the beginning of the current Cell.
         // BUTTON number:data1
-        if (link_values.data1 != 0)
+        if (link_values.data1 !== 0)
           this.state.HL_BTNN_REG = link_values.data1 << 10;
         link_values = this.play_Cell();
         break;
       case link_cmd_t.LinkNextC:
         // Link to Next Cell
         // BUTTON number:data1
-        if (link_values.data1 != 0)
+        if (link_values.data1 !== 0)
           this.state.HL_BTNN_REG = link_values.data1 << 10;
         this.state.cellN += 1;
         link_values = this.play_Cell();
@@ -1145,7 +1145,7 @@ vm.prototype.process_command = function(link_values) {
       case link_cmd_t.LinkPrevC:
         // Link to Previous Cell
         // BUTTON number:data1
-        if (link_values.data1 != 0)
+        if (link_values.data1 !== 0)
           this.state.HL_BTNN_REG = link_values.data1 << 10;
         assert(this.state.cellN > 1);
         this.state.cellN -= 1;
@@ -1154,14 +1154,14 @@ vm.prototype.process_command = function(link_values) {
       case link_cmd_t.LinkTopPG:
         // Link to Top of current Program
         // BUTTON number:data1
-        if (link_values.data1 != 0)
+        if (link_values.data1 !== 0)
           this.state.HL_BTNN_REG = link_values.data1 << 10;
         link_values = this.play_PG();
         break;
       case link_cmd_t.LinkNextPG:
         // Link to Next Program
         // BUTTON number:data1
-        if (link_values.data1 != 0)
+        if (link_values.data1 !== 0)
           this.state.HL_BTNN_REG = link_values.data1 << 10;
         this.state.pgN += 1;
         link_values = this.play_PG();
@@ -1169,7 +1169,7 @@ vm.prototype.process_command = function(link_values) {
       case link_cmd_t.LinkPrevPG:
         // Link to Previous Program
         // BUTTON number:data1
-        if (link_values.data1 != 0)
+        if (link_values.data1 !== 0)
           this.state.HL_BTNN_REG = link_values.data1 << 10;
         assert(this.state.pgN > 1);
         this.state.pgN -= 1;
@@ -1178,16 +1178,16 @@ vm.prototype.process_command = function(link_values) {
       case link_cmd_t.LinkTopPGC:
         // Restart playing from beginning of current Program Chain
         // BUTTON number:data1
-        if (link_values.data1 != 0)
+        if (link_values.data1 !== 0)
           this.state.HL_BTNN_REG = link_values.data1 << 10;
         link_values = this.play_PGC();
         break;
       case link_cmd_t.LinkNextPGC:
         // Link to Next Program Chain
         // BUTTON number:data1
-        if (link_values.data1 != 0)
+        if (link_values.data1 !== 0)
           this.state.HL_BTNN_REG = link_values.data1 << 10;
-        assert(this.state.pgc.next_pgc_nr != 0);
+        assert(this.state.pgc.next_pgc_nr !== 0);
         if (this.set_PGCN(this.state.pgc.next_pgc_nr))
           link_values = this.play_PGC();
         else
@@ -1196,9 +1196,9 @@ vm.prototype.process_command = function(link_values) {
       case link_cmd_t.LinkPrevPGC:
         // Link to Previous Program Chain
         // BUTTON number:data1
-        if (link_values.data1 != 0)
+        if (link_values.data1 !== 0)
           this.state.HL_BTNN_REG = link_values.data1 << 10;
-        assert(this.state.pgc.prev_pgc_nr != 0);
+        assert(this.state.pgc.prev_pgc_nr !== 0);
         if (this.set_PGCN(this.state.pgc.prev_pgc_nr))
           link_values = this.play_PGC();
         else
@@ -1207,9 +1207,9 @@ vm.prototype.process_command = function(link_values) {
       case link_cmd_t.LinkGoUpPGC:
         // Link to GoUp Program Chain
         // BUTTON number:data1
-        if (link_values.data1 != 0)
+        if (link_values.data1 !== 0)
           this.state.HL_BTNN_REG = link_values.data1 << 10;
-        assert(this.state.pgc.goup_pgc_nr != 0);
+        assert(this.state.pgc.goup_pgc_nr !== 0);
         if (this.set_PGCN(this.state.pgc.goup_pgc_nr))
           link_values = this.play_PGC();
         else
@@ -1218,7 +1218,7 @@ vm.prototype.process_command = function(link_values) {
       case link_cmd_t.LinkTailPGC:
         // Link to Tail of Program Chain
         // BUTTON number:data1
-        if (link_values.data1 != 0)
+        if (link_values.data1 !== 0)
           this.state.HL_BTNN_REG = link_values.data1 << 10;
         link_values = this.play_PGC_post();
         break;
@@ -1245,10 +1245,10 @@ vm.prototype.process_command = function(link_values) {
           this.state.registers.SPRM[4 + i] = this.state.rsm_regs[i];
         }
 
-        if (link_values.data1 != 0)
+        if (link_values.data1 !== 0)
           this.state.HL_BTNN_REG = link_values.data1 << 10;
 
-        if (this.state.rsm_cellN == 0) {
+        if (this.state.rsm_cellN === 0) {
           assert(this.state.cellN); // Checking if this ever happens
           this.state.pgN = 1;
           link_values = this.play_PG();
@@ -1276,8 +1276,8 @@ vm.prototype.process_command = function(link_values) {
         // Link to Part of current Title Number:data1
         // BUTTON number:data2
         // PGC Pre-Commands are not executed
-        assert(this.state.domain == DVDDomain_t.DVD_DOMAIN_VTSTitle);
-        if (link_values.data2 != 0)
+        assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSTitle);
+        if (link_values.data2 !== 0)
           this.state.HL_BTNN_REG = link_values.data2 << 10;
         if (!this.set_VTS_PTT(this.state.vtsN, this.state.VTS_TTN_REG, link_values.data1))
           link_values.command = link_cmd_t.Exit;
@@ -1287,7 +1287,7 @@ vm.prototype.process_command = function(link_values) {
       case link_cmd_t.LinkPGN:
         // Link to Program Number:data1
         // BUTTON number:data2
-        if (link_values.data2 != 0)
+        if (link_values.data2 !== 0)
           this.state.HL_BTNN_REG = link_values.data2 << 10;
         // Update any other state, PTTN perhaps?
         this.state.pgN = link_values.data1;
@@ -1296,7 +1296,7 @@ vm.prototype.process_command = function(link_values) {
       case link_cmd_t.LinkCN:
         // Link to Cell Number:data1
         // BUTTON number:data2
-        if (link_values.data2 != 0)
+        if (link_values.data2 !== 0)
           this.state.HL_BTNN_REG = link_values.data2 << 10;
         // Update any other state, pgN, PTTN perhaps?
         this.state.cellN = link_values.data1;
@@ -1311,7 +1311,7 @@ vm.prototype.process_command = function(link_values) {
         // or the Video Manager domain (VMG)
         // Stop SPRM9 Timer
         // Set SPRM1 and SPRM2
-        assert(this.state.domain == DVDDomain_t.DVD_DOMAIN_VMGM || this.state.domain == DVDDomain_t.DVD_DOMAIN_FirstPlay); // ??
+        assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VMGM || this.state.domain === DVDDomain_t.DVD_DOMAIN_FirstPlay); // ??
         if (this.set_TT(link_values.data1))
           link_values = this.play_PGC();
         else
@@ -1323,7 +1323,7 @@ vm.prototype.process_command = function(link_values) {
         // or the Video Title Set Domain(VTS)
         // Stop SPRM9 Timer
         // Set SPRM1 and SPRM2
-        assert(this.state.domain == DVDDomain_t.DVD_DOMAIN_VTSMenu || this.state.domain == DVDDomain_t.DVD_DOMAIN_VTSTitle); // ??
+        assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSMenu || this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSTitle); // ??
         if (!this.set_VTS_TT(this.state.vtsN, link_values.data1))
           link_values.command = link_cmd_t.Exit;
         else
@@ -1335,7 +1335,7 @@ vm.prototype.process_command = function(link_values) {
         // or the Video Title Set Domain(VTS)
         // Stop SPRM9 Timer
         // Set SPRM1 and SPRM2
-        assert(this.state.domain == DVDDomain_t.DVD_DOMAIN_VTSMenu || this.state.domain == DVDDomain_t.DVD_DOMAIN_VTSTitle); // ??
+        assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSMenu || this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSTitle); // ??
         if (!this.set_VTS_PTT(this.state.vtsN, link_values.data1, link_values.data2))
           link_values.command = link_cmd_t.Exit;
         else
@@ -1346,7 +1346,7 @@ vm.prototype.process_command = function(link_values) {
         // Only allowed from the VTS Menu Domain(VTSM)
         // or the Video Manager domain (VMG)
         // Stop SPRM9 Timer and any GPRM counters
-        assert(this.state.domain == DVDDomain_t.DVD_DOMAIN_VMGM || this.state.domain == DVDDomain_t.DVD_DOMAIN_VTSMenu); // ??
+        assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VMGM || this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSMenu); // ??
         if (!this.set_FP_PGC())
           assert(0);
         link_values = this.play_PGC();
@@ -1355,8 +1355,8 @@ vm.prototype.process_command = function(link_values) {
         // Jump to Video Manager domain - Title Menu:data1 or any PGC in VMG
         // Allowed from anywhere except the VTS Title domain
         // Stop SPRM9 Timer and any GPRM counters
-        assert(this.state.domain != DVDDomain_t.DVD_DOMAIN_VTSTitle); // ??
-        if (this.vmgi == null || this.vmgi.pgci_ut == null) {
+        assert(this.state.domain !== DVDDomain_t.DVD_DOMAIN_VTSTitle); // ??
+        if (this.vmgi === null || this.vmgi.pgci_ut === null) {
           link_values.command = link_cmd_t.Exit;
           break;
         }
@@ -1372,13 +1372,13 @@ vm.prototype.process_command = function(link_values) {
         // ifoOpenNewVTSI:data1
         // VTS_TTN_REG:data2
         // get_MENU:data3
-        if (link_values.data1 != 0) {
-          if (link_values.data1 != this.state.vtsN) {
+        if (link_values.data1 !== 0) {
+          if (link_values.data1 !== this.state.vtsN) {
             // the normal case
-            assert(this.state.domain == DVDDomain_t.DVD_DOMAIN_VMGM || this.state.domain == DVDDomain_t.DVD_DOMAIN_FirstPlay); // ??
+            assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VMGM || this.state.domain === DVDDomain_t.DVD_DOMAIN_FirstPlay); // ??
             if (!this.ifoOpenNewVTSI(link_values.data1))  // Also sets this.state.vtsN
               assert(0);
-            if (this.vtsi == null || this.vtsi.pgci_ut == null) {
+            if (this.vtsi === null || this.vtsi.pgci_ut === null) {
               link_values.command = link_cmd_t.Exit;
               break;
             }
@@ -1386,21 +1386,21 @@ vm.prototype.process_command = function(link_values) {
           } else {
             // This happens on some discs like `Captain Scarlet & the Mysterons` or the German RC2
             // of `Anatomie` in VTSM.
-            assert(this.state.domain == DVDDomain_t.DVD_DOMAIN_VTSMenu ||
-              this.state.domain == DVDDomain_t.DVD_DOMAIN_VMGM || this.state.domain == DVDDomain_t.DVD_DOMAIN_FirstPlay); // ??
-            if (this.vtsi == null || this.vtsi.pgci_ut == null) {
+            assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSMenu ||
+              this.state.domain === DVDDomain_t.DVD_DOMAIN_VMGM || this.state.domain === DVDDomain_t.DVD_DOMAIN_FirstPlay); // ??
+            if (this.vtsi === null || this.vtsi.pgci_ut === null) {
               link_values.command = link_cmd_t.Exit;
               break;
             }
             this.state.domain = DVDDomain_t.DVD_DOMAIN_VTSMenu;
           }
         } else {
-          // This happens on 'The Fifth Element' region 2.
-          assert(this.state.domain == DVDDomain_t.DVD_DOMAIN_VTSMenu);
+          // This happens on `The Fifth Element` region 2.
+          assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSMenu);
         }
         // I don't know what title is supposed to be used for.
-        // Alien or Aliens has this != 1, I think.
-        // assert(link_values.data2 == 1);
+        // `Alien` or `Aliens` has this !== 1, I think.
+        // assert(link_values.data2 === 1);
         this.state.VTS_TTN_REG = link_values.data2;
         // TTN_REG (SPRM4), VTS_TTN_REG (SPRM5), TT_PGCN_REG (SPRM6) are linked,
         // so if one changes, the others must change to match it.
@@ -1412,8 +1412,8 @@ vm.prototype.process_command = function(link_values) {
       case link_cmd_t.JumpSS_VMGM_PGC:
         // set_PGCN:data1
         // Stop SPRM9 Timer and any GPRM counters
-        assert(this.state.domain != DVDDomain_t.DVD_DOMAIN_VTSTitle); // ??
-        if (this.vmgi == null || this.vmgi.pgci_ut == null) {
+        assert(this.state.domain !== DVDDomain_t.DVD_DOMAIN_VTSTitle); // ??
+        if (this.vmgi === null || this.vmgi.pgci_ut === null) {
           link_values.command = link_cmd_t.Exit;
           break;
         }
@@ -1424,22 +1424,22 @@ vm.prototype.process_command = function(link_values) {
         break;
       case link_cmd_t.CallSS_FP:
         // set_RSMinfo:data1
-        assert(this.state.domain == DVDDomain_t.DVD_DOMAIN_VTSTitle); // ??
+        assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSTitle); // ??
         // Must be called before domain is changed
-        this.set_RSMinfo(link_values.data1, /* We dont have block info */ 0);
+        this.set_RSMinfo(link_values.data1, /* We don't have block info */ 0);
         this.set_FP_PGC();
         link_values = this.play_PGC();
         break;
       case link_cmd_t.CallSS_VMGM_MENU:
         // set_MENU:data1
         // set_RSMinfo:data2
-        assert(this.state.domain == DVDDomain_t.DVD_DOMAIN_VTSTitle); // ??
+        assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSTitle); // ??
         // Must be called before domain is changed
-        if (this.vmgi == null || this.vmgi.pgci_ut == null) {
+        if (this.vmgi === null || this.vmgi.pgci_ut === null) {
           link_values.command = link_cmd_t.Exit;
           break;
         }
-        this.set_RSMinfo(link_values.data2, /* We dont have block info */ 0);
+        this.set_RSMinfo(link_values.data2, /* We don't have block info */ 0);
         this.state.domain = DVDDomain_t.DVD_DOMAIN_VMGM;
         if (!this.set_MENU(link_values.data1))
           assert(0);
@@ -1448,13 +1448,13 @@ vm.prototype.process_command = function(link_values) {
       case link_cmd_t.CallSS_VTSM:
         // set_MENU:data1
         // set_RSMinfo:data2
-        assert(this.state.domain == DVDDomain_t.DVD_DOMAIN_VTSTitle); // ??
+        assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSTitle); // ??
         // Must be called before domain is changed
-        if (this.vtsi == null || this.vtsi.pgci_ut == null) {
+        if (this.vtsi === null || this.vtsi.pgci_ut === null) {
           link_values.command = link_cmd_t.Exit;
           break;
         }
-        this.set_RSMinfo(link_values.data2, /* We dont have block info */ 0);
+        this.set_RSMinfo(link_values.data2, /* We don't have block info */ 0);
         this.state.domain = DVDDomain_t.DVD_DOMAIN_VTSMenu;
         if (!this.set_MENU(link_values.data1))
           assert(0);
@@ -1463,13 +1463,13 @@ vm.prototype.process_command = function(link_values) {
       case link_cmd_t.CallSS_VMGM_PGC:
         // set_PGC:data1
         // set_RSMinfo:data2
-        assert(this.state.domain == DVDDomain_t.DVD_DOMAIN_VTSTitle); // ??
+        assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSTitle); // ??
         // Must be called before domain is changed
-        if (this.vmgi == null || this.vmgi.pgci_ut == null) {
+        if (this.vmgi === null || this.vmgi.pgci_ut === null) {
           link_values.command = link_cmd_t.Exit;
           break;
         }
-        this.set_RSMinfo(link_values.data2, /* We dont have block info */ 0);
+        this.set_RSMinfo(link_values.data2, /* We don't have block info */ 0);
         this.state.domain = DVDDomain_t.DVD_DOMAIN_VMGM;
         if (!this.set_PGCN(link_values.data1))
           assert(0);
@@ -1513,7 +1513,7 @@ vm.prototype.set_VTS_PTT = function(vtsN, vts_ttn, part) {
 
   this.state.domain = DVDDomain_t.DVD_DOMAIN_VTSTitle;
 
-  if (vtsN != this.state.vtsN)
+  if (vtsN !== this.state.vtsN)
     if (!this.ifoOpenNewVTSI(vtsN))  // Also sets this.state.vtsN
       return false;
 
@@ -1528,7 +1528,7 @@ vm.prototype.set_VTS_PTT = function(vtsN, vts_ttn, part) {
   this.state.TT_PGCN_REG = pgcN;
   this.state.PTTN_REG = part;
   this.state.TTN_REG = this.get_TT(vtsN, vts_ttn);
-  if ((this.state.TTN_REG) == 0)
+  if ((this.state.TTN_REG) === 0)
     return false;
 
   this.state.VTS_TTN_REG = vts_ttn;
@@ -1551,7 +1551,7 @@ vm.prototype.set_VTS_PROG = function(vtsN, vts_ttn, pgcn, pgn) {
 
   this.state.domain = DVDDomain_t.DVD_DOMAIN_VTSTitle;
 
-  if (vtsN != this.state.vtsN)
+  if (vtsN !== this.state.vtsN)
     if (!this.ifoOpenNewVTSI(vtsN))  // Also sets this.state.vtsN
       return false;
 
@@ -1564,7 +1564,7 @@ vm.prototype.set_VTS_PROG = function(vtsN, vts_ttn, pgcn, pgn) {
 
   this.state.TT_PGCN_REG = pgcN;
   this.state.TTN_REG = this.get_TT(vtsN, vts_ttn);
-  assert((this.state.TTN_REG) != 0);
+  assert((this.state.TTN_REG) !== 0);
   this.state.VTS_TTN_REG = vts_ttn;
   this.state.vtsN = vtsN;  // Not sure about this one. We can get to it easily from TTN_REG
   // Any other registers?
@@ -1587,7 +1587,7 @@ vm.prototype.set_FP_PGC = function() {
 };
 
 vm.prototype.set_MENU = function(menu) {
-  assert(this.state.domain == DVDDomain_t.DVD_DOMAIN_VMGM || this.state.domain == DVDDomain_t.DVD_DOMAIN_VTSMenu);
+  assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VMGM || this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSMenu);
   return this.set_PGCN(this.get_ID(menu));
 };
 
@@ -1609,7 +1609,7 @@ vm.prototype.set_PGCN = function(pgcN) {
   this.state.pgcN = pgcN;
   this.state.pgN = 1;
 
-  if (this.state.domain == DVDDomain_t.DVD_DOMAIN_VTSTitle)
+  if (this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSTitle)
     this.state.TT_PGCN_REG = pgcN;
 
   return true;
@@ -1624,13 +1624,13 @@ vm.prototype.set_PGN = function() {
     && this.state.cellN >= this.state.pgc.program_map[new_pgN])
     new_pgN++;
 
-  if (new_pgN == this.state.pgc.nr_of_programs) // We are at the last program
+  if (new_pgN === this.state.pgc.nr_of_programs) // We are at the last program
     if (this.state.cellN > this.state.pgc.nr_of_cells)
       return false; // We are past the last cell
 
   this.state.pgN = new_pgN;
 
-  if (this.state.domain == DVDDomain_t.DVD_DOMAIN_VTSTitle) {
+  if (this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSTitle) {
     if (this.state.TTN_REG > this.vmgi.tt_srpt.nr_of_srpts)
       return false; // ??
 
@@ -1654,7 +1654,7 @@ vm.prototype.set_RSMinfo = function(cellN, blockN) {
   this.state.rsm_vtsN = this.state.vtsN;
   this.state.rsm_pgcN = this.get_PGCN();
 
-  // assert(this.state.rsm_pgcN == this.state.TT_PGCN_REG);  for DVDDomain_t.DVD_DOMAIN_VTSTitle
+  // assert(this.state.rsm_pgcN === this.state.TT_PGCN_REG);  for DVDDomain_t.DVD_DOMAIN_VTSTitle
 
   for (i = 0; i < 5; i++) {
     this.state.rsm_regs[i] = this.state.registers.SPRM[4 + i];
@@ -1673,8 +1673,8 @@ vm.prototype.get_TT = function(vtsN, vts_ttn) {
   var tt = 0;
 
   for (i = 1; i <= this.vmgi.tt_srpt.nr_of_srpts; i++) {
-    if (this.vmgi.tt_srpt.title[i - 1].title_set_nr == vtsN &&
-      this.vmgi.tt_srpt.title[i - 1].vts_ttn == vts_ttn) {
+    if (this.vmgi.tt_srpt.title[i - 1].title_set_nr === vtsN &&
+      this.vmgi.tt_srpt.title[i - 1].vts_ttn === vts_ttn) {
       tt = i;
       break;
     }
@@ -1700,7 +1700,7 @@ vm.prototype.get_ID = function(id) {
 
   // Get menu/title
   for (i = 0; i < pgcit.nr_of_pgci_srp; i++) {
-    if ((pgcit.pgci_srp[i].entry_id) == id) {
+    if ((pgcit.pgci_srp[i].entry_id) === id) {
       pgcN = i + 1;
       if (TRACE) {
         console.log('jsdvdnav: Found menu.');
@@ -1711,7 +1711,7 @@ vm.prototype.get_ID = function(id) {
   if (TRACE) {
     console.error('jsdvdnav: No such id/menu (%s) entry PGC', utils.toHex(id & 0x7F));
     for (i = 0; i < pgcit.nr_of_pgci_srp; i++) {
-      if ((pgcit.pgci_srp[i].entry_id & 0x80) == 0x80) {
+      if ((pgcit.pgci_srp[i].entry_id & 0x80) === 0x80) {
         console.log('jsdvdnav: Available menus: %s',
           utils.toHex(pgcit.pgci_srp[i].entry_id & 0x7F));
       }
@@ -1741,15 +1741,15 @@ vm.prototype.get_PGCN = function() {
 vm.prototype.get_MENU_PGCIT = function(h, lang) {
   var i;
 
-  if (h == null || h.pgci_ut == null) {
+  if (h === null || h.pgci_ut === null) {
     console.error('jsdvdnav: pgci_ut handle is null');
     return null; // error?
   }
 
   i = 0;
-  while (i < h.pgci_ut.nr_of_lus && h.pgci_ut.lu[i].lang_code != lang)
+  while (i < h.pgci_ut.nr_of_lus && h.pgci_ut.lu[i].lang_code !== lang)
     i++;
-  if (i == h.pgci_ut.nr_of_lus) {
+  if (i === h.pgci_ut.nr_of_lus) {
     console.log('jsdvdnav: Language `%s` not found, using `%s` instead', utils.bit2str(lang), utils.bit2str(h.pgci_ut.lu[0].lang_code));
     var msg = 'jsdvdnav: Menu Languages available: ';
     for (i = 0; i < h.pgci_ut.nr_of_lus; i++) {
@@ -1834,7 +1834,7 @@ vm.prototype.evalCMD = function(commands, num_commands, return_values) {
 
     if (line < 0) { // Link command
       if (TRACE) {
-        console.groupEnd(); // Closing 'Single stepping commands'.
+        console.groupEnd(); // Closing Single stepping commands.
         console.group('Registers after transaction');
         this.print_registers();
         console.groupEnd();
@@ -1859,7 +1859,7 @@ vm.prototype.evalCMD = function(commands, num_commands, return_values) {
   return_values.data3 = 0;
 
   if (TRACE) {
-    console.groupEnd(); // Closing 'Single stepping commands'.
+    console.groupEnd(); // Closing Single stepping commands.
     console.group('jsdvdnav: Registers after transaction');
     this.print_registers();
     console.groupEnd();
@@ -1881,7 +1881,7 @@ vm.prototype.getbits = function(command, start, count) {
   var examining = 0;
   var bits = 0;
 
-  if (count == 0) return 0;
+  if (count === 0) return 0;
 
   if (((start - count) < -1) ||
     (count < 0) ||
@@ -1934,7 +1934,7 @@ vm.prototype.set_GPRM = function(registers, reg, value) {
  SXXX_XXXX, where S is 1 if it is system register. */
 vm.prototype.eval_reg = function(command, reg) {
   if (reg & 0x80) {
-    if ((reg & 0x1F) == 20) {
+    if ((reg & 0x1F) === 20) {
       console.log('jsdvdnav: Suspected RCE Region Protection!!!');
     }
     return command.registers.SPRM[reg & 0x1F];
@@ -1973,9 +1973,9 @@ vm.prototype.eval_compare = function(operation, data1, data2) {
     case 1:
       return data1 & data2;
     case 2:
-      return data1 == data2;
+      return data1 === data2;
     case 3:
-      return data1 != data2;
+      return data1 !== data2;
     case 4:
       return data1 >= data2;
     case 5:
@@ -2267,7 +2267,7 @@ vm.prototype.eval_set_op = function(command, op, reg, reg2, data) {
       this.set_GPRM(command.registers, reg, tmp);
       break;
     case 6:
-      if (data != 0) {
+      if (data !== 0) {
         this.set_GPRM(command.registers, reg, this.get_GPRM(command.registers, reg) / data);
       } else {
         this.set_GPRM(command.registers, reg, 0xFFFF);
@@ -2275,7 +2275,7 @@ vm.prototype.eval_set_op = function(command, op, reg, reg2, data) {
       }
       break;
     case 7:
-      if (data != 0) {
+      if (data !== 0) {
         this.set_GPRM(command.registers, reg, this.get_GPRM(command.registers, reg) % data);
       } else {
         this.set_GPRM(command.registers, reg, 0xFFFF);
@@ -2348,7 +2348,7 @@ vm.prototype.eval_command = function(bytes, return_values) {
     case 0: // Special instructions
       cond = this.eval_if_version_1(command);
       res = this.eval_special_instruction(command, cond);
-      if (res == -1) {
+      if (res === -1) {
         console.log('jsdvdnav: Unknown Instruction!');
         abort();
       }
@@ -2507,7 +2507,7 @@ vm.prototype.print_link = function(value) {
     case link_cmd_t.LinkPGCN:
     case link_cmd_t.JumpTT:
     case link_cmd_t.JumpVTS_TT:
-    case link_cmd_t.JumpSS_VMGM_MENU: // == 2 -> Title Menu
+    case link_cmd_t.JumpSS_VMGM_MENU: // === 2 -> Title Menu
     case link_cmd_t.JumpSS_VMGM_PGC:
       console.log('jsdvdnav: %s %d', cmd, value.data1);
       break;
@@ -2531,7 +2531,7 @@ vm.prototype.print_link = function(value) {
     case link_cmd_t.CallSS_FP:
       console.log('jsdvdnav: %s resume cell %d', cmd, value.data1);
       break;
-    case link_cmd_t.CallSS_VMGM_MENU: // == 2 -> Title Menu
+    case link_cmd_t.CallSS_VMGM_MENU: // === 2 -> Title Menu
     case link_cmd_t.CallSS_VTSM:
       console.log('jsdvdnav: %s %d resume cell %d', cmd, value.data1, value.data2);
       break;
@@ -3166,13 +3166,13 @@ vm.prototype.print_mnemonic = function(vm_command) {
       msg += this.print_if_version_2(command);
       msg += this.print_system_set(command);
       msg += this.print_link_instruction(command, 1);
-      // either 'if' or 'link'
+      // either if or link
       break;
     case 3: // Set General Parameters instructions
       msg += this.print_if_version_3(command);
       msg += this.print_set_version_1(command);
       msg += this.print_link_instruction(command, 1);
-      // either 'if' or 'link'
+      // either if or link
       break;
     case 4: // Set, Compare -> LinkSub instructions
       msg += this.print_set_version_2(command);
