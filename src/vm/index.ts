@@ -13,7 +13,7 @@ var TRACE = config.DEBUG;
 var DVD_MENU_LANGUAGE: string = config.DVD_MENU_LANGUAGE;
 var DVD_AUDIO_LANGUAGE: string = config.DVD_AUDIO_LANGUAGE;
 var DVD_SPU_LANGUAGE: string = config.DVD_SPU_LANGUAGE;
-var COUNTRY_CODE = config.COUNTRY_CODE;
+var COUNTRY_CODE: string = config.COUNTRY_CODE;
 var deepEqual = utils.deepEqual;
 var sprintf = utils.sprintf;
 var assert = utils.assert;
@@ -67,54 +67,64 @@ enum link_cmd {
 /**
  * State: SPRM, GPRM, Domain, pgc, pgN, cellN, ?
  */
-function DvdState() {
-  this.registers = new Registers();
+class DvdState {
+  public registers = new Registers();
 
-  this.domain = 0;
-  this.vtsN = 0;            // 0 is vmgm?
-  this.pgc = null;          // either this or 'int pgcN' is enough?
-  this.pgcN = 0;            // but provide pgcN for quick lookup
-  this.pgN = 0;             // is this needed? Can always find pgN from cellN?
-  this.cellN = 0;
-  this.cell_restart = 0;    // get cell to restart
-  this.blockN = 0;
+  /*public AST_REG = 0;
+  public SPST_REG = 0;
+  public AGL_REG = 0;
+  public TTN_REG = 0;
+  public VTS_TTN_REG = 0;
+  //public TT_PGCN_REG = 0;
+  public PTTN_REG = 0;
+  public HL_BTNN_REG = 0;
+  public PTL_REG = 0;*/
+
+  public domain = 0;
+  public vtsN = 0;            // 0 is vmgm?
+  public pgc = null;          // either this or 'int pgcN' is enough?
+  public pgcN = 0;            // but provide pgcN for quick lookup
+  public pgN = 0;             // is this needed? Can always find pgN from cellN?
+  public cellN = 0;
+  public cell_restart = 0;    // get cell to restart
+  public blockN = 0;
 
   // Resume info
-  this.rsm_vtsN = 0;
-  this.rsm_blockN = 0;      // of nav_packet
-  this.rsm_regs = Array(5); // system registers 4-8
-  this.rsm_pgcN = 0;
-  this.rsm_cellN = 0;
+  public rsm_vtsN = 0;
+  public rsm_blockN = 0;      // of nav_packet
+  public rsm_regs = Array(5); // system registers 4-8
+  public rsm_pgcN = 0;
+  public rsm_cellN = 0;
 }
 
 // a link's data set
-function Link() {
-  this.command = 0; // link_cmd
-  this.data1 = 0;
-  this.data2 = 0;
-  this.data3 = 0;
+class Link {
+  public command = 0; // link_cmd
+  public data1 = 0;
+  public data2 = 0;
+  public data3 = 0;
 }
 
 // the VM registers
-function Registers() {
-  this.SPRM = new Array(24);
-  this.GPRM = new Array(16);
-  this.GPRM_mode = new Array(16); // Need to have something to indicate normal/counter mode for every GPRM
-  this.GPRM_time = new Array(16); // For counter mode
+class Registers {
+  public SPRM = new Array(24);
+  public GPRM = new Array(16);
+  public GPRM_mode = new Array(16); // Need to have something to indicate normal/counter mode for every GPRM
+  public GPRM_time = new Array(16); // For counter mode
 }
 
 // a VM command data set
-function Command() {
-  this.instruction = null;
-  this.examined = null;
-  this.registers = new Registers();
+class Command {
+  public instruction: string = '';
+  public examined: number = 0;
+  public registers: Registers = new Registers();
 }
 
 class VM {
   private dvd;
   public vmgi;
   public vtsi;
-  public state;
+  public state: DvdState = new DvdState();
   private hop_channel: number;
   private dvd_name;
   private dvd_serial;
@@ -204,12 +214,12 @@ class VM {
     this.state.PTL_REG = 15;                          // Parental Level
     this.state.registers.SPRM[12] = COUNTRY_CODE.charCodeAt(1);       // Parental Management Country Code
     this.state.registers.SPRM[13] = COUNTRY_CODE.charCodeAt(0);       // Parental Management Country Code
+    this.state.registers.SPRM[14] = 0x0100;            // Try Pan&Scan
     this.state.registers.SPRM[16] = DVD_AUDIO_LANGUAGE.charCodeAt(1); // Initial Language Code for Audio
     this.state.registers.SPRM[17] = DVD_AUDIO_LANGUAGE.charCodeAt(0); // Initial Language Code for Audio
     this.state.registers.SPRM[18] = DVD_SPU_LANGUAGE.charCodeAt(1);   // Initial Language Code for Spu
     this.state.registers.SPRM[19] = DVD_SPU_LANGUAGE.charCodeAt(0);   // Initial Language Code for Spu
     this.state.registers.SPRM[20] = 0x01;              // Player Regional Code Mask. Region free!
-    this.state.registers.SPRM[14] = 0x0100;            // Try Pan&Scan
 
     this.state.pgN = 0;
     this.state.cellN = 0;
@@ -1825,7 +1835,7 @@ class VM {
    * @param {Link} return_values
    * @return {boolean} Whether a Jump, Link or Call just happened.
    */
-  private evalCMD(commands, num_commands, return_values) {
+  private evalCMD(commands, num_commands: number, return_values: Link): boolean {
     var i = 0;
     var total = 0;
 
@@ -1894,7 +1904,7 @@ class VM {
    * @param {number} count
    * @return {number}
    */
-  private getbits(command, start, count) {
+  private getbits(command: Command, start: number, count: number): number {
     var result = 0;
     var bit_mask = 0;
     var examining = 0;
@@ -1952,8 +1962,12 @@ class VM {
   /**
    * Eval register code, can either be system or general register.
    * SXXX_XXXX, where S is 1 if it is system register.
+   *
+   * @param {Command} command
+   * @param {number} reg
+   * @return {number}
    */
-  private eval_reg(command, reg) {
+  private eval_reg(command: Command, reg: number): number {
     if (reg & 0x80) {
       if ((reg & 0x1F) === 20) {
         console.log('jsdvdnav: Suspected RCE Region Protection!!!');
@@ -1969,8 +1983,13 @@ class VM {
    * Eval register or immediate data.
    * AAAA_AAAA BBBB_BBBB, if immediate use all 16 bits for data else use
    * lower eight bits for the system or general purpose register.
+   *
+   * @param {Command} command
+   * @param {number} imm
+   * @param {number} start
+   * @return {number}
    */
-  private eval_reg_or_data(command, imm, start) {
+  private eval_reg_or_data(command: Command, imm: number, start: number): number {
     if (imm) { // immediate
       return this.getbits(command, start, 16);
     } else {
@@ -1982,9 +2001,14 @@ class VM {
    * Eval register or immediate data.
    * xBBB_BBBB, if immediate use all 7 bits for data else use
    * lower four bits for the general purpose register number.
+   *
+   * @param {Command} command
+   * @param {number} imm
+   * @param {number} start
+   * @return {number}
    */
     // Evaluates gprm or data depending on bit, data is in byte n
-  private eval_reg_or_data_2(command, imm, start) {
+  private eval_reg_or_data_2(command: Command, imm: number, start: number): number {
     if (imm) // immediate
       return this.getbits(command, (start - 1), 7);
     else
@@ -2000,7 +2024,7 @@ class VM {
    * @param {number} data2
    * @return {boolean}
    */
-  private eval_compare(operation, data1, data2): boolean {
+  private eval_compare(operation: number, data1: number, data2: number): boolean {
     switch (operation) {
       case 1:
         return !!(data1 & data2);
@@ -2025,10 +2049,10 @@ class VM {
    * Evaluate if version 1.
    * Has comparison data in byte 3 and 4-5 (immediate or register)
    *
-   * @param command
-   * @returns {boolean}
+   * @param {Command} command
+   * @return {boolean}
    */
-  private eval_if_version_1(command): boolean {
+  private eval_if_version_1(command: Command): boolean {
     var op = this.getbits(command, 54, 3);
     if (op) {
       return this.eval_compare(op, this.eval_reg(command, this.getbits(command, 39, 8)),
@@ -2041,10 +2065,10 @@ class VM {
    * Evaluate if version 2.
    * This version only compares register which are in byte 6 and 7
    *
-   * @param command
-   * @returns {boolean}
+   * @param {Command} command
+   * @return {boolean}
    */
-  private eval_if_version_2(command): boolean {
+  private eval_if_version_2(command: Command): boolean {
     var op = this.getbits(command, 54, 3);
     if (op) {
       return this.eval_compare(op, this.eval_reg(command, this.getbits(command, 15, 8)),
@@ -2057,10 +2081,10 @@ class VM {
    * Evaluate if version 3.
    * Has comparison data in byte 2 and 6-7 (immediate or register)
    *
-   * @param command
-   * @returns {boolean}
+   * @param {Command} command
+   * @return {boolean}
    */
-  private eval_if_version_3(command): boolean {
+  private eval_if_version_3(command: Command): boolean {
     var op = this.getbits(command, 54, 3);
     if (op) {
       return this.eval_compare(op, this.eval_reg(command, this.getbits(command, 47, 8)),
@@ -2074,10 +2098,10 @@ class VM {
    * Has comparison data in byte 1 and 4-5 (immediate or register)
    * The register in byte 1 is only the lowe nibble (4 bits)
    *
-   * @param command
-   * @returns {boolean}
+   * @param {Command} command
+   * @return {boolean}
    */
-  private eval_if_version_4(command): boolean {
+  private eval_if_version_4(command: Command): boolean {
     var op = this.getbits(command, 54, 3);
     if (op) {
       return this.eval_compare(op, this.eval_reg(command, this.getbits(command, 51, 4)),
@@ -2090,11 +2114,11 @@ class VM {
    * Evaluate special instruction.... returns the new row/line number,
    * 0 if no new row and 256 if Break.
    *
-   * @param command
+   * @param {Command} command
    * @param {boolean} cond
-   * @returns {number}
+   * @return {number}
    */
-  private eval_special_instruction(command, cond: boolean): number {
+  private eval_special_instruction(command: Command, cond: boolean): number {
     var line, level;
 
     switch (this.getbits(command, 51, 4)) {
@@ -2126,12 +2150,12 @@ class VM {
    * Return 1 if link, or 0 if no link
    * Actual link instruction is in return_values parameter
    *
-   * @param command
+   * @param {Command} command
    * @param {boolean} cond
-   * @param return_values
-   * @returns {number}
+   * @param {Link} return_values
+   * @return {number}
    */
-  private eval_link_subins(command, cond: boolean, return_values): number {
+  private eval_link_subins(command: Command, cond: boolean, return_values: Link): number {
     var button = this.getbits(command, 15, 6);
     var linkop = this.getbits(command, 4, 5);
 
@@ -2150,12 +2174,12 @@ class VM {
    * Return 1 if link, or 0 if no link
    * Actual link instruction is in return_values parameter
    *
-   * @param command
+   * @param {Command} command
    * @param {boolean} cond
-   * @param return_values
-   * @returns {number}
+   * @param {Link} return_values
+   * @return {number}
    */
-  private eval_link_instruction(command, cond: boolean, return_values): number {
+  private eval_link_instruction(command: Command, cond: boolean, return_values: Link): number {
     var op = this.getbits(command, 51, 4);
 
     switch (op) {
@@ -2189,12 +2213,12 @@ class VM {
    * returns 1 if jump or 0 if no jump
    * actual jump instruction is in return_values parameter
    *
-   * @param command
+   * @param {Command} command
    * @param {boolean} cond
-   * @param return_values
-   * @returns {number}
+   * @param {Link} return_values
+   * @return {number}
    */
-  private eval_jump_instruction(command, cond: boolean, return_values): number {
+  private eval_jump_instruction(command: Command, cond: boolean, return_values: Link): number {
     switch (this.getbits(command, 51, 4)) {
       case 1:
         return_values.command = link_cmd.Exit;
@@ -2264,12 +2288,12 @@ class VM {
    * Evaluate a set sytem register instruction
    * May contain a link so return the same as eval_link
    *
-   * @param command
+   * @param {Command} command
    * @param {boolean} cond
-   * @param return_values
-   * @returns {number}
+   * @param {Link} return_values
+   * @return {number}
    */
-  private eval_system_set(command, cond: boolean, return_values): number {
+  private eval_system_set(command: Command, cond: boolean, return_values: Link): number {
     var i;
     var data, data2;
 
@@ -2327,8 +2351,14 @@ class VM {
    * Evaluate set operation
    * Sets the register given to the value indicated by op and data.
    * For the swap case the contents of reg is stored in reg2.
+   *
+   * @param {Command} command
+   * @param {number} op
+   * @param {number} reg
+   * @param {number} reg2
+   * @param {number} data
    */
-  private eval_set_op(command, op, reg, reg2, data) {
+  private eval_set_op(command: Command, op: number, reg: number, reg2: number, data: number) {
     /** @const */ var shortmax = 0xFFFF;
     var tmp = 0;
     switch (op) {
@@ -2388,10 +2418,10 @@ class VM {
   /**
    * Evaluate set instruction, combined with either Link or Compare.
    *
-   * @param command
+   * @param {Command} command
    * @param {boolean} cond
    */
-  private eval_set_version_1(command, cond: boolean) {
+  private eval_set_version_1(command: Command, cond: boolean) {
     var op = this.getbits(command, 59, 4);
     var reg = this.getbits(command, 35, 4);
     // FIXME: This is different from vmcmd.c!!!
@@ -2406,10 +2436,10 @@ class VM {
   /**
    * Evaluate set instruction, combined with both Link and Compare.
    *
-   * @param command
+   * @param {Command} command
    * @param {boolean} cond
    */
-  private eval_set_version_2(command, cond: boolean) {
+  private eval_set_version_2(command: Command, cond: boolean) {
     var op = this.getbits(command, 59, 4);
     var reg = this.getbits(command, 51, 4);
     var reg2 = this.getbits(command, 35, 4);
@@ -2425,8 +2455,12 @@ class VM {
    * Evaluate a command
    * returns row number of goto, 0 if no goto, -1 if link.
    * Link command in return_values
+   *
+   * @param {Array.<number>} bytes
+   * @param {Link} return_values
+   * @return {number}
    */
-  private eval_command(bytes, return_values) {
+  private eval_command(bytes: Array, return_values: Link): number {
     var registers = this.state.registers;
     var cond: boolean = false, res = 0;
     var command = new Command();
@@ -2510,8 +2544,8 @@ class VM {
     }
     // Check if there are bits not yet examined
 
-    if (command.instruction & ~command.examined) {
-      console.error('jsdvdnav: Unknown bits: %08', (command.instruction & ~command.examined));
+    if (Number(command.instruction) & ~command.examined) {
+      console.error('jsdvdnav: Unknown bits: %08', (Number(command.instruction) & ~command.examined));
     }
 
     return res;
@@ -3303,8 +3337,8 @@ class VM {
     }
     // Check if there still are bits set that were not examined.
 
-    if (command.instruction & ~command.examined) {
-      console.error('jsdvdnav: Unknown bits: %s', (command.instruction & ~command.examined));
+    if (Number(command.instruction) & ~command.examined) {
+      console.error('jsdvdnav: Unknown bits: %s', (Number(command.instruction) & ~command.examined));
       //console.error(" %08"PRIx64, (command.instruction & ~ command.examined) );
     }
 
