@@ -71,14 +71,14 @@ class DvdState {
   public registers = new Registers();
 
   /*public AST_REG = 0;
-  public SPST_REG = 0;
-  public AGL_REG = 0;
-  public TTN_REG = 0;
-  public VTS_TTN_REG = 0;
-  //public TT_PGCN_REG = 0;
-  public PTTN_REG = 0;
-  public HL_BTNN_REG = 0;
-  public PTL_REG = 0;*/
+   public SPST_REG = 0;
+   public AGL_REG = 0;
+   public TTN_REG = 0;
+   public VTS_TTN_REG = 0;
+   //public TT_PGCN_REG = 0;
+   public PTTN_REG = 0;
+   public HL_BTNN_REG = 0;
+   public PTL_REG = 0;*/
 
   public domain = 0;
   public vtsN = 0;            // 0 is vmgm?
@@ -144,9 +144,9 @@ class VM {
     this.stopped = false;
   }
 
-
-  // Initialisation & Destruction
-  private free_vm() {
+  // Reader Access
+  private get_dvd_reader() {
+    return this.dvd;
   }
 
   // IFO Access
@@ -156,12 +156,6 @@ class VM {
 
   private get_vtsi() {
     return this.vtsi;
-  }
-
-
-  // Reader Access
-  private get_dvd_reader() {
-    return this.dvd;
   }
 
 
@@ -276,6 +270,11 @@ class VM {
   }
 
 
+  // Initialisation & Destruction
+  private free_vm() {
+  }
+
+
   // Copying and merging.
   public new_copy() {
     var target = new VM();
@@ -351,11 +350,13 @@ class VM {
     position.block = this.state.blockN;
 
     // Handle PGC stills at PGC end.
-    if (this.state.cellN === this.state.pgc.nr_of_cells)
+    if (this.state.cellN === this.state.pgc.nr_of_cells) {
       position.still += this.state.pgc.still_time;
+    }
     // Still already determined
-    if (position.still)
+    if (position.still) {
       return;
+    }
 
     /* This is a rough fix for some strange still situations on some strange DVDs.
      * There are discs (like the German `Back to the Future` RC2) where the only
@@ -377,10 +378,13 @@ class VM {
       time += (this.state.pgc.cell_playback[this.state.cellN - 1].playback_time.minute & 0x0F) * 60;
       time += (this.state.pgc.cell_playback[this.state.cellN - 1].playback_time.second >> 4) * 10;
       time += (this.state.pgc.cell_playback[this.state.cellN - 1].playback_time.second & 0x0F);
-      if (!time || size / time > 30)
-      // datarate is too high, it might be a very short, but regular cell
+      if (!time || size / time > 30) {
+        // datarate is too high, it might be a very short, but regular cell
         return;
-      if (time > 0xFF) time = 0xFF;
+      }
+      if (time > 0xFF) {
+        time = 0xFF;
+      }
       position.still = time;
     }
 
@@ -403,44 +407,49 @@ class VM {
     this.state.cellN = cell;
     this.process_command(this.play_Cell());
     // play_Cell can jump to a different cell in case of angles
-    if (this.state.cellN === cell)
+    if (this.state.cellN === cell) {
       this.state.blockN = block;
+    }
     return true;
   }
 
   private jump_title_program(title, pgcn, pgn) {
     var link;
 
-    if (!this.set_PROG(title, pgcn, pgn))
+    if (!this.set_PROG(title, pgcn, pgn)) {
       return false;
+    }
     /* Some DVDs do not want us to jump directly into a title and have
      * PGC pre commands taking us back to some menu. Since we do not like that,
      * we do not execute PGC pre commands that would do a jump. */
     // this.process_command(this.play_PGC_PG(this.state.pgN));
     link = this.play_PGC_PG(this.state.pgN);
-    if (link.command !== link_cmd.PlayThis)
-    // jump occured. ignore it and play the PG anyway
+    if (link.command !== link_cmd.PlayThis) {
+      // jump occured. ignore it and play the PG anyway
       this.process_command(this.play_PG());
-    else
+    } else {
       this.process_command(link);
+    }
     return true;
   }
 
   private jump_title_part(title, part) {
     var link;
 
-    if (!this.set_PTT(title, part))
+    if (!this.set_PTT(title, part)) {
       return false;
+    }
     /* Some DVDs do not want us to jump directly into a title and have
      * PGC pre commands taking us back to some menu. Since we do not like that,
      * we do not execute PGC pre commands that would do a jump. */
     // this.process_command(this.play_PGC_PG(this.state.pgN));
     link = this.play_PGC_PG(this.state.pgN);
-    if (link.command !== link_cmd.PlayThis)
-    // jump occured. ignore it and play the PG anyway
+    if (link.command !== link_cmd.PlayThis) {
+      // jump occured. ignore it and play the PG anyway
       this.process_command(this.play_PG());
-    else
+    } else {
       this.process_command(link);
+    }
     return true;
   }
 
@@ -532,20 +541,23 @@ class VM {
     link_values.data2 = 0;
     link_values.data3 = 0;
 
-    if (!this.state.rsm_vtsN) // Do we have resume info?
+    if (!this.state.rsm_vtsN) { // Do we have resume info?
       return false;
-    if (!this.process_command(link_values))
+    }
+    if (!this.process_command(link_values)) {
       return false;
+    }
     return true;
   }
 
   private exec_cmd(cmd) {
     var link_values = new Link();
 
-    if (this.evalCMD(cmd, 1, link_values))
+    if (this.evalCMD(cmd, 1, link_values)) {
       return this.process_command(link_values);
-    else
+    } else {
       return false; // It updated some state that's all...
+    }
   }
 
 
@@ -554,14 +566,18 @@ class VM {
     var pgcn = this.state.pgcN;
 
     var pgcit = this.get_PGCIT();
-    if (!pgcit)
+    if (!pgcit) {
       return false;
+    }
 
     menuid = pgcit.pgci_srp[pgcn - 1].entry_id & 0x0F;
     return true;
   }
 
-  private get_current_title_part(title_result, part_result) {
+  /**
+   * @returns {Object.<string, number>}
+   */
+  private get_current_title_part(): Object {
     var vts_ptt_srpt;
     var title, part = 0, vts_ttn;
     var found;
@@ -610,9 +626,11 @@ class VM {
           vts_ptt_srpt.title[vts_ttn - 1].ptt[part - 1].pgn);
       }
     }
-    title_result = title;
-    part_result = part;
-    return true;
+
+    return {
+      title: title,
+      part: part
+    };
   }
 
   /**
@@ -711,11 +729,12 @@ class VM {
       }
     }
 
-    if (this.state.domain === DVDDomain.DVD_DOMAIN_VTSTitle && !(this.state.SPST_REG & 0x40))
-    // Bit 7 set means hide, and only let Forced display show.
+    if (this.state.domain === DVDDomain.DVD_DOMAIN_VTSTitle && !(this.state.SPST_REG & 0x40)) {
+      // Bit 7 set means hide, and only let Forced display show.
       return (streamN | 0x80);
-    else
+    } else {
       return streamN;
+    }
   }
 
   public get_angle_info() {
@@ -738,43 +757,43 @@ class VM {
     return {current: current, num_avail: num_avail};
   }
 
-  // currently unused
-  /*public get_audio_info(current, num_avail) {
-   switch (this.state.domain) {
-   case DVDDomain.DVD_DOMAIN_VTSTitle:
-   *num_avail = this.vtsi.vtsi_mat.nr_of_vts_audio_streams;
-   *current = this.state.AST_REG;
-   break;
-   case DVDDomain.DVD_DOMAIN_VTSMenu:
-   *num_avail = this.vtsi.vtsi_mat.nr_of_vtsm_audio_streams; // 1
-   *current = 1;
-   break;
-   case DVDDomain.DVD_DOMAIN_VMGM:
-   case DVDDomain.DVD_DOMAIN_FirstPlay:
-   *num_avail = this.vmgi.vmgi_mat.nr_of_vmgm_audio_streams; // 1
-   *current = 1;
-   break;
-   }
-   }*/
+  // Currently unused
+  private get_audio_info(current, num_avail) {
+    switch (this.state.domain) {
+      case DVDDomain.DVD_DOMAIN_VTSTitle:
+        num_avail = this.vtsi.vtsi_mat.nr_of_vts_audio_streams;
+        current = this.state.AST_REG;
+        break;
+      case DVDDomain.DVD_DOMAIN_VTSMenu:
+        num_avail = this.vtsi.vtsi_mat.nr_of_vtsm_audio_streams; // 1
+        current = 1;
+        break;
+      case DVDDomain.DVD_DOMAIN_VMGM:
+      case DVDDomain.DVD_DOMAIN_FirstPlay:
+        num_avail = this.vmgi.vmgi_mat.nr_of_vmgm_audio_streams; // 1
+        current = 1;
+        break;
+    }
+  }
 
-  // currently unused
-  /*public get_subp_info(current, num_avail) {
-   switch (this.state.domain) {
-   case DVDDomain.DVD_DOMAIN_VTSTitle:
-   *num_avail = this.vtsi.vtsi_mat.nr_of_vts_subp_streams;
-   *current = this.state.SPST_REG;
-   break;
-   case DVDDomain.DVD_DOMAIN_VTSMenu:
-   *num_avail = this.vtsi.vtsi_mat.nr_of_vtsm_subp_streams; // 1
-   *current = 0x41;
-   break;
-   case DVDDomain.DVD_DOMAIN_VMGM:
-   case DVDDomain.DVD_DOMAIN_FirstPlay:
-   *num_avail = this.vmgi.vmgi_mat.nr_of_vmgm_subp_streams; // 1
-   *current = 0x41;
-   break;
-   }
-   }*/
+  // Currently unused
+  private get_subp_info(current, num_avail) {
+    switch (this.state.domain) {
+      case DVDDomain.DVD_DOMAIN_VTSTitle:
+        num_avail = this.vtsi.vtsi_mat.nr_of_vts_subp_streams;
+        current = this.state.SPST_REG;
+        break;
+      case DVDDomain.DVD_DOMAIN_VTSMenu:
+        num_avail = this.vtsi.vtsi_mat.nr_of_vtsm_subp_streams; // 1
+        current = 0x41;
+        break;
+      case DVDDomain.DVD_DOMAIN_VMGM:
+      case DVDDomain.DVD_DOMAIN_FirstPlay:
+        num_avail = this.vmgi.vmgi_mat.nr_of_vmgm_subp_streams; // 1
+        current = 0x41;
+        break;
+    }
+  }
 
   private get_video_res(width, height) {
     var attr = this.get_video_attr();
@@ -1594,7 +1613,9 @@ class VM {
 
     res = this.set_PGCN(pgcN);   // This clobber's state.pgN (sets it to 1), but we don't want clobbering here.
     this.state.pgN = pgN;
-    this.get_current_title_part(title, part);
+    var obj = this.get_current_title_part();
+    title = obj.title;
+    part = obj.part;
     this.state.PTTN_REG = part;
     return res;
   }
@@ -1644,20 +1665,26 @@ class VM {
     var dummy, part = 0;
 
     while (new_pgN < this.state.pgc.nr_of_programs
-      && this.state.cellN >= this.state.pgc.program_map[new_pgN])
+      && this.state.cellN >= this.state.pgc.program_map[new_pgN]) {
       new_pgN++;
+    }
 
-    if (new_pgN === this.state.pgc.nr_of_programs) // We are at the last program
-      if (this.state.cellN > this.state.pgc.nr_of_cells)
+    if (new_pgN === this.state.pgc.nr_of_programs) { // We are at the last program
+      if (this.state.cellN > this.state.pgc.nr_of_cells) {
         return false; // We are past the last cell
+      }
+    }
 
     this.state.pgN = new_pgN;
 
     if (this.state.domain === DVDDomain.DVD_DOMAIN_VTSTitle) {
-      if (this.state.TTN_REG > this.vmgi.tt_srpt.nr_of_srpts)
+      if (this.state.TTN_REG > this.vmgi.tt_srpt.nr_of_srpts) {
         return false; // ??
+      }
 
-      this.get_current_title_part(dummy, part);
+      var obj = this.get_current_title_part();
+      dummy = obj.title;
+      part = obj.part;
       this.state.PTTN_REG = part;
     }
     return true;
@@ -1777,8 +1804,9 @@ class VM {
     }
 
     i = 0;
-    while (i < h.pgci_ut.nr_of_lus && h.pgci_ut.lu[i].lang_code !== lang)
+    while (i < h.pgci_ut.nr_of_lus && h.pgci_ut.lu[i].lang_code !== lang) {
       i++;
+    }
     if (i === h.pgci_ut.nr_of_lus) {
       console.log('jsdvdnav: Language `%s` not found, using `%s` instead', utils.bit2str(lang), utils.bit2str(h.pgci_ut.lu[0].lang_code));
       var msg = 'jsdvdnav: Menu Languages available: ';
@@ -1817,8 +1845,9 @@ class VM {
   //identify chapters
   private get_title_ifo(title) {
     var titleset_nr;
-    if ((title < 1) || (title > this.vmgi.tt_srpt.nr_of_srpts))
+    if ((title < 1) || (title > this.vmgi.tt_srpt.nr_of_srpts)) {
       return null;
+    }
     titleset_nr = this.vmgi.tt_srpt.title[title - 1].title_set_nr;
     return ifoRead.ifoOpen(this.dvd, titleset_nr);
   }
@@ -2009,10 +2038,11 @@ class VM {
    */
     // Evaluates gprm or data depending on bit, data is in byte n
   private eval_reg_or_data_2(command: Command, imm: number, start: number): number {
-    if (imm) // immediate
+    if (imm) { // immediate
       return this.getbits(command, (start - 1), 7);
-    else
+    } else {
       return this.get_GPRM(command.registers, (this.getbits(command, (start - 4), 4)));
+    }
   }
 
   /**
@@ -2119,7 +2149,7 @@ class VM {
    * @return {number}
    */
   private eval_special_instruction(command: Command, cond: boolean): number {
-    var line, level;
+    var line = 0, level = 0;
 
     switch (this.getbits(command, 51, 4)) {
       case 0: // NOP
@@ -2159,8 +2189,9 @@ class VM {
     var button = this.getbits(command, 15, 6);
     var linkop = this.getbits(command, 4, 5);
 
-    if (linkop > 0x10)
+    if (linkop > 0x10) {
       return 0;
+    }
     // Unknown Link by Sub-Instruction command
 
     // Assumes that the link_cmd enum has the same values as the LinkSIns codes
@@ -2485,7 +2516,7 @@ class VM {
         if (res === -1) {
           console.log('jsdvdnav: Unknown Instruction!');
           this.abort();
-          return;
+          return 0;
         }
         break;
       case 1: // Link/jump instructions
@@ -2496,14 +2527,16 @@ class VM {
           cond = this.eval_if_version_1(command);
           res = this.eval_link_instruction(command, cond, return_values);
         }
-        if (res)
+        if (res) {
           res = -1;
+        }
         break;
       case 2: // System set instructions
         cond = this.eval_if_version_2(command);
         res = this.eval_system_set(command, cond, return_values);
-        if (res)
+        if (res) {
           res = -1;
+        }
         break;
       case 3: // Set instructions, either Compare or Link may be used
         cond = this.eval_if_version_3(command);
@@ -2511,36 +2544,40 @@ class VM {
         if (this.getbits(command, 51, 4)) {
           res = this.eval_link_instruction(command, cond, return_values);
         }
-        if (res)
+        if (res) {
           res = -1;
+        }
         break;
       case 4: // Set, Compare -> Link Sub-Instruction
         this.eval_set_version_2(command, true);
         cond = this.eval_if_version_4(command);
         res = this.eval_link_subins(command, cond, return_values);
-        if (res)
+        if (res) {
           res = -1;
+        }
         break;
       case 5: // Compare -> (Set and Link Sub-Instruction)
         // FIXME: These are wrong. Need to be updated from vmcmd.c
         cond = this.eval_if_version_4(command);
         this.eval_set_version_2(command, cond);
         res = this.eval_link_subins(command, cond, return_values);
-        if (res)
+        if (res) {
           res = -1;
+        }
         break;
       case 6: // Compare -> Set, allways Link Sub-Instruction
         // FIXME: These are wrong. Need to be updated from vmcmd.c
         cond = this.eval_if_version_4(command);
         this.eval_set_version_2(command, cond);
         res = this.eval_link_subins(command, true, return_values);
-        if (res)
+        if (res) {
           res = -1;
+        }
         break;
       default: // Unknown command
         console.error('jsdvdnav: Unknown Command=%s', utils.toHex(this.getbits(command, 63, 3)));
         this.abort();
-        return;
+        return 0;
     }
     // Check if there are bits not yet examined
 
