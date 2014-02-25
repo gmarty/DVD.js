@@ -6,24 +6,24 @@ import ifoRead = require('../dvdread/ifo_read');
 import config = require('../config');
 import utils = require('../utils');
 
-var DVDMenuID_t = dvdTypes.DVDMenuID_t;
-var DVDDomain_t = dvdTypes.DVDDomain_t;
-var vm_position_t = dvdTypes.vm_position_t;
+var DVDMenuID = dvdTypes.DVDMenuID_t;
+var DVDDomain = dvdTypes.DVDDomain_t;
+var VMPosition = dvdTypes.vm_position_t;
 var TRACE = config.DEBUG;
-var DVD_MENU_LANGUAGE = config.DVD_MENU_LANGUAGE;
-var DVD_AUDIO_LANGUAGE = config.DVD_AUDIO_LANGUAGE;
-var DVD_SPU_LANGUAGE = config.DVD_SPU_LANGUAGE;
+var DVD_MENU_LANGUAGE: string = config.DVD_MENU_LANGUAGE;
+var DVD_AUDIO_LANGUAGE: string = config.DVD_AUDIO_LANGUAGE;
+var DVD_SPU_LANGUAGE: string = config.DVD_SPU_LANGUAGE;
 var COUNTRY_CODE = config.COUNTRY_CODE;
 var deepEqual = utils.deepEqual;
 var sprintf = utils.sprintf;
 var assert = utils.assert;
 
-export = vm;
+export = VM;
 
 /**
  * @param {?Object} dvd
  */
-function vm(dvd?) {
+function VM(dvd?) {
   this.dvd = dvd;
   this.vmgi = null;
   this.vtsi = null;
@@ -37,8 +37,8 @@ function vm(dvd?) {
 /**
  * State: SPRM, GPRM, Domain, pgc, pgN, cellN, ?
  */
-function dvd_state_t() {
-  this.registers = new registers_t();
+function DvdState() {
+  this.registers = new Registers();
 
   this.domain = 0;
   this.vtsN = 0;            // 0 is vmgm?
@@ -58,7 +58,7 @@ function dvd_state_t() {
 }
 
 // link command types
-enum link_cmd_t {
+enum link_cmd {
   LinkNoLink,
 
   LinkTopC,
@@ -102,15 +102,15 @@ enum link_cmd_t {
 }
 
 // a link's data set
-function link_t() {
-  this.command = 0; // link_cmd_t
+function Link() {
+  this.command = 0; // link_cmd
   this.data1 = 0;
   this.data2 = 0;
   this.data3 = 0;
 }
 
 // the VM registers
-function registers_t() {
+function Registers() {
   this.SPRM = new Array(24);
   this.GPRM = new Array(16);
   this.GPRM_mode = new Array(16); // Need to have something to indicate normal/counter mode for every GPRM
@@ -118,35 +118,35 @@ function registers_t() {
 }
 
 // a VM command data set
-function command_t() {
+function Command() {
   this.instruction = null;
   this.examined = null;
-  this.registers = new registers_t();
+  this.registers = new Registers();
 }
 
 // Initialisation & Destruction
-vm.prototype.free_vm = function() {
+VM.prototype.free_vm = function() {
 };
 
 
 // IFO Access
-vm.prototype.get_vmgi = function() {
+VM.prototype.get_vmgi = function() {
   return this.vmgi;
 };
 
-vm.prototype.get_vtsi = function() {
+VM.prototype.get_vtsi = function() {
   return this.vtsi;
 };
 
 
 // Reader Access
-vm.prototype.get_dvd_reader = function() {
+VM.prototype.get_dvd_reader = function() {
   return this.dvd;
 };
 
 
 // Basic Handling
-vm.prototype.start = function() {
+VM.prototype.start = function() {
   if (this.stopped) {
     //if (!this.reset())
     //return false;
@@ -161,11 +161,11 @@ vm.prototype.start = function() {
   return !this.stopped;
 };
 
-vm.prototype.stop = function() {
+VM.prototype.stop = function() {
   this.stopped = true;
 };
 
-vm.prototype.close = function() {
+VM.prototype.close = function() {
   if (this.vmgi) {
     this.vmgi = null;
   }
@@ -178,9 +178,9 @@ vm.prototype.close = function() {
   this.stopped = true;
 };
 
-vm.prototype.reset = function(dvdroot, cb) {
+VM.prototype.reset = function(dvdroot, cb) {
   // Setup State
-  this.state = new dvd_state_t();
+  this.state = new DvdState();
   this.state.registers.SPRM[0] = DVD_MENU_LANGUAGE.charCodeAt(1);   // Player Menu Language code
   this.state.registers.SPRM[1] = DVD_MENU_LANGUAGE.charCodeAt(0);   // Player Menu Language code
   this.state.AST_REG = 15;          // 15 why?
@@ -205,7 +205,7 @@ vm.prototype.reset = function(dvdroot, cb) {
   this.state.cellN = 0;
   this.state.cell_restart = 0;
 
-  this.state.domain = DVDDomain_t.DVD_DOMAIN_FirstPlay;
+  this.state.domain = DVDDomain.DVD_DOMAIN_FirstPlay;
   this.state.rsm_vtsN = 0;
   this.state.rsm_cellN = 0;
   this.state.rsm_blockN = 0;
@@ -223,7 +223,7 @@ vm.prototype.reset = function(dvdroot, cb) {
     this.vmgi = ifoRead.ifoOpenVMGI(this.dvd);
     if (!this.vmgi) {
       console.error('jsdvdnav: ifoOpenVMGI failed');
-      return false;
+      return;
     }
 
     if (this.vmgi) {
@@ -239,7 +239,7 @@ vm.prototype.reset = function(dvdroot, cb) {
   }.bind(this));
 };
 
-vm.prototype.ifoOpenNewVTSI = function(vtsN) {
+VM.prototype.ifoOpenNewVTSI = function(vtsN) {
   if (this.state.vtsN === vtsN) {
     return true; // We already have it.
   }
@@ -256,8 +256,8 @@ vm.prototype.ifoOpenNewVTSI = function(vtsN) {
 };
 
 // Copying and merging.
-vm.prototype.new_copy = function() {
-  var target = new vm();
+VM.prototype.new_copy = function() {
+  var target = new VM();
   var vtsN;
   var pgcN = this.get_PGCN();
   var pgN = this.state.pgN;
@@ -281,7 +281,7 @@ vm.prototype.new_copy = function() {
     }
 
     // restore pgc pointer into the new vtsi
-    if (!this.set_PGCN(target, pgcN)) {
+    if (!target.set_PGCN(pgcN)) {
       fail();
       return null;
     }
@@ -293,18 +293,18 @@ vm.prototype.new_copy = function() {
 
   function fail() {
     if (target !== null)
-      this.free_vm(target);
+      target.free_vm();
   }
 };
 
-vm.prototype.merge = function(target) {
+VM.prototype.merge = function(target) {
   if (target.vtsi) {
     target.vtsi = null;
   }
   // @todo Copy properties of this to target.
 };
 
-vm.prototype.free_copy = function() {
+VM.prototype.free_copy = function() {
   if (this.vtsi) {
     this.vtsi = null;
   }
@@ -313,8 +313,8 @@ vm.prototype.free_copy = function() {
 
 // Regular playback
 // @todo Rename to get_position.
-vm.prototype.position_get = function() {
-  var position = new vm_position_t();
+VM.prototype.position_get = function() {
+  var position = new VMPosition();
 
   position.button = this.state.HL_BTNN_REG >> 10;
   position.vts = this.state.vtsN;
@@ -366,19 +366,19 @@ vm.prototype.position_get = function() {
   return position;
 };
 
-vm.prototype.get_next_cell = function() {
+VM.prototype.get_next_cell = function() {
   this.process_command(this.play_Cell_post());
 };
 
 
 // Jumping
-vm.prototype.jump_pg = function(pg) {
+VM.prototype.jump_pg = function(pg) {
   this.state.pgN = pg;
   this.process_command(this.play_PG());
   return true;
 };
 
-vm.prototype.jump_cell_block = function(cell, block) {
+VM.prototype.jump_cell_block = function(cell, block) {
   this.state.cellN = cell;
   this.process_command(this.play_Cell());
   // play_Cell can jump to a different cell in case of angles
@@ -387,7 +387,7 @@ vm.prototype.jump_cell_block = function(cell, block) {
   return true;
 };
 
-vm.prototype.jump_title_program = function(title, pgcn, pgn) {
+VM.prototype.jump_title_program = function(title, pgcn, pgn) {
   var link;
 
   if (!this.set_PROG(title, pgcn, pgn))
@@ -397,7 +397,7 @@ vm.prototype.jump_title_program = function(title, pgcn, pgn) {
    * we do not execute PGC pre commands that would do a jump. */
   // this.process_command(this.play_PGC_PG(this.state.pgN));
   link = this.play_PGC_PG(this.state.pgN);
-  if (link.command !== link_cmd_t.PlayThis)
+  if (link.command !== link_cmd.PlayThis)
   // jump occured. ignore it and play the PG anyway
     this.process_command(this.play_PG());
   else
@@ -405,7 +405,7 @@ vm.prototype.jump_title_program = function(title, pgcn, pgn) {
   return true;
 };
 
-vm.prototype.jump_title_part = function(title, part) {
+VM.prototype.jump_title_part = function(title, part) {
   var link;
 
   if (!this.set_PTT(title, part))
@@ -415,7 +415,7 @@ vm.prototype.jump_title_part = function(title, part) {
    * we do not execute PGC pre commands that would do a jump. */
   // this.process_command(this.play_PGC_PG(this.state.pgN));
   link = this.play_PGC_PG(this.state.pgN);
-  if (link.command !== link_cmd_t.PlayThis)
+  if (link.command !== link_cmd.PlayThis)
   // jump occured. ignore it and play the PG anyway
     this.process_command(this.play_PG());
   else
@@ -423,12 +423,12 @@ vm.prototype.jump_title_part = function(title, part) {
   return true;
 };
 
-vm.prototype.jump_top_pg = function() {
+VM.prototype.jump_top_pg = function() {
   this.process_command(this.play_PG());
   return true;
 }
 
-vm.prototype.jump_next_pg = function() {
+VM.prototype.jump_next_pg = function() {
   if (this.state.pgN >= this.state.pgc.nr_of_programs) {
     // last program. move to TailPGC
     this.process_command(this.play_PGC_post());
@@ -439,7 +439,7 @@ vm.prototype.jump_next_pg = function() {
   }
 };
 
-vm.prototype.jump_prev_pg = function() {
+VM.prototype.jump_prev_pg = function() {
   if (this.state.pgN <= 1) {
     // first program -> move to last program of previous PGC
     if (this.state.pgc.prev_pgc_nr && this.set_PGCN(this.state.pgc.prev_pgc_nr)) {
@@ -454,7 +454,7 @@ vm.prototype.jump_prev_pg = function() {
   }
 };
 
-vm.prototype.jump_up = function() {
+VM.prototype.jump_up = function() {
   if (this.state.pgc.goup_pgc_nr && this.set_PGCN(this.state.pgc.goup_pgc_nr)) {
     this.process_command(this.play_PGC());
     return true;
@@ -462,32 +462,32 @@ vm.prototype.jump_up = function() {
   return false;
 };
 
-vm.prototype.jump_menu = function(menuid) {
+VM.prototype.jump_menu = function(menuid) {
   var old_domain = this.state.domain;
 
   switch (this.state.domain) {
-    case DVDDomain_t.DVD_DOMAIN_VTSTitle:
+    case DVDDomain.DVD_DOMAIN_VTSTitle:
       this.set_RSMinfo(0, this.state.blockN);
     // FALL THROUGH
-    case DVDDomain_t.DVD_DOMAIN_VTSMenu:
-    case DVDDomain_t.DVD_DOMAIN_VMGM:
+    case DVDDomain.DVD_DOMAIN_VTSMenu:
+    case DVDDomain.DVD_DOMAIN_VMGM:
       switch (menuid) {
-        case DVDMenuID_t.DVD_MENU_Title:
-        case DVDMenuID_t.DVD_MENU_Escape:
+        case DVDMenuID.DVD_MENU_Title:
+        case DVDMenuID.DVD_MENU_Escape:
           if (this.vmgi === null || this.vmgi.pgci_ut === null) {
             return false;
           }
-          this.state.domain = DVDDomain_t.DVD_DOMAIN_VMGM;
+          this.state.domain = DVDDomain.DVD_DOMAIN_VMGM;
           break;
-        case DVDMenuID_t.DVD_MENU_Root:
-        case DVDMenuID_t.DVD_MENU_Subpicture:
-        case DVDMenuID_t.DVD_MENU_Audio:
-        case DVDMenuID_t.DVD_MENU_Angle:
-        case DVDMenuID_t.DVD_MENU_Part:
+        case DVDMenuID.DVD_MENU_Root:
+        case DVDMenuID.DVD_MENU_Subpicture:
+        case DVDMenuID.DVD_MENU_Audio:
+        case DVDMenuID.DVD_MENU_Angle:
+        case DVDMenuID.DVD_MENU_Part:
           if (this.vtsi === null || this.vtsi.pgci_ut === null) {
             return false;
           }
-          this.state.domain = DVDDomain_t.DVD_DOMAIN_VTSMenu;
+          this.state.domain = DVDDomain.DVD_DOMAIN_VTSMenu;
           break;
       }
       if (this.get_PGCIT() && this.set_MENU(menuid)) {
@@ -497,16 +497,16 @@ vm.prototype.jump_menu = function(menuid) {
         this.state.domain = old_domain;
       }
       break;
-    case DVDDomain_t.DVD_DOMAIN_FirstPlay: // FIXME XXX $$$ What should we do here?
+    case DVDDomain.DVD_DOMAIN_FirstPlay: // FIXME XXX $$$ What should we do here?
       break;
   }
 
   return false;
 };
 
-vm.prototype.jump_resume = function() {
-  var link_values = new link_t();
-  link_values.command = link_cmd_t.LinkRSM;
+VM.prototype.jump_resume = function() {
+  var link_values = new Link();
+  link_values.command = link_cmd.LinkRSM;
   link_values.data1 = 0;
   link_values.data2 = 0;
   link_values.data3 = 0;
@@ -518,8 +518,8 @@ vm.prototype.jump_resume = function() {
   return true;
 };
 
-vm.prototype.exec_cmd = function(cmd) {
-  var link_values = new link_t();
+VM.prototype.exec_cmd = function(cmd) {
+  var link_values = new Link();
 
   if (this.evalCMD(cmd, 1, link_values))
     return this.process_command(link_values);
@@ -529,7 +529,7 @@ vm.prototype.exec_cmd = function(cmd) {
 
 
 // getting information
-vm.prototype.get_current_menu = function(menuid) {
+VM.prototype.get_current_menu = function(menuid) {
   var pgcn = this.state.pgcN;
 
   var pgcit = this.get_PGCIT();
@@ -540,7 +540,7 @@ vm.prototype.get_current_menu = function(menuid) {
   return true;
 };
 
-vm.prototype.get_current_title_part = function(title_result, part_result) {
+VM.prototype.get_current_title_part = function(title_result, part_result) {
   var vts_ptt_srpt;
   var title, part = 0, vts_ttn;
   var found;
@@ -597,10 +597,10 @@ vm.prototype.get_current_title_part = function(title_result, part_result) {
 /* Return the substream id for 'logical' audio stream audioN.
  * 0 <= audioN < 8
  */
-vm.prototype.get_audio_stream = function(audioN) {
+VM.prototype.get_audio_stream = function(audioN) {
   var streamN = -1;
 
-  if (this.state.domain !== DVDDomain_t.DVD_DOMAIN_VTSTitle)
+  if (this.state.domain !== DVDDomain.DVD_DOMAIN_VTSTitle)
     audioN = 0;
 
   if (audioN < 8) {
@@ -610,7 +610,7 @@ vm.prototype.get_audio_stream = function(audioN) {
     }
   }
 
-  if (this.state.domain !== DVDDomain_t.DVD_DOMAIN_VTSTitle && streamN === -1)
+  if (this.state.domain !== DVDDomain.DVD_DOMAIN_VTSTitle && streamN === -1)
     streamN = 0;
 
   // FIXME: Should also check in vtsi/vmgi status what kind of stream it is (ac3/lpcm/dts/sdds...)
@@ -624,11 +624,11 @@ vm.prototype.get_audio_stream = function(audioN) {
  * mode === 1 - letterbox
  * mode === 2 - pan&scan
  */
-vm.prototype.get_subp_stream = function(subpN, mode) {
+VM.prototype.get_subp_stream = function(subpN, mode) {
   var streamN = -1;
   var source_aspect = this.get_video_aspect();
 
-  if (this.state.domain !== DVDDomain_t.DVD_DOMAIN_VTSTitle)
+  if (this.state.domain !== DVDDomain.DVD_DOMAIN_VTSTitle)
     subpN = 0;
 
   if (subpN < 32) { // a valid logical stream
@@ -650,14 +650,14 @@ vm.prototype.get_subp_stream = function(subpN, mode) {
     }
   }
 
-  if (this.state.domain !== DVDDomain_t.DVD_DOMAIN_VTSTitle && streamN === -1)
+  if (this.state.domain !== DVDDomain.DVD_DOMAIN_VTSTitle && streamN === -1)
     streamN = 0;
 
   // FIXME: Should also check in vtsi/vmgi status what kind of stream it is.
   return streamN;
 };
 
-vm.prototype.get_audio_active_stream = function() {
+VM.prototype.get_audio_active_stream = function() {
   var audioN = this.state.AST_REG;
   var streamN = this.get_audio_stream(audioN);
 
@@ -674,7 +674,7 @@ vm.prototype.get_audio_active_stream = function() {
   return streamN;
 };
 
-vm.prototype.get_subp_active_stream = function(mode) {
+VM.prototype.get_subp_active_stream = function(mode) {
   var subpN = this.state.SPST_REG & ~0x40;
   var streamN = this.get_subp_stream(subpN, mode);
 
@@ -688,18 +688,18 @@ vm.prototype.get_subp_active_stream = function(mode) {
     }
   }
 
-  if (this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSTitle && !(this.state.SPST_REG & 0x40))
+  if (this.state.domain === DVDDomain.DVD_DOMAIN_VTSTitle && !(this.state.SPST_REG & 0x40))
   // Bit 7 set means hide, and only let Forced display show.
     return (streamN | 0x80);
   else
     return streamN;
 };
 
-vm.prototype.get_angle_info = function() {
+VM.prototype.get_angle_info = function() {
   var current = 1;
   var num_avail = 1;
 
-  if (this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSTitle) {
+  if (this.state.domain === DVDDomain.DVD_DOMAIN_VTSTitle) {
     // TTN_REG does not always point to the correct title.
     if (this.state.TTN_REG > this.vmgi.tt_srpt.nr_of_srpts) {
       return {current: current, num_avail: num_avail};
@@ -716,18 +716,18 @@ vm.prototype.get_angle_info = function() {
 };
 
 // currently unused
-/*   vm.prototype.get_audio_info = function(current, num_avail) {
+/*   VM.prototype.get_audio_info = function(current, num_avail) {
  switch (this.state.domain) {
- case DVDDomain_t.DVD_DOMAIN_VTSTitle:
+ case DVDDomain.DVD_DOMAIN_VTSTitle:
  *num_avail = this.vtsi.vtsi_mat.nr_of_vts_audio_streams;
  *current = this.state.AST_REG;
  break;
- case DVDDomain_t.DVD_DOMAIN_VTSMenu:
+ case DVDDomain.DVD_DOMAIN_VTSMenu:
  *num_avail = this.vtsi.vtsi_mat.nr_of_vtsm_audio_streams; // 1
  *current = 1;
  break;
- case DVDDomain_t.DVD_DOMAIN_VMGM:
- case DVDDomain_t.DVD_DOMAIN_FirstPlay:
+ case DVDDomain.DVD_DOMAIN_VMGM:
+ case DVDDomain.DVD_DOMAIN_FirstPlay:
  *num_avail = this.vmgi.vmgi_mat.nr_of_vmgm_audio_streams; // 1
  *current = 1;
  break;
@@ -735,25 +735,25 @@ vm.prototype.get_angle_info = function() {
  }*/
 
 // currently unused
-/* vm.prototype.get_subp_info = function(current, num_avail) {
+/* VM.prototype.get_subp_info = function(current, num_avail) {
  switch (this.state.domain) {
- case DVDDomain_t.DVD_DOMAIN_VTSTitle:
+ case DVDDomain.DVD_DOMAIN_VTSTitle:
  *num_avail = this.vtsi.vtsi_mat.nr_of_vts_subp_streams;
  *current = this.state.SPST_REG;
  break;
- case DVDDomain_t.DVD_DOMAIN_VTSMenu:
+ case DVDDomain.DVD_DOMAIN_VTSMenu:
  *num_avail = this.vtsi.vtsi_mat.nr_of_vtsm_subp_streams; // 1
  *current = 0x41;
  break;
- case DVDDomain_t.DVD_DOMAIN_VMGM:
- case DVDDomain_t.DVD_DOMAIN_FirstPlay:
+ case DVDDomain.DVD_DOMAIN_VMGM:
+ case DVDDomain.DVD_DOMAIN_FirstPlay:
  *num_avail = this.vmgi.vmgi_mat.nr_of_vmgm_subp_streams; // 1
  *current = 0x41;
  break;
  }
  }*/
 
-vm.prototype.get_video_res = function(width, height) {
+VM.prototype.get_video_res = function(width, height) {
   var attr = this.get_video_attr();
 
   if (attr.video_format !== 0)
@@ -779,7 +779,7 @@ vm.prototype.get_video_res = function(width, height) {
   return [width, height];
 };
 
-vm.prototype.get_video_aspect = function() {
+VM.prototype.get_video_aspect = function() {
   var aspect = this.get_video_attr().display_aspect_ratio;
 
   assert(aspect === 0 || aspect === 3);
@@ -789,60 +789,63 @@ vm.prototype.get_video_aspect = function() {
   return aspect;
 };
 
-vm.prototype.get_video_scale_permission = function() {
+VM.prototype.get_video_scale_permission = function() {
   return this.get_video_attr().permitted_df;
 };
 
-vm.prototype.get_video_attr = function() {
+VM.prototype.get_video_attr = function() {
   switch (this.state.domain) {
-    case DVDDomain_t.DVD_DOMAIN_VTSTitle:
+    case DVDDomain.DVD_DOMAIN_VTSTitle:
       return this.vtsi.vtsi_mat.vts_video_attr;
-    case DVDDomain_t.DVD_DOMAIN_VTSMenu:
+    case DVDDomain.DVD_DOMAIN_VTSMenu:
       return this.vtsi.vtsi_mat.vtsm_video_attr;
-    case DVDDomain_t.DVD_DOMAIN_VMGM:
-    case DVDDomain_t.DVD_DOMAIN_FirstPlay:
+    case DVDDomain.DVD_DOMAIN_VMGM:
+    case DVDDomain.DVD_DOMAIN_FirstPlay:
       return this.vmgi.vmgi_mat.vmgm_video_attr;
     default:
       abort();
+      return 0;
   }
 };
 
-vm.prototype.get_audio_attr = function(streamN) {
+VM.prototype.get_audio_attr = function(streamN) {
   switch (this.state.domain) {
-    case DVDDomain_t.DVD_DOMAIN_VTSTitle:
+    case DVDDomain.DVD_DOMAIN_VTSTitle:
       return this.vtsi.vtsi_mat.vts_audio_attr[streamN];
-    case DVDDomain_t.DVD_DOMAIN_VTSMenu:
+    case DVDDomain.DVD_DOMAIN_VTSMenu:
       return this.vtsi.vtsi_mat.vtsm_audio_attr;
-    case DVDDomain_t.DVD_DOMAIN_VMGM:
-    case DVDDomain_t.DVD_DOMAIN_FirstPlay:
+    case DVDDomain.DVD_DOMAIN_VMGM:
+    case DVDDomain.DVD_DOMAIN_FirstPlay:
       return this.vmgi.vmgi_mat.vmgm_audio_attr;
     default:
       abort();
+      return 0;
   }
 };
 
-vm.prototype.get_subp_attr = function(streamN) {
+VM.prototype.get_subp_attr = function(streamN) {
   switch (this.state.domain) {
-    case DVDDomain_t.DVD_DOMAIN_VTSTitle:
+    case DVDDomain.DVD_DOMAIN_VTSTitle:
       return this.vtsi.vtsi_mat.vts_subp_attr[streamN];
-    case DVDDomain_t.DVD_DOMAIN_VTSMenu:
+    case DVDDomain.DVD_DOMAIN_VTSMenu:
       return this.vtsi.vtsi_mat.vtsm_subp_attr;
-    case DVDDomain_t.DVD_DOMAIN_VMGM:
-    case DVDDomain_t.DVD_DOMAIN_FirstPlay:
+    case DVDDomain.DVD_DOMAIN_VMGM:
+    case DVDDomain.DVD_DOMAIN_FirstPlay:
       return this.vmgi.vmgi_mat.vmgm_subp_attr;
     default:
       abort();
+      return 0;
   }
 };
 
 
 // Playback control
-vm.prototype.play_PGC = function() {
-  var link_values = new link_t();
+VM.prototype.play_PGC = function() {
+  var link_values = new Link();
 
   if (TRACE) {
     var msg = 'jsdvdnav: play_PGC:';
-    if (this.state.domain !== DVDDomain_t.DVD_DOMAIN_FirstPlay) {
+    if (this.state.domain !== DVDDomain.DVD_DOMAIN_FirstPlay) {
       //console.log(msg + ' this.state.pgcN (%i)', this.get_PGCN());
       console.log(msg + ' this.state.pgcN (%i)', this.state.pgcN); // Use a cached version.
     } else {
@@ -874,12 +877,12 @@ vm.prototype.play_PGC = function() {
   return this.play_PG();
 };
 
-vm.prototype.play_PGC_PG = function(pgN) {
-  var link_values = new link_t();
+VM.prototype.play_PGC_PG = function(pgN) {
+  var link_values = new Link();
 
   if (TRACE) {
     var msg = 'jsdvdnav: play_PGC_PG:';
-    if (this.state.domain !== DVDDomain_t.DVD_DOMAIN_FirstPlay) {
+    if (this.state.domain !== DVDDomain.DVD_DOMAIN_FirstPlay) {
       console.log(msg + ' this.state.pgcN (%i)', this.get_PGCN());
     } else {
       console.log(msg + ' first_play_pgc');
@@ -910,9 +913,9 @@ vm.prototype.play_PGC_PG = function(pgN) {
   return this.play_PG();
 };
 
-vm.prototype.play_PGC_post = function() {
-  var link_values = new link_t();
-  link_values.command = link_cmd_t.LinkNoLink;
+VM.prototype.play_PGC_post = function() {
+  var link_values = new Link();
+  link_values.command = link_cmd.LinkNoLink;
   link_values.data1 = 0;
   link_values.data2 = 0;
   link_values.data3 = 0;
@@ -934,13 +937,13 @@ vm.prototype.play_PGC_post = function() {
   }
   // Should end up in the STOP_DOMAIN if next_pgc is 0.
   if (!this.set_PGCN(this.state.pgc.next_pgc_nr)) {
-    link_values.command = link_cmd_t.Exit;
+    link_values.command = link_cmd.Exit;
     return link_values;
   }
   return this.play_PGC();
 };
 
-vm.prototype.play_PG = function() {
+VM.prototype.play_PG = function() {
   if (TRACE) {
     console.log('jsdvdnav: play_PG: this.state.pgN (%i)', this.state.pgN);
   }
@@ -959,12 +962,9 @@ vm.prototype.play_PG = function() {
   return this.play_Cell();
 };
 
-vm.prototype.play_Cell = function() {
-  var play_this = new link_t();
-  play_this.command = link_cmd_t.PlayThis;
-  play_this.data1 = 0;
-  play_this.data2 = 0;
-  play_this.data3 = 0;
+VM.prototype.play_Cell = function() {
+  var play_this = new Link();
+  play_this.command = link_cmd.PlayThis;
 
   if (TRACE) {
     console.log('jsdvdnav: play_Cell: this.state.cellN (%i)', this.state.cellN);
@@ -1035,7 +1035,7 @@ vm.prototype.play_Cell = function() {
   return play_this;
 };
 
-vm.prototype.play_Cell_post = function() {
+VM.prototype.play_Cell_post = function() {
   var cell;
 
   if (TRACE) {
@@ -1048,7 +1048,7 @@ vm.prototype.play_Cell_post = function() {
 
   // Deal with a Cell command, if any
   if (cell.cell_cmd_nr !== 0) {
-    var link_values = new link_t();
+    var link_values = new Link();
 
     if (this.state.pgc.command_tbl !== null && this.state.pgc.command_tbl.nr_of_cell >= cell.cell_cmd_nr) {
       if (TRACE) {
@@ -1111,8 +1111,8 @@ vm.prototype.play_Cell_post = function() {
 
 
 // link processing
-vm.prototype.process_command = function(link_values) {
-  while (link_values.command !== link_cmd_t.PlayThis) {
+VM.prototype.process_command = function(link_values) {
+  while (link_values.command !== link_cmd.PlayThis) {
     if (TRACE) {
       console.group('Process command');
       this.print_link(link_values);
@@ -1122,19 +1122,19 @@ vm.prototype.process_command = function(link_values) {
     }
 
     switch (link_values.command) {
-      case link_cmd_t.LinkNoLink:
+      case link_cmd.LinkNoLink:
         // BUTTON number:data1
         if (link_values.data1 !== 0)
           this.state.HL_BTNN_REG = link_values.data1 << 10;
         return false;  // no actual jump
-      case link_cmd_t.LinkTopC:
+      case link_cmd.LinkTopC:
         // Restart playing from the beginning of the current Cell.
         // BUTTON number:data1
         if (link_values.data1 !== 0)
           this.state.HL_BTNN_REG = link_values.data1 << 10;
         link_values = this.play_Cell();
         break;
-      case link_cmd_t.LinkNextC:
+      case link_cmd.LinkNextC:
         // Link to Next Cell
         // BUTTON number:data1
         if (link_values.data1 !== 0)
@@ -1142,7 +1142,7 @@ vm.prototype.process_command = function(link_values) {
         this.state.cellN += 1;
         link_values = this.play_Cell();
         break;
-      case link_cmd_t.LinkPrevC:
+      case link_cmd.LinkPrevC:
         // Link to Previous Cell
         // BUTTON number:data1
         if (link_values.data1 !== 0)
@@ -1151,14 +1151,14 @@ vm.prototype.process_command = function(link_values) {
         this.state.cellN -= 1;
         link_values = this.play_Cell();
         break;
-      case link_cmd_t.LinkTopPG:
+      case link_cmd.LinkTopPG:
         // Link to Top of current Program
         // BUTTON number:data1
         if (link_values.data1 !== 0)
           this.state.HL_BTNN_REG = link_values.data1 << 10;
         link_values = this.play_PG();
         break;
-      case link_cmd_t.LinkNextPG:
+      case link_cmd.LinkNextPG:
         // Link to Next Program
         // BUTTON number:data1
         if (link_values.data1 !== 0)
@@ -1166,7 +1166,7 @@ vm.prototype.process_command = function(link_values) {
         this.state.pgN += 1;
         link_values = this.play_PG();
         break;
-      case link_cmd_t.LinkPrevPG:
+      case link_cmd.LinkPrevPG:
         // Link to Previous Program
         // BUTTON number:data1
         if (link_values.data1 !== 0)
@@ -1175,14 +1175,14 @@ vm.prototype.process_command = function(link_values) {
         this.state.pgN -= 1;
         link_values = this.play_PG();
         break;
-      case link_cmd_t.LinkTopPGC:
+      case link_cmd.LinkTopPGC:
         // Restart playing from beginning of current Program Chain
         // BUTTON number:data1
         if (link_values.data1 !== 0)
           this.state.HL_BTNN_REG = link_values.data1 << 10;
         link_values = this.play_PGC();
         break;
-      case link_cmd_t.LinkNextPGC:
+      case link_cmd.LinkNextPGC:
         // Link to Next Program Chain
         // BUTTON number:data1
         if (link_values.data1 !== 0)
@@ -1191,9 +1191,9 @@ vm.prototype.process_command = function(link_values) {
         if (this.set_PGCN(this.state.pgc.next_pgc_nr))
           link_values = this.play_PGC();
         else
-          link_values.command = link_cmd_t.Exit;
+          link_values.command = link_cmd.Exit;
         break;
-      case link_cmd_t.LinkPrevPGC:
+      case link_cmd.LinkPrevPGC:
         // Link to Previous Program Chain
         // BUTTON number:data1
         if (link_values.data1 !== 0)
@@ -1202,9 +1202,9 @@ vm.prototype.process_command = function(link_values) {
         if (this.set_PGCN(this.state.pgc.prev_pgc_nr))
           link_values = this.play_PGC();
         else
-          link_values.command = link_cmd_t.Exit;
+          link_values.command = link_cmd.Exit;
         break;
-      case link_cmd_t.LinkGoUpPGC:
+      case link_cmd.LinkGoUpPGC:
         // Link to GoUp Program Chain
         // BUTTON number:data1
         if (link_values.data1 !== 0)
@@ -1213,27 +1213,27 @@ vm.prototype.process_command = function(link_values) {
         if (this.set_PGCN(this.state.pgc.goup_pgc_nr))
           link_values = this.play_PGC();
         else
-          link_values.command = link_cmd_t.Exit;
+          link_values.command = link_cmd.Exit;
         break;
-      case link_cmd_t.LinkTailPGC:
+      case link_cmd.LinkTailPGC:
         // Link to Tail of Program Chain
         // BUTTON number:data1
         if (link_values.data1 !== 0)
           this.state.HL_BTNN_REG = link_values.data1 << 10;
         link_values = this.play_PGC_post();
         break;
-      case link_cmd_t.LinkRSM:
+      case link_cmd.LinkRSM:
         // Link to Resume point
         var i;
 
         // Check and see if there is any rsm info!!
         if (!this.state.rsm_vtsN) {
           console.error('jsdvdnav: Trying to resume without any resume info set');
-          link_values.command = link_cmd_t.Exit;
+          link_values.command = link_cmd.Exit;
           break;
         }
 
-        this.state.domain = DVDDomain_t.DVD_DOMAIN_VTSTitle;
+        this.state.domain = DVDDomain.DVD_DOMAIN_VTSTitle;
         if (!this.ifoOpenNewVTSI(this.state.rsm_vtsN))
           assert(0);
         this.set_PGCN(this.state.rsm_pgcN);
@@ -1255,36 +1255,36 @@ vm.prototype.process_command = function(link_values) {
         } else {
           // this.state.pgN = ?? this gets the right value in set_PGN() below
           this.state.cellN = this.state.rsm_cellN;
-          link_values.command = link_cmd_t.PlayThis;
+          link_values.command = link_cmd.PlayThis;
           link_values.data1 = this.state.rsm_blockN & 0xFFFF;
           link_values.data2 = this.state.rsm_blockN >> 16;
           if (!this.set_PGN()) {
             // Were at the end of the PGC, should not happen for a RSM
             assert(0);
-            link_values.command = link_cmd_t.LinkTailPGC;
+            link_values.command = link_cmd.LinkTailPGC;
             link_values.data1 = 0;  // No button
           }
         }
         break;
-      case link_cmd_t.LinkPGCN:
+      case link_cmd.LinkPGCN:
         // Link to Program Chain Number:data1
         if (!this.set_PGCN(link_values.data1))
           assert(0);
         link_values = this.play_PGC();
         break;
-      case link_cmd_t.LinkPTTN:
+      case link_cmd.LinkPTTN:
         // Link to Part of current Title Number:data1
         // BUTTON number:data2
         // PGC Pre-Commands are not executed
-        assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSTitle);
+        assert(this.state.domain === DVDDomain.DVD_DOMAIN_VTSTitle);
         if (link_values.data2 !== 0)
           this.state.HL_BTNN_REG = link_values.data2 << 10;
         if (!this.set_VTS_PTT(this.state.vtsN, this.state.VTS_TTN_REG, link_values.data1))
-          link_values.command = link_cmd_t.Exit;
+          link_values.command = link_cmd.Exit;
         else
           link_values = this.play_PG();
         break;
-      case link_cmd_t.LinkPGN:
+      case link_cmd.LinkPGN:
         // Link to Program Number:data1
         // BUTTON number:data2
         if (link_values.data2 !== 0)
@@ -1293,7 +1293,7 @@ vm.prototype.process_command = function(link_values) {
         this.state.pgN = link_values.data1;
         link_values = this.play_PG();
         break;
-      case link_cmd_t.LinkCN:
+      case link_cmd.LinkCN:
         // Link to Cell Number:data1
         // BUTTON number:data2
         if (link_values.data2 !== 0)
@@ -1302,70 +1302,70 @@ vm.prototype.process_command = function(link_values) {
         this.state.cellN = link_values.data1;
         link_values = this.play_Cell();
         break;
-      case link_cmd_t.Exit:
+      case link_cmd.Exit:
         this.stopped = true;
         return false;
-      case link_cmd_t.JumpTT:
+      case link_cmd.JumpTT:
         // Jump to VTS Title Domain
         // Only allowed from the First Play domain(PGC)
         // or the Video Manager domain (VMG)
         // Stop SPRM9 Timer
         // Set SPRM1 and SPRM2
-        assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VMGM || this.state.domain === DVDDomain_t.DVD_DOMAIN_FirstPlay); // ??
+        assert(this.state.domain === DVDDomain.DVD_DOMAIN_VMGM || this.state.domain === DVDDomain.DVD_DOMAIN_FirstPlay); // ??
         if (this.set_TT(link_values.data1))
           link_values = this.play_PGC();
         else
-          link_values.command = link_cmd_t.Exit;
+          link_values.command = link_cmd.Exit;
         break;
-      case link_cmd_t.JumpVTS_TT:
+      case link_cmd.JumpVTS_TT:
         // Jump to Title:data1 in same VTS Title Domain
         // Only allowed from the VTS Menu Domain(VTSM)
         // or the Video Title Set Domain(VTS)
         // Stop SPRM9 Timer
         // Set SPRM1 and SPRM2
-        assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSMenu || this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSTitle); // ??
+        assert(this.state.domain === DVDDomain.DVD_DOMAIN_VTSMenu || this.state.domain === DVDDomain.DVD_DOMAIN_VTSTitle); // ??
         if (!this.set_VTS_TT(this.state.vtsN, link_values.data1))
-          link_values.command = link_cmd_t.Exit;
+          link_values.command = link_cmd.Exit;
         else
           link_values = this.play_PGC();
         break;
-      case link_cmd_t.JumpVTS_PTT:
+      case link_cmd.JumpVTS_PTT:
         // Jump to Part:data2 of Title:data1 in same VTS Title Domain
         // Only allowed from the VTS Menu Domain(VTSM)
         // or the Video Title Set Domain(VTS)
         // Stop SPRM9 Timer
         // Set SPRM1 and SPRM2
-        assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSMenu || this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSTitle); // ??
+        assert(this.state.domain === DVDDomain.DVD_DOMAIN_VTSMenu || this.state.domain === DVDDomain.DVD_DOMAIN_VTSTitle); // ??
         if (!this.set_VTS_PTT(this.state.vtsN, link_values.data1, link_values.data2))
-          link_values.command = link_cmd_t.Exit;
+          link_values.command = link_cmd.Exit;
         else
           link_values = this.play_PGC_PG(this.state.pgN);
         break;
-      case link_cmd_t.JumpSS_FP:
+      case link_cmd.JumpSS_FP:
         // Jump to First Play Domain
         // Only allowed from the VTS Menu Domain(VTSM)
         // or the Video Manager domain (VMG)
         // Stop SPRM9 Timer and any GPRM counters
-        assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VMGM || this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSMenu); // ??
+        assert(this.state.domain === DVDDomain.DVD_DOMAIN_VMGM || this.state.domain === DVDDomain.DVD_DOMAIN_VTSMenu); // ??
         if (!this.set_FP_PGC())
           assert(0);
         link_values = this.play_PGC();
         break;
-      case link_cmd_t.JumpSS_VMGM_MENU:
+      case link_cmd.JumpSS_VMGM_MENU:
         // Jump to Video Manager domain - Title Menu:data1 or any PGC in VMG
         // Allowed from anywhere except the VTS Title domain
         // Stop SPRM9 Timer and any GPRM counters
-        assert(this.state.domain !== DVDDomain_t.DVD_DOMAIN_VTSTitle); // ??
+        assert(this.state.domain !== DVDDomain.DVD_DOMAIN_VTSTitle); // ??
         if (this.vmgi === null || this.vmgi.pgci_ut === null) {
-          link_values.command = link_cmd_t.Exit;
+          link_values.command = link_cmd.Exit;
           break;
         }
-        this.state.domain = DVDDomain_t.DVD_DOMAIN_VMGM;
+        this.state.domain = DVDDomain.DVD_DOMAIN_VMGM;
         if (!this.set_MENU(link_values.data1))
           assert(0);
         link_values = this.play_PGC();
         break;
-      case link_cmd_t.JumpSS_VTSM:
+      case link_cmd.JumpSS_VTSM:
         // Jump to a menu in Video Title domain,
         // or to a Menu is the current VTS
         // Stop SPRM9 Timer and any GPRM counters
@@ -1375,28 +1375,28 @@ vm.prototype.process_command = function(link_values) {
         if (link_values.data1 !== 0) {
           if (link_values.data1 !== this.state.vtsN) {
             // the normal case
-            assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VMGM || this.state.domain === DVDDomain_t.DVD_DOMAIN_FirstPlay); // ??
+            assert(this.state.domain === DVDDomain.DVD_DOMAIN_VMGM || this.state.domain === DVDDomain.DVD_DOMAIN_FirstPlay); // ??
             if (!this.ifoOpenNewVTSI(link_values.data1))  // Also sets this.state.vtsN
               assert(0);
             if (this.vtsi === null || this.vtsi.pgci_ut === null) {
-              link_values.command = link_cmd_t.Exit;
+              link_values.command = link_cmd.Exit;
               break;
             }
-            this.state.domain = DVDDomain_t.DVD_DOMAIN_VTSMenu;
+            this.state.domain = DVDDomain.DVD_DOMAIN_VTSMenu;
           } else {
             // This happens on some discs like `Captain Scarlet & the Mysterons` or the German RC2
             // of `Anatomie` in VTSM.
-            assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSMenu ||
-              this.state.domain === DVDDomain_t.DVD_DOMAIN_VMGM || this.state.domain === DVDDomain_t.DVD_DOMAIN_FirstPlay); // ??
+            assert(this.state.domain === DVDDomain.DVD_DOMAIN_VTSMenu ||
+              this.state.domain === DVDDomain.DVD_DOMAIN_VMGM || this.state.domain === DVDDomain.DVD_DOMAIN_FirstPlay); // ??
             if (this.vtsi === null || this.vtsi.pgci_ut === null) {
-              link_values.command = link_cmd_t.Exit;
+              link_values.command = link_cmd.Exit;
               break;
             }
-            this.state.domain = DVDDomain_t.DVD_DOMAIN_VTSMenu;
+            this.state.domain = DVDDomain.DVD_DOMAIN_VTSMenu;
           }
         } else {
           // This happens on `The Fifth Element` region 2.
-          assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSMenu);
+          assert(this.state.domain === DVDDomain.DVD_DOMAIN_VTSMenu);
         }
         // I don't know what title is supposed to be used for.
         // `Alien` or `Aliens` has this !== 1, I think.
@@ -1409,73 +1409,73 @@ vm.prototype.process_command = function(link_values) {
           assert(0);
         link_values = this.play_PGC();
         break;
-      case link_cmd_t.JumpSS_VMGM_PGC:
+      case link_cmd.JumpSS_VMGM_PGC:
         // set_PGCN:data1
         // Stop SPRM9 Timer and any GPRM counters
-        assert(this.state.domain !== DVDDomain_t.DVD_DOMAIN_VTSTitle); // ??
+        assert(this.state.domain !== DVDDomain.DVD_DOMAIN_VTSTitle); // ??
         if (this.vmgi === null || this.vmgi.pgci_ut === null) {
-          link_values.command = link_cmd_t.Exit;
+          link_values.command = link_cmd.Exit;
           break;
         }
-        this.state.domain = DVDDomain_t.DVD_DOMAIN_VMGM;
+        this.state.domain = DVDDomain.DVD_DOMAIN_VMGM;
         if (!this.set_PGCN(link_values.data1))
           assert(0);
         link_values = this.play_PGC();
         break;
-      case link_cmd_t.CallSS_FP:
+      case link_cmd.CallSS_FP:
         // set_RSMinfo:data1
-        assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSTitle); // ??
+        assert(this.state.domain === DVDDomain.DVD_DOMAIN_VTSTitle); // ??
         // Must be called before domain is changed
         this.set_RSMinfo(link_values.data1, /* We don't have block info */ 0);
         this.set_FP_PGC();
         link_values = this.play_PGC();
         break;
-      case link_cmd_t.CallSS_VMGM_MENU:
+      case link_cmd.CallSS_VMGM_MENU:
         // set_MENU:data1
         // set_RSMinfo:data2
-        assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSTitle); // ??
+        assert(this.state.domain === DVDDomain.DVD_DOMAIN_VTSTitle); // ??
         // Must be called before domain is changed
         if (this.vmgi === null || this.vmgi.pgci_ut === null) {
-          link_values.command = link_cmd_t.Exit;
+          link_values.command = link_cmd.Exit;
           break;
         }
         this.set_RSMinfo(link_values.data2, /* We don't have block info */ 0);
-        this.state.domain = DVDDomain_t.DVD_DOMAIN_VMGM;
+        this.state.domain = DVDDomain.DVD_DOMAIN_VMGM;
         if (!this.set_MENU(link_values.data1))
           assert(0);
         link_values = this.play_PGC();
         break;
-      case link_cmd_t.CallSS_VTSM:
+      case link_cmd.CallSS_VTSM:
         // set_MENU:data1
         // set_RSMinfo:data2
-        assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSTitle); // ??
+        assert(this.state.domain === DVDDomain.DVD_DOMAIN_VTSTitle); // ??
         // Must be called before domain is changed
         if (this.vtsi === null || this.vtsi.pgci_ut === null) {
-          link_values.command = link_cmd_t.Exit;
+          link_values.command = link_cmd.Exit;
           break;
         }
         this.set_RSMinfo(link_values.data2, /* We don't have block info */ 0);
-        this.state.domain = DVDDomain_t.DVD_DOMAIN_VTSMenu;
+        this.state.domain = DVDDomain.DVD_DOMAIN_VTSMenu;
         if (!this.set_MENU(link_values.data1))
           assert(0);
         link_values = this.play_PGC();
         break;
-      case link_cmd_t.CallSS_VMGM_PGC:
+      case link_cmd.CallSS_VMGM_PGC:
         // set_PGC:data1
         // set_RSMinfo:data2
-        assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSTitle); // ??
+        assert(this.state.domain === DVDDomain.DVD_DOMAIN_VTSTitle); // ??
         // Must be called before domain is changed
         if (this.vmgi === null || this.vmgi.pgci_ut === null) {
-          link_values.command = link_cmd_t.Exit;
+          link_values.command = link_cmd.Exit;
           break;
         }
         this.set_RSMinfo(link_values.data2, /* We don't have block info */ 0);
-        this.state.domain = DVDDomain_t.DVD_DOMAIN_VMGM;
+        this.state.domain = DVDDomain.DVD_DOMAIN_VMGM;
         if (!this.set_PGCN(link_values.data1))
           assert(0);
         link_values = this.play_PGC();
         break;
-      case link_cmd_t.PlayThis:
+      case link_cmd.PlayThis:
         // Should never happen.
         assert(0);
         break;
@@ -1494,24 +1494,24 @@ vm.prototype.process_command = function(link_values) {
 
 
 // Set functions
-vm.prototype.set_TT = function(tt) {
+VM.prototype.set_TT = function(tt) {
   return this.set_PTT(tt, 1);
 };
 
-vm.prototype.set_PTT = function(tt, ptt) {
+VM.prototype.set_PTT = function(tt, ptt) {
   assert(tt <= this.vmgi.tt_srpt.nr_of_srpts);
   return this.set_VTS_PTT(this.vmgi.tt_srpt.title[tt - 1].title_set_nr,
     this.vmgi.tt_srpt.title[tt - 1].vts_ttn, ptt);
 };
 
-vm.prototype.set_VTS_TT = function(vtsN, vts_ttn) {
+VM.prototype.set_VTS_TT = function(vtsN, vts_ttn) {
   return this.set_VTS_PTT(vtsN, vts_ttn, 1);
 };
 
-vm.prototype.set_VTS_PTT = function(vtsN, vts_ttn, part) {
+VM.prototype.set_VTS_PTT = function(vtsN, vts_ttn, part) {
   var pgcN, pgN, res;
 
-  this.state.domain = DVDDomain_t.DVD_DOMAIN_VTSTitle;
+  this.state.domain = DVDDomain.DVD_DOMAIN_VTSTitle;
 
   if (vtsN !== this.state.vtsN)
     if (!this.ifoOpenNewVTSI(vtsN))  // Also sets this.state.vtsN
@@ -1540,16 +1540,16 @@ vm.prototype.set_VTS_PTT = function(vtsN, vts_ttn, part) {
   return res;
 };
 
-vm.prototype.set_PROG = function(tt, pgcn, pgn) {
+VM.prototype.set_PROG = function(tt, pgcn, pgn) {
   assert(tt <= this.vmgi.tt_srpt.nr_of_srpts);
   return this.set_VTS_PROG(this.vmgi.tt_srpt.title[tt - 1].title_set_nr,
     this.vmgi.tt_srpt.title[tt - 1].vts_ttn, pgcn, pgn);
 };
 
-vm.prototype.set_VTS_PROG = function(vtsN, vts_ttn, pgcn, pgn) {
+VM.prototype.set_VTS_PROG = function(vtsN, vts_ttn, pgcn, pgn) {
   var pgcN, pgN, res, title, part = 0;
 
-  this.state.domain = DVDDomain_t.DVD_DOMAIN_VTSTitle;
+  this.state.domain = DVDDomain.DVD_DOMAIN_VTSTitle;
 
   if (vtsN !== this.state.vtsN)
     if (!this.ifoOpenNewVTSI(vtsN))  // Also sets this.state.vtsN
@@ -1576,8 +1576,8 @@ vm.prototype.set_VTS_PROG = function(vtsN, vts_ttn, pgcn, pgn) {
   return res;
 };
 
-vm.prototype.set_FP_PGC = function() {
-  this.state.domain = DVDDomain_t.DVD_DOMAIN_FirstPlay;
+VM.prototype.set_FP_PGC = function() {
+  this.state.domain = DVDDomain.DVD_DOMAIN_FirstPlay;
   if (!this.vmgi.first_play_pgc) {
     return this.set_PGCN(1);
   }
@@ -1586,12 +1586,12 @@ vm.prototype.set_FP_PGC = function() {
   return true;
 };
 
-vm.prototype.set_MENU = function(menu) {
-  assert(this.state.domain === DVDDomain_t.DVD_DOMAIN_VMGM || this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSMenu);
+VM.prototype.set_MENU = function(menu) {
+  assert(this.state.domain === DVDDomain.DVD_DOMAIN_VMGM || this.state.domain === DVDDomain.DVD_DOMAIN_VTSMenu);
   return this.set_PGCN(this.get_ID(menu));
 };
 
-vm.prototype.set_PGCN = function(pgcN) {
+VM.prototype.set_PGCN = function(pgcN) {
   var pgcit = this.get_PGCIT();
   if (!pgcit)
     return false;
@@ -1609,14 +1609,14 @@ vm.prototype.set_PGCN = function(pgcN) {
   this.state.pgcN = pgcN;
   this.state.pgN = 1;
 
-  if (this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSTitle)
+  if (this.state.domain === DVDDomain.DVD_DOMAIN_VTSTitle)
     this.state.TT_PGCN_REG = pgcN;
 
   return true;
 };
 
 // Figure out the correct pgN from the cell and update this.state.
-vm.prototype.set_PGN = function() {
+VM.prototype.set_PGN = function() {
   var new_pgN = 0;
   var dummy, part = 0;
 
@@ -1630,7 +1630,7 @@ vm.prototype.set_PGN = function() {
 
   this.state.pgN = new_pgN;
 
-  if (this.state.domain === DVDDomain_t.DVD_DOMAIN_VTSTitle) {
+  if (this.state.domain === DVDDomain.DVD_DOMAIN_VTSTitle) {
     if (this.state.TTN_REG > this.vmgi.tt_srpt.nr_of_srpts)
       return false; // ??
 
@@ -1641,7 +1641,7 @@ vm.prototype.set_PGN = function() {
 };
 
 // Must be called before domain is changed (set_PGCN())
-vm.prototype.set_RSMinfo = function(cellN, blockN) {
+VM.prototype.set_RSMinfo = function(cellN, blockN) {
   var i;
 
   if (cellN) {
@@ -1654,7 +1654,7 @@ vm.prototype.set_RSMinfo = function(cellN, blockN) {
   this.state.rsm_vtsN = this.state.vtsN;
   this.state.rsm_pgcN = this.get_PGCN();
 
-  // assert(this.state.rsm_pgcN === this.state.TT_PGCN_REG);  for DVDDomain_t.DVD_DOMAIN_VTSTitle
+  // assert(this.state.rsm_pgcN === this.state.TT_PGCN_REG);  for DVDDomain.DVD_DOMAIN_VTSTitle
 
   for (i = 0; i < 5; i++) {
     this.state.rsm_regs[i] = this.state.registers.SPRM[4 + i];
@@ -1668,7 +1668,7 @@ vm.prototype.set_RSMinfo = function(cellN, blockN) {
  * returns the current TT.
  * returns 0 if not found.
  */
-vm.prototype.get_TT = function(vtsN, vts_ttn) {
+VM.prototype.get_TT = function(vtsN, vts_ttn) {
   var i;
   var tt = 0;
 
@@ -1682,11 +1682,15 @@ vm.prototype.get_TT = function(vtsN, vts_ttn) {
   return tt;
 };
 
-/* Search for entry_id match of the PGC Category in the current VTS PGCIT table.
+/**
+ * Search for entry_id match of the PGC Category in the current VTS PGCIT table.
  * Return pgcN based on entry_id match.
+ *
+ * @param {number} id
+ * @return {number}
  */
-vm.prototype.get_ID = function(id) {
-  var pgcN, i;
+VM.prototype.get_ID = function(id): number {
+  var pgcN = 0, i = 0;
 
   // Relies on state to get the correct pgcit.
   var pgcit = this.get_PGCIT();
@@ -1717,11 +1721,14 @@ vm.prototype.get_ID = function(id) {
       }
     }
   }
-  return false; // error
+  return 0; // error
 };
 
-// FIXME: we have a pgcN member in the vm's state now, so this should be obsolete
-vm.prototype.get_PGCN = function() {
+/**
+ * FIXME: we have a pgcN member in the VM's state now, so this should be obsolete
+ * @return {number}
+ */
+VM.prototype.get_PGCN = function(): number {
   var pgcN = 1;
 
   var pgcit = this.get_PGCIT();
@@ -1735,10 +1742,10 @@ vm.prototype.get_PGCN = function() {
   }
 
   console.error('jsdvdnav: get_PGCN failed. Was trying to find pgcN in domain %d', this.state.domain);
-  return false; // error
+  return 0; // error
 };
 
-vm.prototype.get_MENU_PGCIT = function(h, lang) {
+VM.prototype.get_MENU_PGCIT = function(h, lang) {
   var i;
 
   if (h === null || h.pgci_ut === null) {
@@ -1763,22 +1770,23 @@ vm.prototype.get_MENU_PGCIT = function(h, lang) {
 };
 
 // Uses state to decide what to return
-vm.prototype.get_PGCIT = function() {
+VM.prototype.get_PGCIT = function() {
   switch (this.state.domain) {
-    case DVDDomain_t.DVD_DOMAIN_VTSTitle:
+    case DVDDomain.DVD_DOMAIN_VTSTitle:
       if (!this.vtsi) return null;
       return this.vtsi.vts_pgcit;
       break;
-    case DVDDomain_t.DVD_DOMAIN_VTSMenu:
+    case DVDDomain.DVD_DOMAIN_VTSMenu:
       if (!this.vtsi) return null;
       return this.get_MENU_PGCIT(this.vtsi, this.state.registers.SPRM[0] | this.state.registers.SPRM[1] << 8);
       break;
-    case DVDDomain_t.DVD_DOMAIN_VMGM:
-    case DVDDomain_t.DVD_DOMAIN_FirstPlay:
+    case DVDDomain.DVD_DOMAIN_VMGM:
+    case DVDDomain.DVD_DOMAIN_FirstPlay:
       return this.get_MENU_PGCIT(this.vmgi, this.state.registers.SPRM[0] | this.state.registers.SPRM[1] << 8);
       break;
     default:
       abort();
+      return 0;
   }
 
   return null;
@@ -1786,7 +1794,7 @@ vm.prototype.get_PGCIT = function() {
 
 //return the ifo_handle_t describing required title, used to
 //identify chapters
-vm.prototype.get_title_ifo = function(title) {
+VM.prototype.get_title_ifo = function(title) {
   var titleset_nr;
   if ((title < 1) || (title > this.vmgi.tt_srpt.nr_of_srpts))
     return null;
@@ -1803,10 +1811,10 @@ vm.prototype.get_title_ifo = function(title) {
  *
  * @param {vm_cmd_t} commands
  * @param {number} num_commands
- * @param {link_t} return_values
+ * @param {Link} return_values
  * @return {boolean} Whether a Jump, Link or Call just happened.
  */
-vm.prototype.evalCMD = function(commands, num_commands, return_values) {
+VM.prototype.evalCMD = function(commands, num_commands, return_values) {
   var i = 0;
   var total = 0;
 
@@ -1852,8 +1860,8 @@ vm.prototype.evalCMD = function(commands, num_commands, return_values) {
     total++;
   }
 
-  //memset(return_values, 0, sizeof(link_t));
-  return_values.command = link_cmd_t.LinkNoLink;
+  //memset(return_values, 0, sizeof(Link));
+  return_values.command = link_cmd.LinkNoLink;
   return_values.data1 = 0;
   return_values.data2 = 0;
   return_values.data3 = 0;
@@ -1870,12 +1878,12 @@ vm.prototype.evalCMD = function(commands, num_commands, return_values) {
 /**
  * Extracts some bits from the command.
  *
- * @param {command_t} command (passed as reference).
+ * @param {Command} command (passed as reference).
  * @param {number} start
  * @param {number} count
  * @return {number}
  */
-vm.prototype.getbits = function(command, start, count) {
+VM.prototype.getbits = function(command, start, count) {
   var result = 0;
   var bit_mask = 0;
   var examining = 0;
@@ -1888,9 +1896,9 @@ vm.prototype.getbits = function(command, start, count) {
     (start < 0) ||
     (count > 32) ||
     (start > 63)) {
-    console.log('jsdvdnav: Bad call to vm#getbits(). Parameter out of range.');
+    console.log('jsdvdnav: Bad call to VM#getbits(). Parameter out of range.');
     abort();
-    return;
+    return 0;
   }
   // all ones, please
   /*bit_mask = ~bit_mask;
@@ -1905,7 +1913,7 @@ vm.prototype.getbits = function(command, start, count) {
   return result;
 };
 
-vm.prototype.get_GPRM = function(registers, reg) {
+VM.prototype.get_GPRM = function(registers, reg) {
   if (registers.GPRM_mode[reg] & 0x01) {
     // Counter mode
     // console.log('jsdvdnav: Getting counter %d',reg);
@@ -1919,7 +1927,7 @@ vm.prototype.get_GPRM = function(registers, reg) {
   }
 };
 
-vm.prototype.set_GPRM = function(registers, reg, value) {
+VM.prototype.set_GPRM = function(registers, reg, value) {
   if (registers.GPRM_mode[reg] & 0x01) {
     // Counter mode
     // console.log('jsdvdnav: Setting counter %d',reg);
@@ -1932,7 +1940,7 @@ vm.prototype.set_GPRM = function(registers, reg, value) {
 
 /* Eval register code, can either be system or general register.
  SXXX_XXXX, where S is 1 if it is system register. */
-vm.prototype.eval_reg = function(command, reg) {
+VM.prototype.eval_reg = function(command, reg) {
   if (reg & 0x80) {
     if ((reg & 0x1F) === 20) {
       console.log('jsdvdnav: Suspected RCE Region Protection!!!');
@@ -1947,7 +1955,7 @@ vm.prototype.eval_reg = function(command, reg) {
 /* Eval register or immediate data.
  AAAA_AAAA BBBB_BBBB, if immediate use all 16 bits for data else use
  lower eight bits for the system or general purpose register. */
-vm.prototype.eval_reg_or_data = function(command, imm, start) {
+VM.prototype.eval_reg_or_data = function(command, imm, start) {
   if (imm) { // immediate
     return this.getbits(command, start, 16);
   } else {
@@ -1959,19 +1967,26 @@ vm.prototype.eval_reg_or_data = function(command, imm, start) {
  xBBB_BBBB, if immediate use all 7 bits for data else use
  lower four bits for the general purpose register number. */
 // Evaluates gprm or data depending on bit, data is in byte n
-vm.prototype.eval_reg_or_data_2 = function(command, imm, start) {
+VM.prototype.eval_reg_or_data_2 = function(command, imm, start) {
   if (imm) // immediate
     return this.getbits(command, (start - 1), 7);
   else
     return this.get_GPRM(command.registers, (this.getbits(command, (start - 4), 4)));
 };
 
-/* Compare data using operation, return result from comparison.
- Helper function for the different if functions. */
-vm.prototype.eval_compare = function(operation, data1, data2) {
+/**
+ * Compare data using operation, return result from comparison.
+ * Helper function for the different if functions.
+ *
+ * @param {number} operation
+ * @param {number} data1
+ * @param {number} data2
+ * @return {boolean}
+ */
+VM.prototype.eval_compare = function(operation, data1, data2): boolean {
   switch (operation) {
     case 1:
-      return data1 & data2;
+      return !!(data1 & data2);
     case 2:
       return data1 === data2;
     case 3:
@@ -1986,12 +2001,12 @@ vm.prototype.eval_compare = function(operation, data1, data2) {
       return data1 < data2;
   }
   console.error('jsdvdnav: Invalid comparison code');
-  return 0;
+  return false;
 };
 
 /* Evaluate if version 1.
  Has comparison data in byte 3 and 4-5 (immediate or register) */
-vm.prototype.eval_if_version_1 = function(command) {
+VM.prototype.eval_if_version_1 = function(command) {
   var op = this.getbits(command, 54, 3);
   if (op) {
     return this.eval_compare(op, this.eval_reg(command, this.getbits(command, 39, 8)),
@@ -2002,7 +2017,7 @@ vm.prototype.eval_if_version_1 = function(command) {
 
 /* Evaluate if version 2.
  This version only compares register which are in byte 6 and 7 */
-vm.prototype.eval_if_version_2 = function(command) {
+VM.prototype.eval_if_version_2 = function(command) {
   var op = this.getbits(command, 54, 3);
   if (op) {
     return this.eval_compare(op, this.eval_reg(command, this.getbits(command, 15, 8)),
@@ -2013,7 +2028,7 @@ vm.prototype.eval_if_version_2 = function(command) {
 
 /* Evaluate if version 3.
  Has comparison data in byte 2 and 6-7 (immediate or register) */
-vm.prototype.eval_if_version_3 = function(command) {
+VM.prototype.eval_if_version_3 = function(command) {
   var op = this.getbits(command, 54, 3);
   if (op) {
     return this.eval_compare(op, this.eval_reg(command, this.getbits(command, 47, 8)),
@@ -2025,7 +2040,7 @@ vm.prototype.eval_if_version_3 = function(command) {
 /* Evaluate if version 4.
  Has comparison data in byte 1 and 4-5 (immediate or register)
  The register in byte 1 is only the lowe nibble (4 bits) */
-vm.prototype.eval_if_version_4 = function(command) {
+VM.prototype.eval_if_version_4 = function(command) {
   var op = this.getbits(command, 54, 3);
   if (op) {
     return this.eval_compare(op, this.eval_reg(command, this.getbits(command, 51, 4)),
@@ -2036,7 +2051,7 @@ vm.prototype.eval_if_version_4 = function(command) {
 
 /* Evaluate special instruction.... returns the new row/line number,
  0 if no new row and 256 if Break. */
-vm.prototype.eval_special_instruction = function(command, cond) {
+VM.prototype.eval_special_instruction = function(command, cond) {
   var line, level;
 
   switch (this.getbits(command, 51, 4)) {
@@ -2066,7 +2081,7 @@ vm.prototype.eval_special_instruction = function(command, cond) {
 /* Evaluate link by subinstruction.
  Return 1 if link, or 0 if no link
  Actual link instruction is in return_values parameter */
-vm.prototype.eval_link_subins = function(command, cond, return_values) {
+VM.prototype.eval_link_subins = function(command, cond, return_values) {
   var button = this.getbits(command, 15, 6);
   var linkop = this.getbits(command, 4, 5);
 
@@ -2074,7 +2089,7 @@ vm.prototype.eval_link_subins = function(command, cond, return_values) {
     return 0;
   // Unknown Link by Sub-Instruction command
 
-  // Assumes that the link_cmd_t enum has the same values as the LinkSIns codes
+  // Assumes that the link_cmd enum has the same values as the LinkSIns codes
   return_values.command = linkop;
   return_values.data1 = button;
   return cond;
@@ -2083,28 +2098,28 @@ vm.prototype.eval_link_subins = function(command, cond, return_values) {
 /* Evaluate link instruction.
  Return 1 if link, or 0 if no link
  Actual link instruction is in return_values parameter */
-vm.prototype.eval_link_instruction = function(command, cond, return_values) {
+VM.prototype.eval_link_instruction = function(command, cond, return_values) {
   var op = this.getbits(command, 51, 4);
 
   switch (op) {
     case 1:
       return this.eval_link_subins(command, cond, return_values);
     case 4:
-      return_values.command = link_cmd_t.LinkPGCN;
+      return_values.command = link_cmd.LinkPGCN;
       return_values.data1 = this.getbits(command, 14, 15);
       return cond;
     case 5:
-      return_values.command = link_cmd_t.LinkPTTN;
+      return_values.command = link_cmd.LinkPTTN;
       return_values.data1 = this.getbits(command, 9, 10);
       return_values.data2 = this.getbits(command, 15, 6);
       return cond;
     case 6:
-      return_values.command = link_cmd_t.LinkPGN;
+      return_values.command = link_cmd.LinkPGN;
       return_values.data1 = this.getbits(command, 6, 7);
       return_values.data2 = this.getbits(command, 15, 6);
       return cond;
     case 7:
-      return_values.command = link_cmd_t.LinkCN;
+      return_values.command = link_cmd.LinkCN;
       return_values.data1 = this.getbits(command, 7, 8);
       return_values.data2 = this.getbits(command, 15, 6);
       return cond;
@@ -2115,41 +2130,41 @@ vm.prototype.eval_link_instruction = function(command, cond, return_values) {
 /* Evaluate a jump instruction.
  returns 1 if jump or 0 if no jump
  actual jump instruction is in return_values parameter */
-vm.prototype.eval_jump_instruction = function(command, cond, return_values) {
+VM.prototype.eval_jump_instruction = function(command, cond, return_values) {
   switch (this.getbits(command, 51, 4)) {
     case 1:
-      return_values.command = link_cmd_t.Exit;
+      return_values.command = link_cmd.Exit;
       return cond;
     case 2:
-      return_values.command = link_cmd_t.JumpTT;
+      return_values.command = link_cmd.JumpTT;
       return_values.data1 = this.getbits(command, 22, 7);
       return cond;
     case 3:
-      return_values.command = link_cmd_t.JumpVTS_TT;
+      return_values.command = link_cmd.JumpVTS_TT;
       return_values.data1 = this.getbits(command, 22, 7);
       return cond;
     case 5:
-      return_values.command = link_cmd_t.JumpVTS_PTT;
+      return_values.command = link_cmd.JumpVTS_PTT;
       return_values.data1 = this.getbits(command, 22, 7);
       return_values.data2 = this.getbits(command, 41, 10);
       return cond;
     case 6:
       switch (this.getbits(command, 23, 2)) {
         case 0:
-          return_values.command = link_cmd_t.JumpSS_FP;
+          return_values.command = link_cmd.JumpSS_FP;
           return cond;
         case 1:
-          return_values.command = link_cmd_t.JumpSS_VMGM_MENU;
+          return_values.command = link_cmd.JumpSS_VMGM_MENU;
           return_values.data1 = this.getbits(command, 19, 4);
           return cond;
         case 2:
-          return_values.command = link_cmd_t.JumpSS_VTSM;
+          return_values.command = link_cmd.JumpSS_VTSM;
           return_values.data1 = this.getbits(command, 31, 8);
           return_values.data2 = this.getbits(command, 39, 8);
           return_values.data3 = this.getbits(command, 19, 4);
           return cond;
         case 3:
-          return_values.command = link_cmd_t.JumpSS_VMGM_PGC;
+          return_values.command = link_cmd.JumpSS_VMGM_PGC;
           return_values.data1 = this.getbits(command, 46, 15);
           return cond;
       }
@@ -2157,21 +2172,21 @@ vm.prototype.eval_jump_instruction = function(command, cond, return_values) {
     case 8:
       switch (this.getbits(command, 23, 2)) {
         case 0:
-          return_values.command = link_cmd_t.CallSS_FP;
+          return_values.command = link_cmd.CallSS_FP;
           return_values.data1 = this.getbits(command, 31, 8);
           return cond;
         case 1:
-          return_values.command = link_cmd_t.CallSS_VMGM_MENU;
+          return_values.command = link_cmd.CallSS_VMGM_MENU;
           return_values.data1 = this.getbits(command, 19, 4);
           return_values.data2 = this.getbits(command, 31, 8);
           return cond;
         case 2:
-          return_values.command = link_cmd_t.CallSS_VTSM;
+          return_values.command = link_cmd.CallSS_VTSM;
           return_values.data1 = this.getbits(command, 19, 4);
           return_values.data2 = this.getbits(command, 31, 8);
           return cond;
         case 3:
-          return_values.command = link_cmd_t.CallSS_VMGM_PGC;
+          return_values.command = link_cmd.CallSS_VMGM_PGC;
           return_values.data1 = this.getbits(command, 46, 15);
           return_values.data2 = this.getbits(command, 31, 8);
           return cond;
@@ -2183,7 +2198,7 @@ vm.prototype.eval_jump_instruction = function(command, cond, return_values) {
 
 /* Evaluate a set sytem register instruction
  May contain a link so return the same as eval_link */
-vm.prototype.eval_system_set = function(command, cond, return_values) {
+VM.prototype.eval_system_set = function(command, cond, return_values) {
   var i;
   var data, data2;
 
@@ -2240,7 +2255,7 @@ vm.prototype.eval_system_set = function(command, cond, return_values) {
 /* Evaluate set operation
  Sets the register given to the value indicated by op and data.
  For the swap case the contents of reg is stored in reg2. */
-vm.prototype.eval_set_op = function(command, op, reg, reg2, data) {
+VM.prototype.eval_set_op = function(command, op, reg, reg2, data) {
   /** @const */ var shortmax = 0xFFFF;
   var tmp = 0;
   switch (op) {
@@ -2298,7 +2313,7 @@ vm.prototype.eval_set_op = function(command, op, reg, reg2, data) {
 };
 
 // Evaluate set instruction, combined with either Link or Compare.
-vm.prototype.eval_set_version_1 = function(command, cond) {
+VM.prototype.eval_set_version_1 = function(command, cond) {
   var op = this.getbits(command, 59, 4);
   var reg = this.getbits(command, 35, 4);
   // FIXME: This is different from vmcmd.c!!!
@@ -2311,7 +2326,7 @@ vm.prototype.eval_set_version_1 = function(command, cond) {
 };
 
 // Evaluate set instruction, combined with both Link and Compare.
-vm.prototype.eval_set_version_2 = function(command, cond) {
+VM.prototype.eval_set_version_2 = function(command, cond) {
   var op = this.getbits(command, 59, 4);
   var reg = this.getbits(command, 51, 4);
   var reg2 = this.getbits(command, 35, 4);
@@ -2326,10 +2341,10 @@ vm.prototype.eval_set_version_2 = function(command, cond) {
 /* Evaluate a command
  returns row number of goto, 0 if no goto, -1 if link.
  Link command in return_values */
-vm.prototype.eval_command = function(bytes, return_values) {
+VM.prototype.eval_command = function(bytes, return_values) {
   var registers = this.state.registers;
   var cond = 0, res = 0;
-  var command = new command_t();
+  var command = new Command();
   // Working with strings avoid messing around with rounded values.
   // Alternatively, we could use a typed array here.
   command.instruction = bytes.map(function(byte: number) {
@@ -2338,8 +2353,8 @@ vm.prototype.eval_command = function(bytes, return_values) {
   command.examined = 0;
   command.registers = registers;
 
-  //memset(return_values, 0, sizeof(link_t));
-  return_values.command = link_cmd_t.LinkNoLink;
+  //memset(return_values, 0, sizeof(Link));
+  return_values.command = link_cmd.LinkNoLink;
   return_values.data1 = 0;
   return_values.data2 = 0;
   return_values.data3 = 0;
@@ -2351,6 +2366,7 @@ vm.prototype.eval_command = function(bytes, return_values) {
       if (res === -1) {
         console.log('jsdvdnav: Unknown Instruction!');
         abort();
+        return;
       }
       break;
     case 1: // Link/jump instructions
@@ -2405,6 +2421,7 @@ vm.prototype.eval_command = function(bytes, return_values) {
     default: // Unknown command
       console.error('jsdvdnav: Unknown Command=%s', utils.toHex(this.getbits(command, 63, 3)));
       abort();
+      return;
   }
   // Check if there are bits not yet examined
 
@@ -2415,67 +2432,67 @@ vm.prototype.eval_command = function(bytes, return_values) {
   return res;
 };
 
-vm.prototype.linkcmd2str = function(cmd) {
+VM.prototype.linkcmd2str = function(cmd) {
   switch (cmd) {
-    case link_cmd_t.LinkNoLink:
+    case link_cmd.LinkNoLink:
       return 'LinkNoLink';
-    case link_cmd_t.LinkTopC:
+    case link_cmd.LinkTopC:
       return 'LinkTopC';
-    case link_cmd_t.LinkNextC:
+    case link_cmd.LinkNextC:
       return 'LinkNextC';
-    case link_cmd_t.LinkPrevC:
+    case link_cmd.LinkPrevC:
       return 'LinkPrevC';
-    case link_cmd_t.LinkTopPG:
+    case link_cmd.LinkTopPG:
       return 'LinkTopPG';
-    case link_cmd_t.LinkNextPG:
+    case link_cmd.LinkNextPG:
       return 'LinkNextPG';
-    case link_cmd_t.LinkPrevPG:
+    case link_cmd.LinkPrevPG:
       return 'LinkPrevPG';
-    case link_cmd_t.LinkTopPGC:
+    case link_cmd.LinkTopPGC:
       return 'LinkTopPGC';
-    case link_cmd_t.LinkNextPGC:
+    case link_cmd.LinkNextPGC:
       return 'LinkNextPGC';
-    case link_cmd_t.LinkPrevPGC:
+    case link_cmd.LinkPrevPGC:
       return 'LinkPrevPGC';
-    case link_cmd_t.LinkGoUpPGC:
+    case link_cmd.LinkGoUpPGC:
       return 'LinkGoUpPGC';
-    case link_cmd_t.LinkTailPGC:
+    case link_cmd.LinkTailPGC:
       return 'LinkTailPGC';
-    case link_cmd_t.LinkRSM:
+    case link_cmd.LinkRSM:
       return 'LinkRSM';
-    case link_cmd_t.LinkPGCN:
+    case link_cmd.LinkPGCN:
       return 'LinkPGCN';
-    case link_cmd_t.LinkPTTN:
+    case link_cmd.LinkPTTN:
       return 'LinkPTTN';
-    case link_cmd_t.LinkPGN:
+    case link_cmd.LinkPGN:
       return 'LinkPGN';
-    case link_cmd_t.LinkCN:
+    case link_cmd.LinkCN:
       return 'LinkCN';
-    case link_cmd_t.Exit:
+    case link_cmd.Exit:
       return 'Exit';
-    case link_cmd_t.JumpTT:
+    case link_cmd.JumpTT:
       return 'JumpTT';
-    case link_cmd_t.JumpVTS_TT:
+    case link_cmd.JumpVTS_TT:
       return 'JumpVTS_TT';
-    case link_cmd_t.JumpVTS_PTT:
+    case link_cmd.JumpVTS_PTT:
       return 'JumpVTS_PTT';
-    case link_cmd_t.JumpSS_FP:
+    case link_cmd.JumpSS_FP:
       return 'JumpSS_FP';
-    case link_cmd_t.JumpSS_VMGM_MENU:
+    case link_cmd.JumpSS_VMGM_MENU:
       return 'JumpSS_VMGM_MENU';
-    case link_cmd_t.JumpSS_VTSM:
+    case link_cmd.JumpSS_VTSM:
       return 'JumpSS_VTSM';
-    case link_cmd_t.JumpSS_VMGM_PGC:
+    case link_cmd.JumpSS_VMGM_PGC:
       return 'JumpSS_VMGM_PGC';
-    case link_cmd_t.CallSS_FP:
+    case link_cmd.CallSS_FP:
       return 'CallSS_FP';
-    case link_cmd_t.CallSS_VMGM_MENU:
+    case link_cmd.CallSS_VMGM_MENU:
       return 'CallSS_VMGM_MENU';
-    case link_cmd_t.CallSS_VTSM:
+    case link_cmd.CallSS_VTSM:
       return 'CallSS_VTSM';
-    case link_cmd_t.CallSS_VMGM_PGC:
+    case link_cmd.CallSS_VMGM_PGC:
       return 'CallSS_VMGM_PGC';
-    case link_cmd_t.PlayThis:
+    case link_cmd.PlayThis:
       return 'PlayThis';
   }
   return '(bug)';
@@ -2485,74 +2502,74 @@ vm.prototype.linkcmd2str = function(cmd) {
 /**
  * For debugging: prints a link in readable form.
  */
-vm.prototype.print_link = function(value) {
+VM.prototype.print_link = function(value) {
   var cmd = this.linkcmd2str(value.command);
 
   switch (value.command) {
-    case link_cmd_t.LinkNoLink:
-    case link_cmd_t.LinkTopC:
-    case link_cmd_t.LinkNextC:
-    case link_cmd_t.LinkPrevC:
-    case link_cmd_t.LinkTopPG:
-    case link_cmd_t.LinkNextPG:
-    case link_cmd_t.LinkPrevPG:
-    case link_cmd_t.LinkTopPGC:
-    case link_cmd_t.LinkNextPGC:
-    case link_cmd_t.LinkPrevPGC:
-    case link_cmd_t.LinkGoUpPGC:
-    case link_cmd_t.LinkTailPGC:
-    case link_cmd_t.LinkRSM:
+    case link_cmd.LinkNoLink:
+    case link_cmd.LinkTopC:
+    case link_cmd.LinkNextC:
+    case link_cmd.LinkPrevC:
+    case link_cmd.LinkTopPG:
+    case link_cmd.LinkNextPG:
+    case link_cmd.LinkPrevPG:
+    case link_cmd.LinkTopPGC:
+    case link_cmd.LinkNextPGC:
+    case link_cmd.LinkPrevPGC:
+    case link_cmd.LinkGoUpPGC:
+    case link_cmd.LinkTailPGC:
+    case link_cmd.LinkRSM:
       console.log('jsdvdnav: %s (button %d)', cmd, value.data1);
       break;
-    case link_cmd_t.LinkPGCN:
-    case link_cmd_t.JumpTT:
-    case link_cmd_t.JumpVTS_TT:
-    case link_cmd_t.JumpSS_VMGM_MENU: // === 2 -> Title Menu
-    case link_cmd_t.JumpSS_VMGM_PGC:
+    case link_cmd.LinkPGCN:
+    case link_cmd.JumpTT:
+    case link_cmd.JumpVTS_TT:
+    case link_cmd.JumpSS_VMGM_MENU: // === 2 -> Title Menu
+    case link_cmd.JumpSS_VMGM_PGC:
       console.log('jsdvdnav: %s %d', cmd, value.data1);
       break;
-    case link_cmd_t.LinkPTTN:
-    case link_cmd_t.LinkPGN:
-    case link_cmd_t.LinkCN:
+    case link_cmd.LinkPTTN:
+    case link_cmd.LinkPGN:
+    case link_cmd.LinkCN:
       console.log('jsdvdnav: %s %d (button %d)', cmd, value.data1, value.data2);
       break;
-    case link_cmd_t.Exit:
-    case link_cmd_t.JumpSS_FP:
-    case link_cmd_t.PlayThis: // Humm.. should we have this at all..
+    case link_cmd.Exit:
+    case link_cmd.JumpSS_FP:
+    case link_cmd.PlayThis: // Humm.. should we have this at all..
       console.log('jsdvdnav: %s', cmd);
       break;
-    case link_cmd_t.JumpVTS_PTT:
+    case link_cmd.JumpVTS_PTT:
       console.log('jsdvdnav: %s %d:%d', cmd, value.data1, value.data2);
       break;
-    case link_cmd_t.JumpSS_VTSM:
+    case link_cmd.JumpSS_VTSM:
       console.log('jsdvdnav: %s vts %d title %d menu %d',
         cmd, value.data1, value.data2, value.data3);
       break;
-    case link_cmd_t.CallSS_FP:
+    case link_cmd.CallSS_FP:
       console.log('jsdvdnav: %s resume cell %d', cmd, value.data1);
       break;
-    case link_cmd_t.CallSS_VMGM_MENU: // === 2 -> Title Menu
-    case link_cmd_t.CallSS_VTSM:
+    case link_cmd.CallSS_VMGM_MENU: // === 2 -> Title Menu
+    case link_cmd.CallSS_VTSM:
       console.log('jsdvdnav: %s %d resume cell %d', cmd, value.data1, value.data2);
       break;
-    case link_cmd_t.CallSS_VMGM_PGC:
+    case link_cmd.CallSS_VMGM_PGC:
       console.log('jsdvdnav: %s %d resume cell %d', cmd, value.data1, value.data2);
       break;
   }
 };
 
-vm.prototype.print_current_domain_state = function() {
+VM.prototype.print_current_domain_state = function() {
   switch (this.state.domain) {
-    case DVDDomain_t.DVD_DOMAIN_VTSTitle:
+    case DVDDomain.DVD_DOMAIN_VTSTitle:
       console.log('jsdvdnav: Video Title Domain: -');
       break;
-    case DVDDomain_t.DVD_DOMAIN_VTSMenu:
+    case DVDDomain.DVD_DOMAIN_VTSMenu:
       console.log('jsdvdnav: Video Title Menu Domain: -');
       break;
-    case DVDDomain_t.DVD_DOMAIN_VMGM:
+    case DVDDomain.DVD_DOMAIN_VMGM:
       console.log('jsdvdnav: Video Manager Menu Domain: -');
       break;
-    case DVDDomain_t.DVD_DOMAIN_FirstPlay:
+    case DVDDomain.DVD_DOMAIN_FirstPlay:
       console.log('jsdvdnav: First Play Domain: -');
       break;
     default:
@@ -2576,7 +2593,7 @@ vm.prototype.print_current_domain_state = function() {
  * @param position
  * @return {string}
  */
-vm.prototype.print_position = function(position) {
+VM.prototype.print_position = function(position) {
   if (!position) {
     return '';
   }
@@ -2599,7 +2616,7 @@ vm.prototype.print_position = function(position) {
 /**
  * for debugging: dumps VM registers.
  */
-vm.prototype.print_registers = function() {
+VM.prototype.print_registers = function() {
   var registers = this.state.registers;
   var i = 0;
 
@@ -2629,7 +2646,7 @@ function abort() {
   throw new Error('Unknown error');
 }
 
-// Ported from vm/vmcmd.c
+// Ported from VM/vmcmd.c
 
 var cmp_op_table = [
   '', '&', '==', '!=', '>=', '>', '<=', '<'
@@ -2712,7 +2729,7 @@ var system_reg_abbr_table = [
   ''
 ];
 
-vm.prototype.print_system_reg = function(reg) {
+VM.prototype.print_system_reg = function(reg) {
   var msg = '';
   if (reg < system_reg_abbr_table.length / system_reg_abbr_table[0].length) {
     msg += sprintf('%s (SRPM:%d)', system_reg_table[reg], reg);
@@ -2723,7 +2740,7 @@ vm.prototype.print_system_reg = function(reg) {
   return msg;
 };
 
-vm.prototype.print_g_reg = function(reg) {
+VM.prototype.print_g_reg = function(reg) {
   var msg = '';
   if (reg < 16) {
     //msg += sprintf("g[%" PRIu8 "]", reg);
@@ -2735,7 +2752,7 @@ vm.prototype.print_g_reg = function(reg) {
   return msg;
 };
 
-vm.prototype.print_reg = function(reg) {
+VM.prototype.print_reg = function(reg) {
   var msg = '';
   if (reg & 0x80) {
     msg += this.print_system_reg(reg & 0x7F);
@@ -2746,7 +2763,7 @@ vm.prototype.print_reg = function(reg) {
   return msg;
 };
 
-vm.prototype.print_cmp_op = function(op) {
+VM.prototype.print_cmp_op = function(op) {
   var msg = '';
   if (op < cmp_op_table.length / cmp_op_table[0].length) {
     msg += sprintf(' %s ', cmp_op_table[op]);
@@ -2757,7 +2774,7 @@ vm.prototype.print_cmp_op = function(op) {
   return msg;
 };
 
-vm.prototype.print_set_op = function(op) {
+VM.prototype.print_set_op = function(op) {
   var msg = '';
   if (op < set_op_table.length / cmp_op_table[0].length) {
     msg += sprintf(' %s ', set_op_table[op]);
@@ -2768,7 +2785,7 @@ vm.prototype.print_set_op = function(op) {
   return msg;
 };
 
-vm.prototype.print_reg_or_data = function(command, immediate, start) {
+VM.prototype.print_reg_or_data = function(command, immediate, start) {
   var msg = '';
   if (immediate) {
     var i = this.getbits(command, start, 16);
@@ -2784,7 +2801,7 @@ vm.prototype.print_reg_or_data = function(command, immediate, start) {
   return msg;
 };
 
-vm.prototype.print_reg_or_data_2 = function(command, immediate, start) {
+VM.prototype.print_reg_or_data_2 = function(command, immediate, start) {
   var msg = '';
   if (immediate) {
     msg += sprintf('%s', utils.toHex(this.getbits(command, start - 1, 7)));
@@ -2796,7 +2813,7 @@ vm.prototype.print_reg_or_data_2 = function(command, immediate, start) {
   return msg;
 };
 
-vm.prototype.print_reg_or_data_3 = function(command, immediate, start) {
+VM.prototype.print_reg_or_data_3 = function(command, immediate, start) {
   var msg = '';
   if (immediate) {
     var i = this.getbits(command, start, 16);
@@ -2812,7 +2829,7 @@ vm.prototype.print_reg_or_data_3 = function(command, immediate, start) {
   return msg;
 };
 
-vm.prototype.print_if_version_1 = function(command) {
+VM.prototype.print_if_version_1 = function(command) {
   var msg = '';
   var op = this.getbits(command, 54, 3);
 
@@ -2827,7 +2844,7 @@ vm.prototype.print_if_version_1 = function(command) {
   return msg;
 };
 
-vm.prototype.print_if_version_2 = function(command) {
+VM.prototype.print_if_version_2 = function(command) {
   var msg = '';
   var op = this.getbits(command, 54, 3);
 
@@ -2842,7 +2859,7 @@ vm.prototype.print_if_version_2 = function(command) {
   return msg;
 };
 
-vm.prototype.print_if_version_3 = function(command) {
+VM.prototype.print_if_version_3 = function(command) {
   var msg = '';
   var op = this.getbits(command, 54, 3);
 
@@ -2857,7 +2874,7 @@ vm.prototype.print_if_version_3 = function(command) {
   return msg;
 };
 
-vm.prototype.print_if_version_4 = function(command) {
+VM.prototype.print_if_version_4 = function(command) {
   var msg = '';
   var op = this.getbits(command, 54, 3);
 
@@ -2872,7 +2889,7 @@ vm.prototype.print_if_version_4 = function(command) {
   return msg;
 };
 
-vm.prototype.print_if_version_5 = function(command) {
+VM.prototype.print_if_version_5 = function(command) {
   var msg = '';
   var op = this.getbits(command, 54, 3);
   var set_immediate = this.getbits(command, 60, 1);
@@ -2896,7 +2913,7 @@ vm.prototype.print_if_version_5 = function(command) {
   return msg;
 };
 
-vm.prototype.print_special_instruction = function(command) {
+VM.prototype.print_special_instruction = function(command) {
   var msg = '';
   var op = this.getbits(command, 51, 4);
 
@@ -2922,7 +2939,7 @@ vm.prototype.print_special_instruction = function(command) {
   return msg;
 };
 
-vm.prototype.print_linksub_instruction = function(command) {
+VM.prototype.print_linksub_instruction = function(command) {
   var msg = '';
   var linkop = this.getbits(command, 7, 8);
   var button = this.getbits(command, 15, 6);
@@ -2937,7 +2954,7 @@ vm.prototype.print_linksub_instruction = function(command) {
   return msg;
 };
 
-vm.prototype.print_link_instruction = function(command, optional) {
+VM.prototype.print_link_instruction = function(command, optional) {
   var msg = '';
   var op = this.getbits(command, 51, 4);
 
@@ -2975,7 +2992,7 @@ vm.prototype.print_link_instruction = function(command, optional) {
   return msg;
 };
 
-vm.prototype.print_jump_instruction = function(command) {
+VM.prototype.print_jump_instruction = function(command) {
   var msg = '';
   switch (this.getbits(command, 51, 4)) {
     case 1:
@@ -3039,7 +3056,7 @@ vm.prototype.print_jump_instruction = function(command) {
   return msg;
 };
 
-vm.prototype.print_system_set = function(command) {
+VM.prototype.print_system_set = function(command) {
   var msg = '';
   var i = 0;
   // FIXME: What about SPRM11 ? Karaoke
@@ -3094,7 +3111,7 @@ vm.prototype.print_system_set = function(command) {
   return msg;
 };
 
-vm.prototype.print_set_version_1 = function(command) {
+VM.prototype.print_set_version_1 = function(command) {
   var msg = '';
   var set_op = this.getbits(command, 59, 4);
 
@@ -3109,7 +3126,7 @@ vm.prototype.print_set_version_1 = function(command) {
   return msg;
 };
 
-vm.prototype.print_set_version_2 = function(command) {
+VM.prototype.print_set_version_2 = function(command) {
   var msg = '';
   var set_op = this.getbits(command, 59, 4);
 
@@ -3124,7 +3141,7 @@ vm.prototype.print_set_version_2 = function(command) {
   return msg;
 };
 
-vm.prototype.print_set_version_3 = function(command) {
+VM.prototype.print_set_version_3 = function(command) {
   var msg = '';
   var set_op = this.getbits(command, 59, 4);
 
@@ -3139,9 +3156,9 @@ vm.prototype.print_set_version_3 = function(command) {
   return msg;
 };
 
-vm.prototype.print_mnemonic = function(vm_command) {
+VM.prototype.print_mnemonic = function(vm_command) {
   var msg = '';
-  var command = new command_t();
+  var command = new Command();
   command.instruction = vm_command.bytes.map(function(byte: number) {
     return sprintf('%08i', (byte).toString(2));
   }).join('');
@@ -3208,7 +3225,7 @@ vm.prototype.print_mnemonic = function(vm_command) {
   return msg;
 };
 
-vm.prototype.print_cmd = function(row, vm_command) {
+VM.prototype.print_cmd = function(row, vm_command) {
   var msg = sprintf('(%03d) ', row + 1);
 
   for (var i = 0; i < 8; i++)
