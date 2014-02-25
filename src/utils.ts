@@ -398,7 +398,7 @@ export function toHex(dec: number): string {
  * Quick title formatting function.
  *
  * @param {string} title
- * @returns {string} A formatted title.
+ * @return {string} A formatted title.
  */
 export function formatTitle(title: string): string {
   return title
@@ -417,7 +417,7 @@ export function formatTitle(title: string): string {
  *  * Replace the `.VOB` extension by `.webm`.
  *
  * @param {string} path
- * @returns {string} A formatted title.
+ * @return {string} A formatted title.
  */
 export function convertVobPath(path: string): string {
   return path

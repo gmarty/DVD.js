@@ -33,7 +33,7 @@ export = dvdnav;
  * The main DVDNAV type.
  *
  * @param {HTMLVideoElement} screen A video element.
- * @returns {dvdnav}
+ * @return {dvdnav}
  */
 function dvdnav(screen) {
   if (!(this instanceof dvdnav)) return new dvdnav(screen);

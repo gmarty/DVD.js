@@ -125,7 +125,7 @@ function convertIfo(dvdPath: string, callback) {
    * Used for naming both the IFO files and the metadata file.
    *
    * @param name A file name.
-   * @returns {string}
+   * @return {string}
    */
   function getWebName(name: string): string {
     return path.join(dvdPath, '/web/', getFileName(name));
@@ -136,7 +136,7 @@ function convertIfo(dvdPath: string, callback) {
  * Transform the file name of a file.
  *
  * @param name A file name.
- * @returns {string}
+ * @return {string}
  */
 function getFileName(name: string): string {
   return name.replace(/\.IFO$/i, '') + '.json';
