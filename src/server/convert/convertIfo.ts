@@ -43,7 +43,7 @@ function convertIfo(dvdPath: string, callback) {
     // There are better ways to do async...
     function next(ifoFile: string) {
       var name = path.basename(ifoFile);
-      ifoFilesList.push('/' + dvdName + '/web/' + getFileName(name));
+      ifoFilesList.push('/' + dvdName + '/web/' + getJsonFileName(name));
 
       fs.readFile(ifoFile, function(err, data) {
         if (err) {
@@ -128,16 +128,16 @@ function convertIfo(dvdPath: string, callback) {
    * @return {string}
    */
   function getWebName(name: string): string {
-    return path.join(dvdPath, '/web/', getFileName(name));
+    return path.join(dvdPath, '/web/', getJsonFileName(name));
   }
 }
 
 /**
- * Transform the file name of a file.
+ * Transform the file name of a JSON file.
  *
  * @param name A file name.
  * @return {string}
  */
-function getFileName(name: string): string {
+function getJsonFileName(name: string): string {
   return name.replace(/\.IFO$/i, '') + '.json';
 }

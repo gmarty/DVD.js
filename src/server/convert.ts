@@ -10,6 +10,7 @@ import createDir = require('../server/convert/createDir');
 import generateCatalogue = require('../server/convert/generateCatalogue');
 import convertIfo = require('../server/convert/convertIfo');
 import extractNavPackets = require('../server/convert/extractNavPackets');
+import generateChapters = require('../server/convert/generateChapters');
 import encodeVideo = require('../server/convert/encodeVideo');
 
 var cli = optimist
@@ -42,7 +43,10 @@ function convertDVD(dvdPath) {
         // Extract NAV packets.
         extractNavPackets(dvdPath, function() {
           // Convert video.
-          encodeVideo(dvdPath);
+          generateChapters(dvdPath, function() {
+            // Convert video.
+            encodeVideo(dvdPath);
+          });
         });
       });
     });
