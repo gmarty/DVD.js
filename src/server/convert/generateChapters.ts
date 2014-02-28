@@ -80,7 +80,7 @@ function generateChapters(dvdPath: string, callback) {
     saveWebVTTFile(cues);
 
     function saveWebVTTFile(cues) {
-      var fileName = getVTTFileName(name, vttFile);
+      var fileName = getVTTFilename(name, vttFile);
       var content = [
         'WEBVTT',
         ''
@@ -134,7 +134,7 @@ function generateChapters(dvdPath: string, callback) {
 /**
  * Transform the file name of a JSON file.
  *
- * @param name A file name.
+ * @param {string} name A file name.
  * @return {string}
  */
 function getJsonFileName(name: string): string {
@@ -144,11 +144,11 @@ function getJsonFileName(name: string): string {
 /**
  * Return the file path for the web given a file.
  *
- * @param name A file name.
- * @param vttFile The number of the VTT file (A IFO file can result in several VTT files).
+ * @param {string} name A file name.
+ * @param {number} vttFile The number of the VTT file (A IFO file can result in several VTT files).
  * @return {string}
  */
-function getVTTFileName(name: string, vttFile: number): string {
+function getVTTFilename(name: string, vttFile: number): string {
   return name.replace(/\.json/i, '') + '-' + vttFile + '.vtt';
 }
 

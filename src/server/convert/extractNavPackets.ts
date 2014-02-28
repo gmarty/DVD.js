@@ -64,7 +64,7 @@ function extractNav(dvdPath: string, callback) {
             dsi: navRead.parseDSI(new jDataView(navPackets.dsi, undefined, undefined, false))
           };
 
-          var jsonPath = path.join(dvdPath, '/web/', name + '-' + utils.toHex(sector) + '.json');
+          var jsonPath = getNavFilename(name, sector);
           fs.writeFile(jsonPath, JSON.stringify(json), function(err) {
             if (err) {
               console.error(err);
@@ -96,4 +96,27 @@ function extractNav(dvdPath: string, callback) {
       });
     }
   });
+
+  /**
+   * Return the file path for the web given a file.
+   * Used for naming both the NAV packet files and the metadata file.
+   *
+   * @param {string} name A file name.
+   * @param {number} sector A file name.
+   * @return {string}
+   */
+  function getNavFilename(name: string, sector: number): string {
+    return path.join(dvdPath, '/web/', getJsonFileName(name, sector));
+  }
+}
+
+/**
+ * Transform the file name of a JSON file.
+ *
+ * @param {string} name A file name.
+ * @param {number} sector A file name.
+ * @return {string}
+ */
+function getJsonFileName(name: string, sector: number): string {
+  return name.replace(/\.IFO$/i, '') + '-' + utils.toHex(sector) + '.json';
 }
