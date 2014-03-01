@@ -37,6 +37,11 @@ function extractNav(dvdPath: string, callback) {
       console.error(err);
     }
 
+    // Filter out non-menu VOB files as we only use these NAV packets for generating UI buttons.
+    vobFiles = vobFiles.filter(function(ifoFile) {
+      return ifoFile.match(/VIDEO_TS\.VOB$/) || ifoFile.match(/VTS_\d{1,2}_0.VOB$/);
+    });
+
     var pointer = 0;
 
     next(vobFiles[pointer]);
@@ -118,5 +123,5 @@ function extractNav(dvdPath: string, callback) {
  * @return {string}
  */
 function getJsonFileName(name: string, sector: number): string {
-  return name.replace(/\.IFO$/i, '') + '-' + utils.toHex(sector) + '.json';
+  return name.replace(/\.VOB$/i, '') + '-' + utils.toHex(sector) + '.json';
 }
