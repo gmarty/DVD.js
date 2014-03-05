@@ -6,11 +6,12 @@
 import path = require('path');
 import optimist = require('optimist');
 
-import createDir = require('../server/convert/createDir');
 import generateCatalogue = require('../server/convert/generateCatalogue');
+import createDir = require('../server/convert/createDir');
 import convertIfo = require('../server/convert/convertIfo');
-import extractNavPackets = require('../server/convert/extractNavPackets');
 import generateChapters = require('../server/convert/generateChapters');
+import extractNavPackets = require('../server/convert/extractNavPackets');
+import generateButtons = require('../server/convert/generateButtons');
 import encodeVideo = require('../server/convert/encodeVideo');
 
 var cli = optimist
@@ -40,12 +41,15 @@ function convertDVD(dvdPath) {
     createDir(dvdPath, function() {
       // Convert IFO files.
       convertIfo(dvdPath, function() {
-        // Extract NAV packets.
-        extractNavPackets(dvdPath, function() {
-          // Convert video.
-          generateChapters(dvdPath, function() {
-            // Convert video.
-            encodeVideo(dvdPath);
+        // Generate WebVTT files with video chapters.
+        generateChapters(dvdPath, function() {
+          // Extract NAV packets.
+          extractNavPackets(dvdPath, function() {
+            // Generate buttons for menu UI.
+            generateButtons(dvdPath, function() {
+              // Convert video.
+              encodeVideo(dvdPath);
+            });
           });
         });
       });
