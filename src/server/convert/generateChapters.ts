@@ -93,7 +93,7 @@ function generateChapters(dvdPath: string, callback) {
       });
 
       vttFilesList.push('/' + dvdName + '/web/' + fileName);
-      fs.writeFile(path.join(dvdPath, '/web', '/', fileName), content.join('\n'), function(err) {
+      fs.writeFile(path.join(dvdPath, '/web/', fileName), content.join('\n'), function(err) {
         if (err) {
           console.error(err);
         }
@@ -149,7 +149,7 @@ function getJsonFileName(name: string): string {
  * @return {string}
  */
 function getVTTFilename(name: string, vttFile: number): string {
-  return name.replace(/\.json/i, '') + '-' + vttFile + '.vtt';
+  return name.replace(/\_0.json$/i, '') + '-' + vttFile + '.vtt';
 }
 
 function timeToWebVTTTimestamp(time) {
