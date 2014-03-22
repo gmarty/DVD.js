@@ -15,7 +15,7 @@ module.exports = function(grunt) {
         options: {
           module: 'amd',
           target: 'es5',
-          base_path: 'src',
+          basePath: 'src',
           sourcemap: false,
           declaration: false,
           comments: true
@@ -32,7 +32,7 @@ module.exports = function(grunt) {
         options: {
           module: 'commonjs',
           target: 'es5',
-          base_path: 'src',
+          basePath: 'src',
           sourcemap: false,
           declaration: false,
           removeComments: true
