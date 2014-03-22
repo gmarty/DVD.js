@@ -7,8 +7,11 @@ import fs = require('fs');
 import path = require('path');
 import glob = require('glob');
 
+import serverUtils = require('../../server/utils/utils');
 import editMetadataFile = require('../../server/utils/editMetadataFile');
 import utils = require('../../utils');
+
+var getFileIndex = serverUtils.getFileIndex;
 
 export = generateButtons;
 
@@ -28,7 +31,7 @@ function generateButtons(dvdPath: string, callback) {
     }
 
     var dvdName = dvdPath.split(path.sep).pop(); // Use path.resolve() instead.
-    var cssFilesList = [];
+    var filesList = [];
     var pointer = 0;
 
     next(ifoFiles[pointer]);
@@ -63,7 +66,8 @@ function generateButtons(dvdPath: string, callback) {
       function saveCSSFile(css) {
         var fileName = getCSSFileName(name);
 
-        cssFilesList.push('/' + dvdName + '/web/' + fileName);
+        filesList[getFileIndex(name)] = {};
+        filesList[getFileIndex(name)].css = '/' + dvdName + '/web/' + fileName;
         fs.writeFile(path.join(dvdPath, '/web/', fileName), css.join('\n'), function(err) {
           if (err) {
             console.error(err);
@@ -82,7 +86,7 @@ function generateButtons(dvdPath: string, callback) {
       } else {
         // At the end of all iterations.
         // Save a metadata file containing the list of all IFO files.
-        editMetadataFile(getWebName('metadata'), 'css', cssFilesList, function() {
+        editMetadataFile(getWebName('metadata'), filesList, function() {
           callback();
         });
       }

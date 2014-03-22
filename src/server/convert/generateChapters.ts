@@ -7,9 +7,11 @@ import fs = require('fs');
 import path = require('path');
 import glob = require('glob');
 
+import serverUtils = require('../../server/utils/utils');
 import editMetadataFile = require('../../server/utils/editMetadataFile');
 import utils = require('../../utils');
 
+var getFileIndex = serverUtils.getFileIndex;
 var sprintf = utils.sprintf;
 
 export = generateChapters;
@@ -32,18 +34,18 @@ function generateChapters(dvdPath: string, callback) {
   process.stdout.write('\nGenerating chapter files:\n');
 
   var ifoPath = path.join(dvdPath, '/web', '/metadata.json');
-  var ifoFiles = require(ifoPath).ifo;
+  var filesList = require(ifoPath);
 
   var dvdName = dvdPath.split(path.sep).pop();
   var vttFilesList = [];
   var pointer = 0;
 
   // Filter out menu IFO files.
-  ifoFiles = ifoFiles.filter(function(ifoFile) {
-    return !ifoFile.match(/VIDEO_TS\.json$/) && !ifoFile.match(/VTS_\d{1,2}_0.IFO\.json$/);
+  filesList = filesList.filter(function(ifoFile) {
+    return !ifoFile.ifo.match(/VIDEO_TS\.json$/) && !ifoFile.ifo.match(/VTS_\d{1,2}_0.IFO\.json$/);
   });
 
-  next(ifoFiles[pointer]);
+  next(filesList[pointer].ifo);
 
   // There are better ways to do async...
   function next(ifoFile: string) {
@@ -92,7 +94,11 @@ function generateChapters(dvdPath: string, callback) {
         content.push('');
       });
 
-      vttFilesList.push('/' + dvdName + '/web/' + fileName);
+      if (!vttFilesList[getFileIndex(name)]) {
+        vttFilesList[getFileIndex(name)] = {};
+        vttFilesList[getFileIndex(name)].vtt = [];
+      }
+      vttFilesList[getFileIndex(name)].vtt.push('/' + dvdName + '/web/' + fileName);
       fs.writeFile(path.join(dvdPath, '/web/', fileName), content.join('\n'), function(err) {
         if (err) {
           console.error(err);
@@ -106,14 +112,14 @@ function generateChapters(dvdPath: string, callback) {
 
     // Next iteration.
     pointer++;
-    if (pointer < ifoFiles.length) {
+    if (pointer < filesList.length) {
       setTimeout(function() {
-        next(ifoFiles[pointer]);
+        next(filesList[pointer].ifo);
       }, 0);
     } else {
       // At the end of all iterations.
       // Save a metadata file containing the list of all IFO files.
-      editMetadataFile(getWebName('metadata'), 'vtt', vttFilesList, function() {
+      editMetadataFile(getWebName('metadata'), vttFilesList, function() {
         callback();
       });
     }

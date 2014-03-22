@@ -5,11 +5,12 @@
 
 import fs = require('fs');
 import path = require('path');
+import _ = require('lodash');
 
 export = editMetadataFile;
 
-function editMetadataFile(file, key, value, callback) {
-  var content = {};
+function editMetadataFile(file, value, callback) {
+  var content = [];
   // We check if the file exists.
   fs.exists(file, function(exists) {
     if (exists) {
@@ -17,7 +18,7 @@ function editMetadataFile(file, key, value, callback) {
     }
 
     // Now, we append the data.
-    content[key] = value;
+    content = _.merge(content, value);
 
     fs.writeFile(file, JSON.stringify(content), function(err) {
       if (err) {
