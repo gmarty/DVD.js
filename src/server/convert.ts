@@ -48,7 +48,9 @@ function convertDVD(dvdPath) {
             // Generate buttons for menu UI.
             generateButtons(dvdPath, function() {
               // Convert video.
-              encodeVideo(dvdPath);
+              encodeVideo(dvdPath, function() {
+                console.log('That\'s all folks!');
+              });
             });
           });
         });

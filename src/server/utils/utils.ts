@@ -1,6 +1,8 @@
 'use strict';
 
 
+import path = require('path');
+
 /**
  * Given a DVD file name, returns the index following this model:
  *  * VIDEO_TS.(IFO|VOB) => 0
@@ -12,6 +14,7 @@
  * @return {number}
  */
 export function getFileIndex(name: string): number {
+  name = path.basename(name); // Keep file name only.
   name = name.substr(0, 8);
   switch (name) {
     case 'VIDEO_TS':

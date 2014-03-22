@@ -9,9 +9,12 @@ import glob = require('glob');
 import child_process = require('child_process');
 import _ = require('lodash');
 
+import serverUtils = require('../../server/utils/utils');
+import editMetadataFile = require('../../server/utils/editMetadataFile');
 import utils = require('../../utils');
 
 var spawn = child_process.spawn;
+var getFileIndex = serverUtils.getFileIndex;
 
 export = encodeVideo;
 
@@ -21,10 +24,13 @@ export = encodeVideo;
  * @see https://sites.google.com/a/webmproject.org/wiki/ffmpeg
  *
  * @todo At the end, delete the ffmpeg2pass-0.log file.
+ * @todo Add key frames at chapter beginnings.
+ * @todo Check for multiaudio/multiangle video and convert video and sound separately.
  *
  * @param {string} dvdPath
+ * @param {function} callback
  */
-function encodeVideo(dvdPath: string) {
+function encodeVideo(dvdPath: string, callback) {
   process.stdout.write('\nEncoding VOB files:\n');
 
   var vobPath = path.join(dvdPath, '/VIDEO_TS', '/*.VOB');
@@ -48,6 +54,8 @@ function encodeVideo(dvdPath: string) {
       });
     });
 
+    var dvdName = dvdPath.split(path.sep).pop();
+    var filesList = [];
     var pointer = 0;
 
     next(vobFiles[pointer]);
@@ -57,6 +65,9 @@ function encodeVideo(dvdPath: string) {
       var output = utils.convertVobPath(vobFile[0]);
       var prefix = path.join(vobFile[0].replace(/\/VIDEO_TS\/.+/i, '/web/'), '/ffmpeg2pass');
       var input = '';
+
+      filesList[getFileIndex(vobFile[0])] = {};
+      filesList[getFileIndex(vobFile[0])].video = '/' + dvdName + '/web/' + path.basename(output);
 
       if (vobFile.length === 1) {
         input = path.normalize(vobFile[0]);
@@ -135,6 +146,10 @@ function encodeVideo(dvdPath: string) {
         process.stderr.write(data);
       });
 
+      pass1.on('error', function(err) {
+        console.error(err);
+      });
+
       pass1.on('close', function() {
         var pass2 = spawn('ffmpeg', pass2Cmd);
 
@@ -146,6 +161,10 @@ function encodeVideo(dvdPath: string) {
           process.stderr.write(data);
         });
 
+        pass2.on('error', function(err) {
+          console.error(err);
+        });
+
         pass2.on('close', function() {
           // Next iteration.
           pointer++;
@@ -155,10 +174,34 @@ function encodeVideo(dvdPath: string) {
             }, 0);
           } else {
             // At the end of all iterations.
-            console.log('That\'s all folks!')
+            // Save a metadata file containing the list of all IFO files.
+            editMetadataFile(getWebName('metadata'), filesList, function() {
+              callback();
+            });
           }
         });
       });
     }
   });
+
+  /**
+   * Return the file path for the web given a file.
+   * Used for naming both the IFO files and the metadata file.
+   *
+   * @param name A file name.
+   * @return {string}
+   */
+  function getWebName(name: string): string {
+    return path.join(dvdPath, '/web/', getJsonFileName(name));
+  }
+}
+
+/**
+ * Transform the file name of a JSON file.
+ *
+ * @param name A file name.
+ * @return {string}
+ */
+function getJsonFileName(name: string): string {
+  return name.replace(/\.IFO$/i, '') + '.json';
 }
