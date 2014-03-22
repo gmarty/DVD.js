@@ -52,6 +52,7 @@ function generateButtons(dvdPath: string, callback) {
 
       function buttonToCss(btn, i) {
         return '.btn[data-id="' + i + '"]{' +
+          'display:block;' +
           'left:' + btn.x_start + 'px;' +
           'top:' + btn.y_start + 'px;' +
           'width:' + (btn.x_end - btn.x_start) + 'px;' +
