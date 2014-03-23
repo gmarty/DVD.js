@@ -2899,7 +2899,7 @@ class VM {
 
   private print_g_reg(reg) {
     var msg = '';
-    if (reg < 16) {
+    if (reg < 0x10) {
       //msg += sprintf("g[%" PRIu8 "]", reg);
       msg += sprintf('g[%s]', utils.toHex(reg));
     } else {
@@ -3076,7 +3076,7 @@ class VM {
 
     switch (op) {
       case 0: // NOP
-        msg += 'Nop';
+        msg += 'NOP';
         break;
       case 1: // Goto line
         //msg += sprintf("Goto %" PRIu8, this.getbits(command, 7, 8));

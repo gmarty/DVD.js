@@ -12,6 +12,7 @@ import convertIfo = require('../server/convert/convertIfo');
 import generateChapters = require('../server/convert/generateChapters');
 import extractNavPackets = require('../server/convert/extractNavPackets');
 import generateButtons = require('../server/convert/generateButtons');
+import generateJavaScript = require('../server/convert/generateJavaScript');
 import encodeVideo = require('../server/convert/encodeVideo');
 
 var cli = optimist
@@ -43,13 +44,16 @@ function convertDVD(dvdPath) {
       convertIfo(dvdPath, function() {
         // Generate WebVTT files with video chapters.
         generateChapters(dvdPath, function() {
-          // Extract NAV packets.
-          extractNavPackets(dvdPath, function() {
-            // Generate buttons for menu UI.
-            generateButtons(dvdPath, function() {
-              // Convert video.
-              encodeVideo(dvdPath, function() {
-                console.log('That\'s all folks!');
+          // Generate JavaScript from VM instructions.
+          generateJavaScript(dvdPath, function() {
+            // Extract NAV packets.
+            extractNavPackets(dvdPath, function() {
+              // Generate buttons for menu UI.
+              generateButtons(dvdPath, function() {
+                // Convert video.
+                encodeVideo(dvdPath, function() {
+                  console.log('That\'s all folks!');
+                });
               });
             });
           });
