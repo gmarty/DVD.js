@@ -3111,7 +3111,7 @@ class VM {
     return msg;
   }
 
-  private print_link_instruction(command, optional) {
+  private print_link_instruction(command, optional: boolean) {
     var msg = '';
     var op = this.getbits(command, 51, 4);
 
@@ -3332,20 +3332,20 @@ class VM {
           msg += this.print_jump_instruction(command);
         } else {
           msg += this.print_if_version_1(command);
-          msg += this.print_link_instruction(command, 0);
+          msg += this.print_link_instruction(command, false);
           // must be present
         }
         break;
       case 2: // Set System Parameters instructions
         msg += this.print_if_version_2(command);
         msg += this.print_system_set(command);
-        msg += this.print_link_instruction(command, 1);
+        msg += this.print_link_instruction(command, true);
         // either if or link
         break;
       case 3: // Set General Parameters instructions
         msg += this.print_if_version_3(command);
         msg += this.print_set_version_1(command);
-        msg += this.print_link_instruction(command, 1);
+        msg += this.print_link_instruction(command, true);
         // either if or link
         break;
       case 4: // Set, Compare -> LinkSub instructions
