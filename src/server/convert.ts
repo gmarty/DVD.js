@@ -38,7 +38,7 @@ function convertDVD(dvdPath) {
 
   // Regenerate the list of DVD.
   generateCatalogue(function() {
-    // Convert IFO files.
+    // Create an empty directory if not already there.
     createDir(dvdPath, function() {
       // Convert IFO files.
       convertIfo(dvdPath, function() {

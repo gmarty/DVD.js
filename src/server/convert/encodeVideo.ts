@@ -77,6 +77,10 @@ function encodeVideo(dvdPath: string, callback) {
         }).join('|');
       }
 
+      input = input.replace(' ', '\ ');
+      prefix = prefix.replace(' ', '\ ');
+      output = output.replace(' ', '\ ');
+
       var pass1Cmd = [
         '-i', input,
         '-pass', '1',
