@@ -6,6 +6,8 @@
 import fs = require('fs');
 import path = require('path');
 
+import utils = require('../../utils');
+
 export = getDVDList;
 
 /**
@@ -24,6 +26,12 @@ function getDVDList(dvdPath: string, callback) {
       var webFolderexists = fs.existsSync(path.join(filePath, 'web'));
 
       return stats.isDirectory() && webFolderexists;
+    })
+    .map(function(dir) {
+      return {
+        name: utils.formatTitle(dir),
+        dir: dir
+      };
     });
 
   callback(dvds);
