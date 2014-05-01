@@ -15,7 +15,7 @@ function generateCatalogue(callback) {
   process.stdout.write('\nRegenerating the list of DVD:\n');
 
   getDVDList(config.dvdPath, function(availableDvds) {
-    var metaPath = path.join(config.dvdPath, '/metadata.json');
+    var metaPath = path.join(config.dvdPath, '/dvds.json');
     fs.writeFile(metaPath, JSON.stringify(availableDvds), function(err) {
       if (err) {
         console.error(err);
