@@ -67,13 +67,18 @@ function encodeVideo(dvdPath: string, callback) {
       var prefix = path.join(vobFile[0].replace(/\/VIDEO_TS\/.+/i, '/web/'), '/ffmpeg2pass');
       var input = '';
 
-      if (!filesList[getFileIndex(vobFile[0])]) {
-        filesList[getFileIndex(vobFile[0])] = {};
+      var index = getFileIndex(vobFile[0]);
+      // Menu and video are optional. We use arrays here as we can then simply
+      // iterate in the template without the need of a heavier logic.
+      if (filesList[index] === undefined) {
+        filesList[index] = {};
+        filesList[index].menu = [];
+        filesList[index].video = [];
       }
       if (getFileSuffix(vobFile[0]) === 0) {
-        filesList[getFileIndex(vobFile[0])].menu = '/' + dvdName + '/web/' + path.basename(output);
+        filesList[index].menu.push('/' + dvdName + '/web/' + path.basename(output));
       } else {
-        filesList[getFileIndex(vobFile[0])].video = '/' + dvdName + '/web/' + path.basename(output);
+        filesList[index].video.push('/' + dvdName + '/web/' + path.basename(output));
       }
 
       if (vobFile.length === 1) {
