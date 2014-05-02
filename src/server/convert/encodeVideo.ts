@@ -9,7 +9,7 @@ import glob = require('glob');
 import child_process = require('child_process');
 import _ = require('lodash');
 
-import serverUtils = require('../../server/utils/utils');
+import serverUtils = require('../../server/utils/index');
 import editMetadataFile = require('../../server/utils/editMetadataFile');
 import utils = require('../../utils');
 

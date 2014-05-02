@@ -7,7 +7,7 @@ import fs = require('fs');
 import path = require('path');
 import glob = require('glob');
 
-import serverUtils = require('../../server/utils/utils');
+import serverUtils = require('../../server/utils/index');
 import editMetadataFile = require('../../server/utils/editMetadataFile');
 import utils = require('../../utils');
 

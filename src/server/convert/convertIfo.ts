@@ -12,7 +12,7 @@ import ifoRead = require('../../dvdread/ifo_read');
 import dvdRead = require('../../dvdread/index');
 import ifoTypes = require('../../dvdread/ifo_types');
 import dvdTypes = require('../../dvdnav/dvd_types');
-import serverUtils = require('../../server/utils/utils');
+import serverUtils = require('../../server/utils/index');
 import editMetadataFile = require('../../server/utils/editMetadataFile');
 
 var ifo_handle_t = ifoTypes.ifo_handle_t;
