@@ -15,6 +15,7 @@ import utils = require('../../utils');
 
 var spawn = child_process.spawn;
 var getFileIndex = serverUtils.getFileIndex;
+var getFileSuffix = serverUtils.getFileSuffix;
 
 export = encodeVideo;
 
@@ -66,8 +67,14 @@ function encodeVideo(dvdPath: string, callback) {
       var prefix = path.join(vobFile[0].replace(/\/VIDEO_TS\/.+/i, '/web/'), '/ffmpeg2pass');
       var input = '';
 
-      filesList[getFileIndex(vobFile[0])] = {};
-      filesList[getFileIndex(vobFile[0])].video = '/' + dvdName + '/web/' + path.basename(output);
+      if (!filesList[getFileIndex(vobFile[0])]) {
+        filesList[getFileIndex(vobFile[0])] = {};
+      }
+      if (getFileSuffix(vobFile[0]) === 0) {
+        filesList[getFileIndex(vobFile[0])].menu = '/' + dvdName + '/web/' + path.basename(output);
+      } else {
+        filesList[getFileIndex(vobFile[0])].video = '/' + dvdName + '/web/' + path.basename(output);
+      }
 
       if (vobFile.length === 1) {
         input = path.normalize(vobFile[0]);
