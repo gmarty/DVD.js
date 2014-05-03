@@ -30,6 +30,12 @@ function generateButtons(dvdPath: string, callback) {
       console.error(err);
     }
 
+    if (!ifoFiles.length) {
+      // Some DVD don't have menu at all.
+      callback();
+      return;
+    }
+
     var dvdName = dvdPath.split(path.sep).pop(); // Use path.resolve() instead.
     var filesList = [];
     var pointer = 0;

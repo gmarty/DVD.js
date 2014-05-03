@@ -42,6 +42,12 @@ function extractNav(dvdPath: string, callback) {
       return ifoFile.match(/VIDEO_TS\.VOB$/) || ifoFile.match(/VTS_\d{1,2}_0.VOB$/);
     });
 
+    if (!vobFiles.length) {
+      // Some DVD don't have menu at all.
+      callback();
+      return;
+    }
+
     var pointer = 0;
 
     next(vobFiles[pointer]);
