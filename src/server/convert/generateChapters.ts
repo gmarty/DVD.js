@@ -162,9 +162,9 @@ function timeToWebVTTTimestamp(time) {
   var hours = Math.floor(time / 60 / 60);
   var minutes = Math.floor((time - (hours * 60 * 60)) / 60);
   var seconds = Math.floor(time - (hours * 60 * 60) - (minutes * 60));
-  var secondsFrac = (time - Math.floor(time)) * 100;
+  var secondsFrac = (time - Math.floor(time)) * 1000;
 
-  return sprintf('%02d:%02d:%02d.%02d', hours, minutes, seconds, secondsFrac);
+  return sprintf('%02d:%02d:%02d.%03d', hours, minutes, seconds, secondsFrac);
 }
 
 function timeToNumber(dtime) {
