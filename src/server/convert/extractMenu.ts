@@ -33,6 +33,7 @@ function extractMenu(dvdPath: string, callback) {
   var ifoPath = path.join(dvdPath, '/web', '/metadata.json');
   var filesList = require(ifoPath);
 
+  var dvdName = dvdPath.split(path.sep).pop();
   var menuList = [];
   var pointer = 0;
 
@@ -41,6 +42,7 @@ function extractMenu(dvdPath: string, callback) {
   // There are better ways to do async...
   function next(ifoFile: string) {
     ifoFile = path.join(dvdPath, '../', ifoFile);
+    var name = path.basename(ifoFile);
     var json = require(ifoFile);
     var inputFile = ifoFile
       .replace(/\/web\//, '/VIDEO_TS/')
@@ -52,6 +54,11 @@ function extractMenu(dvdPath: string, callback) {
     extractStillImage();
 
     function extractStillImage() {
+      if (!json.menu_c_adt) {
+        callNext();
+        return;
+      }
+
       var vob = json.menu_c_adt.cell_adr_table[vobPointer];
       var start = vob.start_sector * DVD_VIDEO_LB_LEN;
       var end = vob.last_sector * DVD_VIDEO_LB_LEN;
@@ -97,6 +104,12 @@ function extractMenu(dvdPath: string, callback) {
             ffmpeg.on('close', function() {
               process.stdout.write('.');
 
+              if (!menuList[pointer]) {
+                menuList[pointer] = {};
+                menuList[pointer].still = [];
+              }
+              menuList[pointer].still[vobPointer] = '/' + dvdName + '/web/menu' + pointer + '-' + vobPointer + '.png';
+
               // Next iteration.
               vobPointer++;
               if (vobPointer < json.menu_c_adt.nr_of_vobs) {
@@ -104,24 +117,28 @@ function extractMenu(dvdPath: string, callback) {
                   extractStillImage();
                 }, 0);
               } else {
-                //vobPointer = 0;
-                pointer++;
-                if (pointer < filesList.length) {
-                  setTimeout(function() {
-                    next(filesList[pointer].ifo);
-                  }, 0);
-                } else {
-                  // At the end of all iterations.
-                  // Save a metadata file containing the list of all IFO files.
-                  //editMetadataFile(getWebName('metadata'), menuList, function() {
-                  callback();
-                  //});
-                }
+                callNext();
               }
             });
           });
         });
       });
+
+      function callNext() {
+        //vobPointer = 0;
+        pointer++;
+        if (pointer < filesList.length) {
+          setTimeout(function() {
+            next(filesList[pointer].ifo);
+          }, 0);
+        } else {
+          // At the end of all iterations.
+          // Save a metadata file containing the list of all IFO files.
+          editMetadataFile(getWebName('metadata'), menuList, function() {
+            callback();
+          });
+        }
+      }
     }
   }
 
@@ -135,4 +152,14 @@ function extractMenu(dvdPath: string, callback) {
   function getWebName(name: string): string {
     return path.join(dvdPath, '/web/', getJsonFileName(name));
   }
+}
+
+/**
+ * Transform the file name of a JSON file.
+ *
+ * @param {string} name A file name.
+ * @return {string}
+ */
+function getJsonFileName(name: string): string {
+  return name.replace(/\.IFO$/i, '') + '.json';
 }
