@@ -34,6 +34,8 @@ function generateButtons(dvdPath: string, callback) {
   // There are better ways to do async...
   function next(ifoFile: string) {
     ifoFile = path.join(dvdPath, '../', ifoFile);
+    var name = path.basename(ifoFile);
+    var basename = path.basename(name, '.json');
     var ifoJson = require(ifoFile);
 
     var vobPointer = 0;
@@ -52,8 +54,7 @@ function generateButtons(dvdPath: string, callback) {
       var cellID = vob.cell_id;
       var vobID = vob.vob_id;
 
-      var ifoFile = path.join(dvdPath, '/web', '/VTS_01_0-' + toHex(start) + '.json');
-      var name = path.basename(ifoFile);
+      var ifoFile = path.join(dvdPath, '/web', '/' + basename + '-' + toHex(start) + '.json');
       var json = require(ifoFile);
 
       var css = [];
