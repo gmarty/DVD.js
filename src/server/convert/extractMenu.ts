@@ -34,7 +34,7 @@ function extractMenu(dvdPath: string, callback) {
   var filesList = require(ifoPath);
 
   var dvdName = dvdPath.split(path.sep).pop();
-  var menuList = [];
+  var menuCell = [];
   var pointer = 0;
 
   next(filesList[pointer].ifo);
@@ -42,7 +42,6 @@ function extractMenu(dvdPath: string, callback) {
   // There are better ways to do async...
   function next(ifoFile: string) {
     ifoFile = path.join(dvdPath, '../', ifoFile);
-    var name = path.basename(ifoFile);
     var json = require(ifoFile);
     var inputFile = ifoFile
       .replace(/\/web\//, '/VIDEO_TS/')
@@ -65,6 +64,9 @@ function extractMenu(dvdPath: string, callback) {
       var outputFile = ifoFile
         .replace(/\/[^/]+\.json$/, '/stillFrame' + pointer + '-' + vobPointer + '.mpg');
 
+      var cellID = vob.cell_id;
+      var vobID = vob.vob_id;
+
       fs.readFile(inputFile, {flag: 'r'}, function(err, data) {
         if (err) {
           throw err;
@@ -83,7 +85,7 @@ function extractMenu(dvdPath: string, callback) {
             }
 
             var imgFile = outputFile
-              .replace(/\/[^/]+\.mpg$/, '/menu' + pointer + '-' + vobPointer + '.png');
+              .replace(/\/[^/]+\.mpg$/, '/menu-' + pointer + '-' + cellID + '-' + vobID + '.png');
 
             outputFile = outputFile.replace(' ', '\ ');
             imgFile = imgFile.replace(' ', '\ ');
@@ -104,11 +106,19 @@ function extractMenu(dvdPath: string, callback) {
             ffmpeg.on('close', function() {
               process.stdout.write('.');
 
-              if (!menuList[pointer]) {
-                menuList[pointer] = {};
-                menuList[pointer].still = [];
+              if (!menuCell[pointer]) {
+                menuCell[pointer] = {};
+                menuCell[pointer].menuCell = {};
               }
-              menuList[pointer].still[vobPointer] = '/' + dvdName + '/web/menu' + pointer + '-' + vobPointer + '.png';
+              if (!menuCell[pointer].menuCell[cellID]) {
+                menuCell[pointer].menuCell[cellID] = {};
+              }
+              if (!menuCell[pointer].menuCell[cellID][vobID]) {
+                menuCell[pointer].menuCell[cellID][vobID] = {};
+              }
+              menuCell[pointer].menuCell[cellID][vobID].cell_id = cellID;
+              menuCell[pointer].menuCell[cellID][vobID].vob_id = vobID;
+              menuCell[pointer].menuCell[cellID][vobID].still = '/' + dvdName + '/web/menu-' + pointer + '-' + cellID + '-' + vobID + '.png';
 
               // Next iteration.
               vobPointer++;
@@ -125,7 +135,6 @@ function extractMenu(dvdPath: string, callback) {
       });
 
       function callNext() {
-        //vobPointer = 0;
         pointer++;
         if (pointer < filesList.length) {
           setTimeout(function() {
@@ -134,7 +143,7 @@ function extractMenu(dvdPath: string, callback) {
         } else {
           // At the end of all iterations.
           // Save a metadata file containing the list of all IFO files.
-          editMetadataFile(getWebName('metadata'), menuList, function() {
+          editMetadataFile(getWebName('metadata'), menuCell, function() {
             callback();
           });
         }

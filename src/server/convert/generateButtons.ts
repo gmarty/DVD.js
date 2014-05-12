@@ -5,13 +5,11 @@
 
 import fs = require('fs');
 import path = require('path');
-import glob = require('glob');
 
-import serverUtils = require('../../server/utils/index');
 import editMetadataFile = require('../../server/utils/editMetadataFile');
 import utils = require('../../utils');
 
-var getFileIndex = serverUtils.getFileIndex;
+var toHex = utils.toHex;
 
 export = generateButtons;
 
@@ -24,32 +22,44 @@ export = generateButtons;
 function generateButtons(dvdPath: string, callback) {
   process.stdout.write('\nGenerating buttons:\n');
 
-  var ifoPath = path.join(dvdPath, '/web', '/V*TS*-0x00.json');
-  glob(ifoPath, function(err, ifoFiles) {
-    if (err) {
-      console.error(err);
-    }
+  var ifoPath = path.join(dvdPath, '/web', '/metadata.json');
+  var filesList = require(ifoPath);
 
-    if (!ifoFiles.length) {
-      // Some DVD don't have menu at all.
-      callback();
-      return;
-    }
+  var dvdName = dvdPath.split(path.sep).pop();
+  var menuCell = [];
+  var pointer = 0;
 
-    var dvdName = dvdPath.split(path.sep).pop(); // Use path.resolve() instead.
-    var filesList = [];
-    var pointer = 0;
+  next(filesList[pointer].ifo);
 
-    next(ifoFiles[pointer]);
+  // There are better ways to do async...
+  function next(ifoFile: string) {
+    ifoFile = path.join(dvdPath, '../', ifoFile);
+    var ifoJson = require(ifoFile);
 
-    // There are better ways to do async...
-    function next(ifoFile: string) {
+    var vobPointer = 0;
+
+    generateButtonsCss();
+
+    function generateButtonsCss() {
+      if (!ifoJson.menu_c_adt) {
+        callNext();
+        return;
+      }
+
+      var vob = ifoJson.menu_c_adt.cell_adr_table[vobPointer];
+      var start = vob.start_sector;
+
+      var cellID = vob.cell_id;
+      var vobID = vob.vob_id;
+
+      var ifoFile = path.join(dvdPath, '/web', '/VTS_01_0-' + toHex(start) + '.json');
       var name = path.basename(ifoFile);
       var json = require(ifoFile);
 
       var css = [];
 
-      if (json.pci && json.pci.hli && json.pci.hli.hl_gi && json.pci.hli.hl_gi.btn_ns) {
+      // A CSS file is always generated even if it's empty.
+      if (json.pci && json.pci.hli && json.pci.hli.hl_gi && json.pci.hli.hl_gi.btn_ns !== undefined) {
         // Creating a CSS file with the buttons coordinates and size.
         // json.pci.hli.hl_gi.`btn_ns` or json.pci.hli.hl_gi.`nsl_btn_ns`?
         for (var i = 0; i < json.pci.hli.hl_gi.btn_ns; i++) {
@@ -70,35 +80,56 @@ function generateButtons(dvdPath: string, callback) {
       }
 
       function saveCSSFile(css) {
-        var fileName = getCSSFileName(name);
-        var index = getFileIndex(name);
+        var fileName = 'menu-' + pointer + '-' + cellID + '-' + vobID + '.css';
+        css = css.join('\n');
 
-        filesList[index] = {};
-        filesList[index].css = '/' + dvdName + '/web/' + fileName;
-        fs.writeFile(path.join(dvdPath, '/web/', fileName), css.join('\n'), function(err) {
+        fs.writeFile(path.join(dvdPath, '/web/', fileName), css, function(err) {
           if (err) {
             console.error(err);
           }
 
           process.stdout.write('.');
+
+          if (!menuCell[pointer]) {
+            menuCell[pointer] = {};
+            menuCell[pointer].menuCell = {};
+          }
+          if (!menuCell[pointer].menuCell[cellID]) {
+            menuCell[pointer].menuCell[cellID] = {};
+          }
+          if (!menuCell[pointer].menuCell[cellID][vobID]) {
+            menuCell[pointer].menuCell[cellID][vobID] = {};
+          }
+          menuCell[pointer].menuCell[cellID][vobID].css = '/' + dvdName + '/web/' + fileName;
+
+          // Next iteration.
+          vobPointer++;
+          if (vobPointer < ifoJson.menu_c_adt.nr_of_vobs) {
+            setTimeout(function() {
+              generateButtonsCss();
+            }, 0);
+          } else {
+            callNext();
+          }
         });
       }
 
-      // Next iteration.
-      pointer++;
-      if (pointer < ifoFiles.length) {
-        setTimeout(function() {
-          next(ifoFiles[pointer]);
-        }, 0);
-      } else {
-        // At the end of all iterations.
-        // Save a metadata file containing the list of all IFO files.
-        editMetadataFile(getWebName('metadata'), filesList, function() {
-          callback();
-        });
+      function callNext() {
+        pointer++;
+        if (pointer < filesList.length) {
+          setTimeout(function() {
+            next(filesList[pointer].ifo);
+          }, 0);
+        } else {
+          // At the end of all iterations.
+          // Save a metadata file containing the list of all IFO files.
+          editMetadataFile(getWebName('metadata'), menuCell, function() {
+            callback();
+          });
+        }
       }
     }
-  });
+  }
 
   /**
    * Return the file path for the web given a file.
@@ -115,26 +146,9 @@ function generateButtons(dvdPath: string, callback) {
 /**
  * Transform the file name of a JSON file.
  *
- * @param name A file name.
+ * @param {string} name A file name.
  * @return {string}
  */
 function getJsonFileName(name: string): string {
   return name.replace(/\.IFO$/i, '') + '.json';
-}
-
-/**
- * Return the file path for the web given a file.
- *
- * @param name A file name.
- * @return {string}
- */
-function getCSSFileName(name: string): string {
-  if (name.match(/VIDEO_TS/)) {
-    // First Play menu.
-    return 'menu.css';
-  }
-
-  // Video Title Set menu.
-  var vts = name.substring(4, 6);
-  return 'menu-' + vts + '.css';
 }
