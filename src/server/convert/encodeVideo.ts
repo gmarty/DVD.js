@@ -66,8 +66,8 @@ function encodeVideo(dvdPath: string, callback) {
       var output = utils.convertVobPath(vobFile[0]);
       var prefix = path.join(vobFile[0].replace(/\/VIDEO_TS\/.+/i, '/web/'), '/ffmpeg2pass');
       var input = '';
-
       var index = getFileIndex(vobFile[0]);
+
       // Menu and video are optional. We use arrays here as we can then simply
       // iterate in the template without the need of a heavier logic.
       if (filesList[index] === undefined) {

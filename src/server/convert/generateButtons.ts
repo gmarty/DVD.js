@@ -71,9 +71,10 @@ function generateButtons(dvdPath: string, callback) {
 
       function saveCSSFile(css) {
         var fileName = getCSSFileName(name);
+        var index = getFileIndex(name);
 
-        filesList[getFileIndex(name)] = {};
-        filesList[getFileIndex(name)].css = '/' + dvdName + '/web/' + fileName;
+        filesList[index] = {};
+        filesList[index].css = '/' + dvdName + '/web/' + fileName;
         fs.writeFile(path.join(dvdPath, '/web/', fileName), css.join('\n'), function(err) {
           if (err) {
             console.error(err);

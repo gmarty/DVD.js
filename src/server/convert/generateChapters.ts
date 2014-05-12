@@ -83,6 +83,7 @@ function generateChapters(dvdPath: string, callback) {
 
     function saveWebVTTFile(cues) {
       var fileName = getVTTFilename(name, vttFile);
+      var index = getFileIndex(name);
       var content = [
         'WEBVTT',
         ''
@@ -94,11 +95,11 @@ function generateChapters(dvdPath: string, callback) {
         content.push('');
       });
 
-      if (!vttFilesList[getFileIndex(name)]) {
-        vttFilesList[getFileIndex(name)] = {};
-        vttFilesList[getFileIndex(name)].vtt = [];
+      if (!vttFilesList[index]) {
+        vttFilesList[index] = {};
+        vttFilesList[index].vtt = [];
       }
-      vttFilesList[getFileIndex(name)].vtt.push('/' + dvdName + '/web/' + fileName);
+      vttFilesList[index].vtt.push('/' + dvdName + '/web/' + fileName);
       fs.writeFile(path.join(dvdPath, '/web/', fileName), content.join('\n'), function(err) {
         if (err) {
           console.error(err);

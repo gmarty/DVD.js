@@ -45,8 +45,10 @@ function convertIfo(dvdPath: string, callback) {
     // There are better ways to do async...
     function next(ifoFile: string) {
       var name = path.basename(ifoFile);
-      filesList[getFileIndex(name)] = {};
-      filesList[getFileIndex(name)].ifo = '/' + dvdName + '/web/' + getJsonFileName(name);
+      var index = getFileIndex(name);
+
+      filesList[index] = {};
+      filesList[index].ifo = '/' + dvdName + '/web/' + getJsonFileName(name);
 
       fs.readFile(ifoFile, function(err, data) {
         if (err) {
