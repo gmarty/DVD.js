@@ -16,7 +16,7 @@ export var VERSION = '0.01';
  * Enable debug mode. Can be overridden to false at compile time.
  * @define {boolean}
  */
-export var DEBUG = true;
+export var DEBUG = false;
 
 
 /**
