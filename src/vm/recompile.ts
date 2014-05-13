@@ -10,12 +10,23 @@ var sprintf = utils.sprintf;
 
 export = compile;
 
-function compile(vm_commands) {
+/**
+ * Compile a set of VM commands to JavaScript code.
+ * @todo Changing language is not allowed for the moment (See LANG usage below).
+ *
+ * @param vm_commands
+ * @returns {string}
+ */
+function compile(vm_commands): string {
+  if (!vm_commands) {
+    return '';
+  }
+
   var code = vm_commands.map(function(vm_command) {
     return compileSingleCommand(vm_command);
   });
 
-  return '  ' + code.join('\n  ');
+  return '\n  ' + code.join('\n  ') + '\n';
 }
 
 function compileSingleCommand(vm_command) {
@@ -411,15 +422,20 @@ function compile_jump_instruction(command) {
           break;
         case 1:
           // JumpSS VMGM (menu x)
-          code += sprintf('JumpSS VMGM (menu %s)', getbits(command, 19, 4));
+          code += sprintf('JumpSS VMGM (menu %s)',
+            getbits(command, 19, 4));
           break;
         case 2:
           // JumpSS VTSM (vts x, title y, menu z)
-          code += sprintf('JumpSS VTSM (vts %s, title %s, menu %s)', getbits(command, 30, 7), getbits(command, 38, 7), getbits(command, 19, 4));
+          code += sprintf('MPGCIUT[%s][LANG/* Should be `%s` */][%s].pre();',
+            getbits(command, 30, 7),
+            getbits(command, 38, 7),
+            getbits(command, 19, 4));
           break;
         case 3:
           // JumpSS VMGM (pgc x)
-          code += sprintf('JumpSS VMGM (pgc %s)', getbits(command, 46, 15));
+          code += sprintf('MPGCIUT[0][LANG][%s].pre();',
+            getbits(command, 46, 15));
           break;
       }
       break;
