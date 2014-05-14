@@ -121,7 +121,7 @@ function getbits(instruction: string, start: number, count: number): number {
 function compile_system_reg(reg) {
   var code = '';
   if (reg < VM.system_reg_abbr_table.length / VM.system_reg_abbr_table[0].length) {
-    code += sprintf('%s (SRPM:%d)', VM.system_reg_table[reg], reg);
+    code += sprintf('dummy/*%s (SRPM:%d)*/', VM.system_reg_table[reg], reg);
   } else {
     console.error('jsdvdnav: Unknown system register (reg=%d)', reg);
   }
@@ -313,17 +313,17 @@ function compile_special_instruction(command) {
     case 1:
       // GoTo
       // Go to a specified command line.
-      code += sprintf('Goto %s', getbits(command, 7, 8));
+      code += sprintf('console.log(\'Goto %s\');', getbits(command, 7, 8));
       break;
     case 2:
       // Break
       // Exit the current command section.
-      code += 'Break';
+      code += 'console.log(\'Break\');';
       break;
     case 3:
       // SetTmpPML
       // Set Temporary Parental Management Level.
-      code += sprintf('SetTmpPML %s, Goto %s', getbits(command, 11, 4), getbits(command, 7, 8));
+      code += sprintf('console.log(\'SetTmpPML %s, Goto %s\');', getbits(command, 11, 4), getbits(command, 7, 8));
       break;
     default:
       console.error('jsdvdnav: Unknown special instruction (%i)', getbits(command, 51, 4));
@@ -338,7 +338,7 @@ function compile_linksub_instruction(command) {
   var button = getbits(command, 15, 6);
 
   if (linkop < VM.link_table.length / VM.link_table[0].length) {
-    code += sprintf('%s (button %s)', VM.link_table[linkop], button);
+    code += sprintf('dummy/*%s (button %s)*/', VM.link_table[linkop], button);
   } else {
     console.error('jsdvdnav: Unknown linksub instruction (%i)', linkop);
   }
@@ -364,22 +364,22 @@ function compile_link_instruction(command, optional: boolean) {
     case 4:
       // LinkPGCN x
       // Link to a PGC in the same domain.
-      code += sprintf('LinkPGCN %s', getbits(command, 14, 15));
+      code += sprintf('console.log(\'LinkPGCN %s\');', getbits(command, 14, 15));
       break;
     case 5:
       // LinkPTT x (button y)
       // Link to a PTT in the current VTS.
-      code += sprintf('LinkPTT %s (button %s)', getbits(command, 9, 10), getbits(command, 15, 6));
+      code += sprintf('console.log(\'LinkPTT %s (button %s)\');', getbits(command, 9, 10), getbits(command, 15, 6));
       break;
     case 6:
       // LinkPGN x (button y)
       // Link to a program in the same PGC.
-      code += sprintf('LinkPGN %s (button %s)', getbits(command, 6, 7), getbits(command, 15, 6));
+      code += sprintf('console.log(\'LinkPGN %s (button %s)\');', getbits(command, 6, 7), getbits(command, 15, 6));
       break;
     case 7:
       // LinkCN x (button y)
       // Link to a cell in the same PGC.
-      code += sprintf('LinkCN %s (button %s)', getbits(command, 7, 8), getbits(command, 15, 6));
+      code += sprintf('console.log(\'LinkCN %s (button %s)\');', getbits(command, 7, 8), getbits(command, 15, 6));
       break;
     default:
       console.error('jsdvdnav: Unknown link instruction');
@@ -394,22 +394,22 @@ function compile_jump_instruction(command) {
     case 1:
       // Exit
       // Terminate the playback of a video DVD.
-      return 'dvd.stop();';
+      code += 'dvd.stop();';
       break;
     case 2:
       // JumpTT x
       // Jump to a video title.
-      return sprintf('dvd.playByIndex(%s);', getbits(command, 22, 7));
+      code += sprintf('dvd.playByIndex(%s);', getbits(command, 22, 7));
       break;
     case 3:
       // JumpVTS_TT x
       // Jump to a video title in the current VTS.
-      code += sprintf('JumpVTS_TT %s', getbits(command, 22, 7));
+      code += sprintf('console.log(\'JumpVTS_TT %s\');', getbits(command, 22, 7));
       break;
     case 5:
       // JumpVTS_PTT x:y
       // Jump to a PTT in a specified VTS.
-      return sprintf('dvd.playByIndex(%s);', getbits(command, 22, 7)) +
+      code += sprintf('dvd.playByIndex(%s);', getbits(command, 22, 7)) +
         sprintf('dvd.playChapter(%s);', getbits(command, 41, 10));
       break;
     case 6:
@@ -418,23 +418,23 @@ function compile_jump_instruction(command) {
       switch (getbits(command, 23, 2)) {
         case 0:
           // JumpSS FP
-          code += 'JumpSS FP';
+          code += 'console.log(\'JumpSS FP\');';
           break;
         case 1:
           // JumpSS VMGM (menu x)
-          code += sprintf('JumpSS VMGM (menu %s)',
+          code += sprintf('console.log(\'JumpSS VMGM (menu %s)\');',
             getbits(command, 19, 4));
           break;
         case 2:
           // JumpSS VTSM (vts x, title y, menu z)
-          code += sprintf('MPGCIUT[%s][LANG/* Should be `%s` */][%s].pre();',
+          code += sprintf('MPGCIUT[%s][LANG/* Should be `%s` */][%s]();',
             getbits(command, 30, 7),
             getbits(command, 38, 7),
             getbits(command, 19, 4));
           break;
         case 3:
           // JumpSS VMGM (pgc x)
-          code += sprintf('MPGCIUT[0][LANG][%s].pre();',
+          code += sprintf('MPGCIUT[0][LANG][%s]();',
             getbits(command, 46, 15));
           break;
       }
@@ -445,25 +445,27 @@ function compile_jump_instruction(command) {
       switch (getbits(command, 23, 2)) {
         case 0:
           // CallSS FP (rsm_cell x)
-          code += sprintf('CallSS FP (rsm_cell %s)', getbits(command, 31, 8));
+          code += sprintf('console.log(\'CallSS FP (rsm_cell %s)\');', getbits(command, 31, 8));
           break;
         case 1:
           // CallSS VMGM (menu x, rsm_cell y)
-          code += sprintf('CallSS VMGM (menu %s, rsm_cell %s)', getbits(command, 19, 4), getbits(command, 31, 8));
+          code += sprintf('console.log(\'CallSS VMGM (menu %s, rsm_cell %s)\');', getbits(command, 19, 4), getbits(command, 31, 8));
           break;
         case 2:
           // CallSS VTSM (menu x, rsm_cell y)
-          code += sprintf('CallSS VTSM (menu %s, rsm_cell %s)', getbits(command, 19, 4), getbits(command, 31, 8));
+          code += sprintf('console.log(\'CallSS VTSM (menu %s, rsm_cell %s)\');', getbits(command, 19, 4), getbits(command, 31, 8));
           break;
         case 3:
           // CallSS VMGM (pgc x, rsm_cell y)
-          code += sprintf('CallSS VMGM (pgc %s, rsm_cell %s)', getbits(command, 46, 15), getbits(command, 31, 8));
+          code += sprintf('console.log(\'CallSS VMGM (pgc %s, rsm_cell %s)\');', getbits(command, 46, 15), getbits(command, 31, 8));
           break;
       }
       break;
     default:
       console.error('jsdvdnav: Unknown Jump/Call instruction');
   }
+
+  code += 'return 1;'; // Jump commands return 1.
 
   return code;
 }
@@ -509,7 +511,7 @@ function compile_system_set(command) {
     case 6: // Set system reg 8 (Highlighted button)
       code += compile_system_reg(8);
       if (getbits(command, 60, 1)) { // immediate
-        code += sprintf(' = %s (button no %d);', utils.toHex(getbits(command, 31, 16)), getbits(command, 31, 6));
+        code += sprintf(' = dummy/*%s (button no %d)*/;', utils.toHex(getbits(command, 31, 16)), getbits(command, 31, 6));
       } else {
         code += sprintf(' = g[%s];', utils.toHex(getbits(command, 19, 4)));
       }

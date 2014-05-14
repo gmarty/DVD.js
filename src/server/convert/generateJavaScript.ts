@@ -27,7 +27,10 @@ function generateJavaScript(dvdPath: string, callback) {
   var code = [
     '\'use strict\';',
     '',
-    'var LANG = "en";'
+    'var LANG = "en";',
+    'var MPGCIUT=[];',
+    'var g=[];',
+    'var dummy=0;',
   ];
 
   next(filesList[pointer].ifo);
@@ -89,7 +92,6 @@ function generateJavaScript(dvdPath: string, callback) {
       code = code.concat([
         '',
         '// VMGM',
-        'var MPGCIUT=[];',
           'MPGCIUT[' + index + ']=[];'
       ]);
 
@@ -103,9 +105,14 @@ function generateJavaScript(dvdPath: string, callback) {
           var pgci_srp = lu.pgcit.pgci_srp[j];
           var pgcIndex = j + 1;
           code = code.concat([
-              'MPGCIUT[' + index + '].' + lang + '[' + pgcIndex + '].pre=function(){' + recompile(pgci_srp.pgc.command_tbl.pre_cmds) + '};',
-              'MPGCIUT[' + index + '].' + lang + '[' + pgcIndex + '].post=function(){' + recompile(pgci_srp.pgc.command_tbl.post_cmds) + '};',
-              'MPGCIUT[' + index + '].' + lang + '[' + pgcIndex + '].cell=function(){' + recompile(pgci_srp.pgc.command_tbl.cell_cmds) + '};',
+              'MPGCIUT[' + index + '].' + lang + '[' + pgcIndex + ']=function(){',
+              'if(pre()){return;}',
+              'dvd.playMenu(' + index + ',' + pgcIndex + ');',
+              'post();',
+              'function pre(){' + recompile(pgci_srp.pgc.command_tbl.pre_cmds) + '}',
+              'function post(){' + recompile(pgci_srp.pgc.command_tbl.post_cmds) + '}',
+              'function cell(){' + recompile(pgci_srp.pgc.command_tbl.cell_cmds) + '}',
+            '};',
           ]);
         }
       }
