@@ -3,20 +3,10 @@
 'use strict';
 
 
-import fs = require('fs');
 import path = require('path');
-import child_process = require('child_process');
 
+import utils = require('../../utils');
 import editMetadataFile = require('../../server/utils/editMetadataFile');
-
-var spawn = child_process.spawn;
-
-/**
- * The length of one Logical Block of a DVD.
- * From dvdread/index.ts.
- * @const
- */
-var DVD_VIDEO_LB_LEN = 2048;
 
 export = extractMenu;
 
@@ -33,8 +23,7 @@ function extractMenu(dvdPath: string, callback) {
   var ifoPath = path.join(dvdPath, '/web', '/metadata.json');
   var filesList = require(ifoPath);
 
-  var dvdName = dvdPath.split(path.sep).pop();
-  var menuCell = [];
+  var menu = [];
   var pointer = 0;
 
   next(filesList[pointer].ifo);
@@ -43,96 +32,41 @@ function extractMenu(dvdPath: string, callback) {
   function next(ifoFile: string) {
     ifoFile = path.join(dvdPath, '../', ifoFile);
     var json = require(ifoFile);
-    var inputFile = ifoFile
-      .replace(/\/web\//, '/VIDEO_TS/')
-      .replace(/\.json$/, '.VOB')
-      .replace(/ /, '\ ');
 
-    var vobPointer = 0;
+    menu[pointer] = {};
+    menu[pointer].menu = {};
 
-    extractStillImage();
+    extractMenuData();
 
-    function extractStillImage() {
-      if (!json.menu_c_adt) {
+    function extractMenuData() {
+      if (!json.pgci_ut || !json.pgci_ut.lu || !Array.isArray(json.pgci_ut.lu)) {
         callNext();
         return;
       }
 
-      var vob = json.menu_c_adt.cell_adr_table[vobPointer];
-      var start = vob.start_sector * DVD_VIDEO_LB_LEN;
-      var end = vob.last_sector * DVD_VIDEO_LB_LEN;
-      var outputFile = ifoFile
-        .replace(/\/[^/]+\.json$/, '/stillFrame' + pointer + '-' + vobPointer + '.mpg');
-
-      var cellID = vob.cell_id;
-      var vobID = vob.vob_id;
-
-      fs.readFile(inputFile, {flag: 'r'}, function(err, data) {
-        if (err) {
-          throw err;
-        }
-
-        var buffer = data.slice(start, end);
-
-        fs.open(outputFile, 'w+', function(err, fd) {
-          if (err) {
-            throw err;
+      for (var i = 0; i < json.pgci_ut.nr_of_lus; i++) {
+        var lu = json.pgci_ut.lu[i];
+        var lang = utils.bit2str(lu.lang_code);
+        menu[pointer].menu[lang] = {};
+        for (var j = 0; j < lu.pgcit.nr_of_pgci_srp; j++) {
+          var pgci_srp = lu.pgcit.pgci_srp[j];
+          var pgcIndex = j + 1;
+          var vobID = null;
+          var cellID = null;
+          if (pgci_srp.pgc.cell_position && pgci_srp.pgc.cell_position.length) {
+            vobID = pgci_srp.pgc.cell_position[0].vob_id_nr;
+            cellID = pgci_srp.pgc.cell_position[0].cell_nr;
           }
+          menu[pointer].menu[lang][j] = {
+            pgc: pgcIndex,
+            entry: pgci_srp.entry_id,
+            vobID: vobID,
+            cellID: cellID
+          };
+        }
+      }
 
-          fs.write(fd, buffer, 0, buffer.length, null, function(err) {
-            if (err) {
-              throw err;
-            }
-
-            var imgFile = outputFile
-              .replace(/\/[^/]+\.mpg$/, '/menu-' + pointer + '-' + cellID + '-' + vobID + '.png');
-
-            outputFile = outputFile.replace(' ', '\ ');
-            imgFile = imgFile.replace(' ', '\ ');
-
-            var cmd = [
-              '-i', outputFile,
-              '-frames', '1',
-              '-f', 'image2', imgFile,
-              '-y' // Overwrite by default.
-            ];
-
-            var ffmpeg = spawn('ffmpeg', cmd);
-
-            ffmpeg.on('error', function(err) {
-              console.error(err);
-            });
-
-            ffmpeg.on('close', function() {
-              process.stdout.write('.');
-
-              if (!menuCell[pointer]) {
-                menuCell[pointer] = {};
-                menuCell[pointer].menuCell = {};
-              }
-              if (!menuCell[pointer].menuCell[cellID]) {
-                menuCell[pointer].menuCell[cellID] = {};
-              }
-              if (!menuCell[pointer].menuCell[cellID][vobID]) {
-                menuCell[pointer].menuCell[cellID][vobID] = {};
-              }
-              menuCell[pointer].menuCell[cellID][vobID].cell_id = cellID;
-              menuCell[pointer].menuCell[cellID][vobID].vob_id = vobID;
-              menuCell[pointer].menuCell[cellID][vobID].still = '/' + dvdName + '/web/menu-' + pointer + '-' + cellID + '-' + vobID + '.png';
-
-              // Next iteration.
-              vobPointer++;
-              if (vobPointer < json.menu_c_adt.nr_of_vobs) {
-                setTimeout(function() {
-                  extractStillImage();
-                }, 0);
-              } else {
-                callNext();
-              }
-            });
-          });
-        });
-      });
+      callNext();
 
       function callNext() {
         pointer++;
@@ -143,7 +77,7 @@ function extractMenu(dvdPath: string, callback) {
         } else {
           // At the end of all iterations.
           // Save a metadata file containing the list of all IFO files.
-          editMetadataFile(getWebName('metadata'), menuCell, function() {
+          editMetadataFile(getWebName('metadata'), menu, function() {
             callback();
           });
         }

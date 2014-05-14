@@ -72,11 +72,11 @@ function encodeVideo(dvdPath: string, callback) {
       // iterate in the template without the need of a heavier logic.
       if (filesList[index] === undefined) {
         filesList[index] = {};
-        filesList[index].menu = [];
+        filesList[index].index = [];
         filesList[index].video = [];
       }
       if (getFileSuffix(vobFile[0]) === 0) {
-        filesList[index].menu.push('/' + dvdName + '/web/' + path.basename(output));
+        filesList[index].index.push('/' + dvdName + '/web/' + path.basename(output));
       } else {
         filesList[index].video.push('/' + dvdName + '/web/' + path.basename(output));
       }

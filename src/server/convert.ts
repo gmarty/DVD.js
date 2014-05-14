@@ -12,6 +12,7 @@ import convertIfo = require('../server/convert/convertIfo');
 import generateChapters = require('../server/convert/generateChapters');
 import extractNavPackets = require('../server/convert/extractNavPackets');
 import extractMenu = require('../server/convert/extractMenu');
+import generateMenuCellTable = require('../server/convert/generateMenuCellTable');
 import generateButtons = require('../server/convert/generateButtons');
 import generateJavaScript = require('../server/convert/generateJavaScript');
 import encodeVideo = require('../server/convert/encodeVideo');
@@ -51,11 +52,14 @@ function convertDVD(dvdPath) {
             extractNavPackets(dvdPath, function() {
               // Extract menu still frames.
               extractMenu(dvdPath, function() {
-                // Generate buttons for menu UI.
-                generateButtons(dvdPath, function() {
-                  // Convert video.
-                  encodeVideo(dvdPath, function() {
-                    console.log('That\'s all folks!');
+                // Generate menu cell table.
+                generateMenuCellTable(dvdPath, function() {
+                  // Generate buttons for menu UI.
+                  generateButtons(dvdPath, function() {
+                    // Convert video.
+                    encodeVideo(dvdPath, function() {
+                      console.log('That\'s all folks!');
+                    });
                   });
                 });
               });
