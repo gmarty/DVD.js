@@ -106,9 +106,9 @@ function generateJavaScript(dvdPath: string, callback) {
           var pgcIndex = j + 1;
           code = code.concat([
               'MPGCIUT[' + index + '].' + lang + '[' + pgcIndex + ']=function(){',
-              'if(pre()){return;}',
-              'dvd.playMenu(' + index + ',' + pgcIndex + ');',
-              'post();',
+            'if(pre()){return;}',
+              'dvd.playMenuByID("#menu-' + lang + '-' + index + '-' + pgcIndex + '");',
+            'post();',
               'function pre(){' + recompile(pgci_srp.pgc.command_tbl.pre_cmds) + '}',
               'function post(){' + recompile(pgci_srp.pgc.command_tbl.post_cmds) + '}',
               'function cell(){' + recompile(pgci_srp.pgc.command_tbl.cell_cmds) + '}',
