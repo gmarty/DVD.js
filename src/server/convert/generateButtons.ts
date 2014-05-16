@@ -67,7 +67,7 @@ function generateButtons(dvdPath: string, callback) {
           css.push(buttonToCss(json.pci.hli.btnit[i], i));
         }
 
-        saveCSSFile(css);
+        saveCSSFile(css, json.pci.hli.hl_gi.btn_ns);
       }
 
       function buttonToCss(btn, i) {
@@ -80,7 +80,7 @@ function generateButtons(dvdPath: string, callback) {
           '}';
       }
 
-      function saveCSSFile(css) {
+      function saveCSSFile(css, btn_nb) {
         var fileName = 'menu-' + pointer + '-' + cellID + '-' + vobID + '.css';
         css = css.join('\n');
 
@@ -102,6 +102,7 @@ function generateButtons(dvdPath: string, callback) {
             menuCell[pointer].menuCell[cellID][vobID] = {};
           }
           menuCell[pointer].menuCell[cellID][vobID].css = '/' + dvdName + '/web/' + fileName;
+          menuCell[pointer].menuCell[cellID][vobID].btn_nb = btn_nb;
 
           // Next iteration.
           vobPointer++;

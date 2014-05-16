@@ -47,7 +47,7 @@ function extractMenu(dvdPath: string, callback) {
       for (var i = 0; i < json.pgci_ut.nr_of_lus; i++) {
         var lu = json.pgci_ut.lu[i];
         var lang = utils.bit2str(lu.lang_code);
-        menu[pointer].menu[lang] = {};
+        menu[pointer].menu[lang] = [];
         for (var j = 0; j < lu.pgcit.nr_of_pgci_srp; j++) {
           var pgci_srp = lu.pgcit.pgci_srp[j];
           var pgcIndex = j + 1;
@@ -57,12 +57,12 @@ function extractMenu(dvdPath: string, callback) {
             vobID = pgci_srp.pgc.cell_position[0].vob_id_nr;
             cellID = pgci_srp.pgc.cell_position[0].cell_nr;
           }
-          menu[pointer].menu[lang][j] = {
+          menu[pointer].menu[lang].push({
             pgc: pgcIndex,
             entry: pgci_srp.entry_id,
             vobID: vobID,
             cellID: cellID
-          };
+          });
         }
       }
 

@@ -116,8 +116,6 @@ function extractMenu(dvdPath: string, callback) {
               if (!menuCell[pointer].menuCell[cellID][vobID]) {
                 menuCell[pointer].menuCell[cellID][vobID] = {};
               }
-              menuCell[pointer].menuCell[cellID][vobID].cell_id = cellID;
-              menuCell[pointer].menuCell[cellID][vobID].vob_id = vobID;
               menuCell[pointer].menuCell[cellID][vobID].still = '/' + dvdName + '/web/menu-' + pointer + '-' + cellID + '-' + vobID + '.png';
 
               // Next iteration.
