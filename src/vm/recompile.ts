@@ -399,7 +399,7 @@ function compile_jump_instruction(command) {
     case 2:
       // JumpTT x
       // Jump to a video title.
-      code += sprintf('dvd.playByIndex(%s);', getbits(command, 22, 7));
+      code += sprintf('dvd.playByID("video-%s");', getbits(command, 22, 7));
       break;
     case 3:
       // JumpVTS_TT x
@@ -409,7 +409,7 @@ function compile_jump_instruction(command) {
     case 5:
       // JumpVTS_PTT x:y
       // Jump to a PTT in a specified VTS.
-      code += sprintf('dvd.playByIndex(%s);', getbits(command, 22, 7)) +
+      code += sprintf('dvd.playByIndex("video-%s");', getbits(command, 22, 7)) +
         sprintf('dvd.playChapter(%s);', getbits(command, 41, 10));
       break;
     case 6:
