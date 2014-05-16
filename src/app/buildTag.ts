@@ -22,7 +22,7 @@ function buildTag(metadata) {
         var cellID = menu.cellID;
         var vobID = menu.vobID;
 
-        tpl += '<x-menu id="menu-' + lang + '-' + menu.pgc + '" lang="' + lang + '">';
+        tpl += '<x-menu id="menu-' + lang + '-' + id + '-' + menu.pgc + '" data-cell="' + cellID + '" data-vob="' + vobID + '" lang="' + lang + '">';
 
         if (cellID !== null || vobID !== null) {
 
