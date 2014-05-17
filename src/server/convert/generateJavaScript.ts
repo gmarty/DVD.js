@@ -9,6 +9,8 @@ import path = require('path');
 import recompile = require('../../vm/recompile');
 import utils = require('../../utils');
 
+var toHex = utils.toHex;
+
 export = generateJavaScript;
 
 /**
@@ -28,9 +30,10 @@ function generateJavaScript(dvdPath: string, callback) {
     '\'use strict\';',
     '',
     'var LANG = "en";',
-    'var MPGCIUT=[];',
-    'var g=[];',
-    'var dummy=0;',
+    'var MPGCIUT = [];',
+    'var btnCmd = [];',
+    'var g = [];',
+    'var dummy = 0;',
   ];
 
   next(filesList[pointer].ifo);
@@ -38,6 +41,8 @@ function generateJavaScript(dvdPath: string, callback) {
   // There are better ways to do async...
   function next(ifoFile: string) {
     ifoFile = path.join(dvdPath, '../', ifoFile);
+    var name = path.basename(ifoFile);
+    var basename = path.basename(name, '.json');
     var json = require(ifoFile);
 
     // First Play PGC
@@ -46,6 +51,9 @@ function generateJavaScript(dvdPath: string, callback) {
     // VMGM table (Menu PGCI Unit table)
     code = pgci_srp(json, code);
 
+    // Button commands
+    code = btn_cmd(json, code);
+
     pointer++;
     if (pointer < filesList.length) {
       setTimeout(function() {
@@ -53,6 +61,9 @@ function generateJavaScript(dvdPath: string, callback) {
       }, 0);
     } else {
       // At the end of all iterations.
+
+      // Add the event listener to the UI buttons.
+      code = addEventListener(json, code);
 
       // Save file.
       var jsPath = path.join(dvdPath, '/web', '/vm.js');
@@ -117,6 +128,58 @@ function generateJavaScript(dvdPath: string, callback) {
         }
       }
       return  code;
+    }
+
+    function btn_cmd(json, code) {
+      if (!json.menu_c_adt || !json.menu_c_adt.nr_of_vobs) {
+        return code;
+      }
+
+      code.push('btnCmd[' + pointer + '] = [];');
+
+      for (var i = 0; i < json.menu_c_adt.nr_of_vobs; i++) {
+        var vobPointer = json.menu_c_adt.cell_adr_table[i].vob_id;
+        var vob = json.menu_c_adt.cell_adr_table[i];
+        var start = vob.start_sector;
+
+        var ifoFile = path.join(dvdPath, '/web', '/' + basename + '-' + toHex(start) + '.json');
+        var pci = require(ifoFile).pci;
+
+        code.push('btnCmd[' + pointer + '][' + vobPointer + '] = [];');
+        for (var j = 0; j < pci.hli.hl_gi.btn_ns; j++) {
+          var cmd = pci.hli.btnit[j].cmd;
+          code.push('btnCmd[' + pointer + '][' + vobPointer + '][' + j + '] = function(){' + recompile([cmd]) + '};');
+        }
+      }
+
+      return  code;
+    }
+
+    function addEventListener(json, code) {
+      code = code.concat([
+        'function init() {',
+        '  dvd.addEventListener(\'click\', function(event) {',
+        '    event.stopImmediatePropagation();',
+        '    var target = event.target;',
+        '    var domain = target.parentNode.dataset.domain;',
+        '    var vob = target.parentNode.dataset.vob;',
+        '    var id = target.dataset.id;',
+        '',
+        '    if (target.tagName !== \'INPUT\' || domain === undefined || vob === undefined || id === undefined) {',
+        '      return;',
+        '    }',
+        '',
+        '    if (!btnCmd[domain] || !btnCmd[domain][vob] || !btnCmd[domain][vob][id]) {',
+        '      console.error(\'Missing button command for\', domain, vob, id);',
+        '      return;',
+        '    }',
+        '',
+        '    btnCmd[domain][vob][id]();',
+        '  });',
+        '}'
+      ]);
+
+      return code;
     }
   }
 }
