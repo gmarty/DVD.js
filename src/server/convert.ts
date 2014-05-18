@@ -46,10 +46,10 @@ function convertDVD(dvdPath) {
       convertIfo(dvdPath, function() {
         // Generate WebVTT files with video chapters.
         generateChapters(dvdPath, function() {
-          // Generate JavaScript from VM instructions.
-          generateJavaScript(dvdPath, function() {
-            // Extract NAV packets.
-            extractNavPackets(dvdPath, function() {
+          // Extract NAV packets.
+          extractNavPackets(dvdPath, function() {
+            // Generate JavaScript from VM instructions.
+            generateJavaScript(dvdPath, function() {
               // Extract menu still frames.
               extractMenu(dvdPath, function() {
                 // Generate menu cell table.
