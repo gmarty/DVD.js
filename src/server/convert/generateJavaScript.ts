@@ -29,7 +29,7 @@ function generateJavaScript(dvdPath: string, callback) {
   var code = [
     '\'use strict\';',
     '',
-    'var LANG = "en";',
+    'var lang = "en";',
     'var MPGCIUT = [];',
     'var btnCmd = [];',
     'var g = [];',
@@ -176,7 +176,13 @@ function generateJavaScript(dvdPath: string, callback) {
         '',
         '    btnCmd[domain][vob][id]();',
         '  });',
-        '}'
+        '',
+        '  // Update the value of lang.',
+        '  MPGCIUT.forEach(function(obj) {',
+        '    lang = Object.keys(obj)[0] || lang;',
+        '  });',
+        '}',
+        ''
       ]);
 
       return code;

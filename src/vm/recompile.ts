@@ -12,7 +12,7 @@ export = compile;
 
 /**
  * Compile a set of VM commands to JavaScript code.
- * @todo Changing language is not allowed for the moment (See LANG usage below).
+ * @todo Changing language is not allowed for the moment (See `lang` usage below).
  *
  * @param {Array} vm_commands
  * @returns {string}
@@ -396,7 +396,7 @@ function compile_jump_instruction(command) {
     case 1:
       // Exit
       // Terminate the playback of a video DVD.
-      code += 'dvd.stop()';
+      code += 'console.log(\'Exit\')';
       break;
     case 2:
       // JumpTT x
@@ -429,14 +429,14 @@ function compile_jump_instruction(command) {
           break;
         case 2:
           // JumpSS VTSM (vts x, title y, menu z)
-          code += sprintf('MPGCIUT[%s][LANG/* Should be `%s` */][%s]()',
+          code += sprintf('MPGCIUT[%s][lang/* Should be `%s` */][%s]()',
             getbits(command, 30, 7),
             getbits(command, 38, 7),
             getbits(command, 19, 4));
           break;
         case 3:
           // JumpSS VMGM (pgc x)
-          code += sprintf('MPGCIUT[0][LANG][%s]()',
+          code += sprintf('MPGCIUT[0][lang][%s]()',
             getbits(command, 46, 15));
           break;
       }
