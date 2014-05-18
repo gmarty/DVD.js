@@ -60,7 +60,7 @@ function extractMenu(dvdPath: string, callback) {
 
       var vob = json.menu_c_adt.cell_adr_table[vobPointer];
       var start = vob.start_sector * DVD_VIDEO_LB_LEN;
-      var end = vob.last_sector * DVD_VIDEO_LB_LEN;
+      var end = (vob.last_sector + 1) * DVD_VIDEO_LB_LEN;
       var outputFile = ifoFile
         .replace(/\/[^/]+\.json$/, '/stillFrame' + pointer + '-' + vobPointer + '.mpg');
 
