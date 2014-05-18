@@ -116,17 +116,19 @@ function generateJavaScript(dvdPath: string, callback) {
         for (var j = 0; j < lu.pgcit.nr_of_pgci_srp; j++) {
           var pgci_srp = lu.pgcit.pgci_srp[j];
           var pgcIndex = j + 1;
-          code = code.concat([
-              'MPGCIUT[' + index + '].' + lang + '[' + pgcIndex + ']=function(){',
-              'domain = ' + index + ';',
-            'if(pre()){return;}',
-              'dvd.playMenuByID("#menu-' + lang + '-' + index + '-' + pgcIndex + '");',
-            'post();',
-              'function pre(){' + recompile(pgci_srp.pgc.command_tbl.pre_cmds) + '}',
-              'function post(){' + recompile(pgci_srp.pgc.command_tbl.post_cmds) + '}',
-              'function cell(){' + recompile(pgci_srp.pgc.command_tbl.cell_cmds) + '}',
-            '};',
-          ]);
+          if (pgci_srp.pgc && pgci_srp.pgc.command_tbl) {
+            code = code.concat([
+                'MPGCIUT[' + index + '].' + lang + '[' + pgcIndex + ']=function(){',
+                'domain = ' + index + ';',
+              'if(pre()){return;}',
+                'dvd.playMenuByID("#menu-' + lang + '-' + index + '-' + pgcIndex + '");',
+              'post();',
+                'function pre(){' + recompile(pgci_srp.pgc.command_tbl.pre_cmds) + '}',
+                'function post(){' + recompile(pgci_srp.pgc.command_tbl.post_cmds) + '}',
+                'function cell(){' + recompile(pgci_srp.pgc.command_tbl.cell_cmds) + '}',
+              '};',
+            ]);
+          }
         }
       }
       return  code;
