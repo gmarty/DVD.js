@@ -30,6 +30,7 @@ function generateJavaScript(dvdPath: string, callback) {
     '\'use strict\';',
     '',
     'var lang = "en";',
+    'var domain = 0;',
     'var MPGCIUT = [];',
     'var btnCmd = [];',
     'var g = [];',
@@ -117,6 +118,7 @@ function generateJavaScript(dvdPath: string, callback) {
           var pgcIndex = j + 1;
           code = code.concat([
               'MPGCIUT[' + index + '].' + lang + '[' + pgcIndex + ']=function(){',
+              'domain = ' + index + ';',
             'if(pre()){return;}',
               'dvd.playMenuByID("#menu-' + lang + '-' + index + '-' + pgcIndex + '");',
             'post();',
@@ -148,7 +150,7 @@ function generateJavaScript(dvdPath: string, callback) {
         code.push('btnCmd[' + pointer + '][' + vobPointer + '] = [];');
         for (var j = 0; j < pci.hli.hl_gi.btn_ns; j++) {
           var cmd = pci.hli.btnit[j].cmd;
-          code.push('btnCmd[' + pointer + '][' + vobPointer + '][' + j + '] = function(){' + recompile([cmd]) + '};');
+          code.push('btnCmd[' + pointer + '][' + vobPointer + '][' + j + '] = function(){domain = ' + pointer + ';' + recompile([cmd]) + '};');
         }
       }
 

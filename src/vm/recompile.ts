@@ -366,7 +366,7 @@ function compile_link_instruction(command, optional: boolean) {
     case 4:
       // LinkPGCN x
       // Link to a PGC in the same domain.
-      code += sprintf('console.log(\'LinkPGCN %s\')', getbits(command, 14, 15));
+      code += sprintf('dvd.playMenuByID("#menu-" + lang + "-" + domain + "-%s")', getbits(command, 14, 15));
       break;
     case 5:
       // LinkPTT x (button y)
