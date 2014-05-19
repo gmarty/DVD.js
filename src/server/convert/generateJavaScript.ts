@@ -31,6 +31,8 @@ function generateJavaScript(dvdPath: string, callback) {
     '',
     'var lang = "en";',
     'var domain = 0;',
+    'var pgc = 0;',
+    'var sprm = {};',
     'var MPGCIUT = [];',
     'var btnCmd = [];',
     'var g = [];',
@@ -118,20 +120,23 @@ function generateJavaScript(dvdPath: string, callback) {
           var pgcIndex = j + 1;
           if (pgci_srp.pgc && pgci_srp.pgc.command_tbl) {
             code = code.concat([
-                'MPGCIUT[' + index + '].' + lang + '[' + pgcIndex + ']=function(){',
-                'domain = ' + index + ';',
-              'if(pre()){return;}',
-                'dvd.playMenuByID("#menu-' + lang + '-' + index + '-' + pgcIndex + '");',
-              'post();',
-                'function pre(){' + recompile(pgci_srp.pgc.command_tbl.pre_cmds) + '}',
-                'function post(){' + recompile(pgci_srp.pgc.command_tbl.post_cmds) + '}',
-                'function cell(){' + recompile(pgci_srp.pgc.command_tbl.cell_cmds) + '}',
-              '};',
+                'MPGCIUT[' + index + '].' + lang + '[' + pgcIndex + ']={',
+              'run: function() {',
+                '  domain = ' + index + ';',
+                '  pgc = ' + pgcIndex + ';',
+              '  if(this.pre()){return;}',
+                '  dvd.playMenuByID("#menu-' + lang + '-' + index + '-' + pgcIndex + '");',
+              '  //this.post();',
+              '},',
+                'pre: function(){' + recompile(pgci_srp.pgc.command_tbl.pre_cmds) + '},',
+                'post: function(){' + recompile(pgci_srp.pgc.command_tbl.post_cmds) + '},',
+                'cell: function(){' + recompile(pgci_srp.pgc.command_tbl.cell_cmds) + '}',
+              '};'
             ]);
           }
         }
       }
-      return  code;
+      return code;
     }
 
     function btn_cmd(json, code) {
@@ -168,6 +173,8 @@ function generateJavaScript(dvdPath: string, callback) {
         '    var domain = target.parentNode.dataset.domain;',
         '    var vob = target.parentNode.dataset.vob;',
         '    var id = target.dataset.id;',
+        '',
+        '    sprm["HL_BTNN"] = id;',
         '',
         '    if (target.tagName !== \'INPUT\' || domain === undefined || vob === undefined || id === undefined) {',
         '      return;',

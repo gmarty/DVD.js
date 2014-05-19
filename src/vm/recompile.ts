@@ -16,6 +16,14 @@ var CMP_OP_TABLE = [
   '', '&', '===', '!==', '>=', '>', '<=', '<'
 ];
 
+/**
+ * Overridden here to use JavaScript %= comparators.
+ * @const
+ */
+var SET_OP_TABLE = [
+  '', '=', '<->', '+=', '-=', '*=', '%=', '%=', 'rnd', '&=', '|=', '^='
+];
+
 export = compile;
 
 /**
@@ -59,6 +67,8 @@ function compileMultipleCommands(vm_commands) {
   });
 
   code = code.concat([
+    '    default:',
+    '      return;',
     '  }',
     '}',
   ]);
@@ -157,8 +167,9 @@ function getbits(instruction: string, start: number, count: number): number {
 
 function compile_system_reg(reg) {
   var code = '';
-  if (reg < VM.system_reg_abbr_table.length / VM.system_reg_abbr_table[0].length) {
-    code += sprintf('dummy/*%s (SRPM:%d)*/', VM.system_reg_table[reg], reg);
+  if (reg < VM.system_reg_abbr_table.length && VM.system_reg_table[reg] !== '') {
+    code += sprintf('sprm["%s"] /*%s (SRPM:%d)*/',
+      VM.system_reg_abbr_table[reg], VM.system_reg_table[reg], reg);
   } else {
     console.error('jsdvdnav: Unknown system register (reg=%d)', reg);
   }
@@ -190,7 +201,7 @@ function compile_reg(reg) {
 
 function compile_cmp_op(op) {
   var code = '';
-  if (op < CMP_OP_TABLE.length / CMP_OP_TABLE[0].length) {
+  if (op < CMP_OP_TABLE.length && CMP_OP_TABLE[op] !== '') {
     code += sprintf(' %s ', CMP_OP_TABLE[op]);
   } else {
     console.error('jsdvdnav: Unknown compare op');
@@ -201,8 +212,8 @@ function compile_cmp_op(op) {
 
 function compile_set_op(op) {
   var code = '';
-  if (op < VM.set_op_table.length / CMP_OP_TABLE[0].length) {
-    code += sprintf(' %s ', VM.set_op_table[op]);
+  if (op < SET_OP_TABLE.length && SET_OP_TABLE[op] !== '') {
+    code += sprintf(' %s ', SET_OP_TABLE[op]);
   } else {
     console.error('jsdvdnav: Unknown set op');
   }
@@ -375,7 +386,14 @@ function compile_linksub_instruction(command) {
   var button = getbits(command, 15, 6);
 
   if (linkop < VM.link_table.length && VM.link_table[linkop] !== '') {
-    code += sprintf('dummy/*%s (button %s)*/', VM.link_table[linkop], button);
+    switch (VM.link_table[linkop]) {
+      case 'LinkTailPGC':
+        code += sprintf('MPGCIUT[domain][lang][pgc].post()', button);
+        break;
+      default:
+        code += sprintf('dummy/*%s (button %s)*/', VM.link_table[linkop], button);
+        break;
+    }
   } else {
     code += 'console.log(\'Unknown linksub instruction (' + linkop + ')\')';
     console.error('jsdvdnav: Unknown linksub instruction (%i)', linkop);
@@ -402,8 +420,9 @@ function compile_link_instruction(command, optional: boolean) {
     case 4:
       // LinkPGCN x
       // Link to a PGC in the same domain.
-      code += sprintf('return dvd.playMenuByID("#menu-" + lang + "-" + domain + "-%s"), 1',
-        getbits(command, 14, 15));
+      // /!\ We don't want a leading coma here.
+      code = sprintf('return pgc = %i, dvd.playMenuByID("#menu-" + lang + "-" + domain + "-%i"), 1',
+        getbits(command, 14, 15), getbits(command, 14, 15));
       break;
     case 5:
       // LinkPTT x (button y)
@@ -469,14 +488,14 @@ function compile_jump_instruction(command) {
           break;
         case 2:
           // JumpSS VTSM (vts x, title y, menu z)
-          code += sprintf('return MPGCIUT[%s][lang/* Should be `%s` */][%s](), 1',
+          code += sprintf('return MPGCIUT[%s][lang/* Should be `%s` */][%s].run(), 1',
             getbits(command, 30, 7),
             getbits(command, 38, 7),
             getbits(command, 19, 4));
           break;
         case 3:
           // JumpSS VMGM (pgc x)
-          code += sprintf('return MPGCIUT[0][lang][%s](), 1',
+          code += sprintf('return MPGCIUT[0][lang][%s].run(), 1',
             getbits(command, 46, 15));
           break;
       }
