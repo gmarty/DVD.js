@@ -444,8 +444,11 @@ function compile_link_instruction(command, optional: boolean) {
     case 4:
       // LinkPGCN x
       // Link to a PGC in the same domain.
-      code += sprintf('pgc = %i; dvd.playMenuByID("#menu-" + lang + "-" + domain + "-%i"); return 1;',
-        getbits(command, 14, 15), getbits(command, 14, 15));
+      code += sprintf('setTimeout(MPGCIUT[domain][lang][%i].run.bind(MPGCIUT[domain][lang][%i])); return 1;',
+        getbits(command, 14, 15),
+        getbits(command, 14, 15),
+        getbits(command, 14, 15)
+      );
       break;
     case 5:
       // LinkPTT x (button y)
@@ -507,19 +510,26 @@ function compile_jump_instruction(command) {
         case 1:
           // JumpSS VMGM (menu x)
           code += sprintf('return console.log(\'JumpSS VMGM (menu %s)\'), 1',
-            getbits(command, 19, 4));
+            getbits(command, 19, 4)
+          );
           break;
         case 2:
           // JumpSS VTSM (vts x, title y, menu z)
-          code += sprintf('return MPGCIUT[%s][lang/* Should be `%s` */][%s].run(), 1',
+          code += sprintf('setTimeout(MPGCIUT[%s][lang/* Should be `%s` */][%s].run.bind(MPGCIUT[%s][lang/* Should be `%s` */][%s])); return 1',
             getbits(command, 30, 7),
             getbits(command, 38, 7),
-            getbits(command, 19, 4));
+            getbits(command, 19, 4),
+            getbits(command, 30, 7),
+            getbits(command, 38, 7),
+            getbits(command, 19, 4)
+          );
           break;
         case 3:
           // JumpSS VMGM (pgc x)
-          code += sprintf('return MPGCIUT[0][lang][%s].run(), 1',
-            getbits(command, 46, 15));
+          code += sprintf('setTimeout(MPGCIUT[0][lang][%s].run.bind(MPGCIUT[0][lang][%s])); return 1',
+            getbits(command, 46, 15),
+            getbits(command, 46, 15)
+          );
           break;
       }
       break;
