@@ -94,7 +94,9 @@ function compileSingleCommand(vm_command) {
   switch (getbits(command, 63, 3)) {
     case 0: // Special instructions
       code += compile_if_version_1(command);
+      code += '{ ';
       code += compile_special_instruction(command);
+      code += ' }';
       break;
     case 1: // Jump/Call or Link instructions
       if (getbits(command, 60, 1)) {
@@ -102,24 +104,32 @@ function compileSingleCommand(vm_command) {
         code += compile_jump_instruction(command);
       } else {
         code += compile_if_version_1(command);
+        code += '{ ';
         code += compile_link_instruction(command, false);
+        code += ' }';
       }
       break;
     case 2: // Set System Parameters instructions
       code += compile_if_version_2(command);
+      code += '{ ';
       code += compile_system_set(command);
       code += compile_link_instruction(command, true);
+      code += ' }';
       break;
     case 3: // Set General Parameters instructions
       code += compile_if_version_3(command);
+      code += '{ ';
       code += compile_set_version_1(command);
       code += compile_link_instruction(command, true);
+      code += ' }';
       break;
     case 4: // Set, Compare -> LinkSub instructions
       code += compile_set_version_2(command);
       code += ', ';
       code += compile_if_version_4(command);
+      code += '{ ';
       code += compile_linksub_instruction(command);
+      code += ' }';
       break;
     case 5: // Compare -> (Set and LinkSub) instructions
       code += compile_if_version_5(command);
@@ -421,7 +431,7 @@ function compile_link_instruction(command, optional: boolean) {
   var op = getbits(command, 51, 4);
 
   if (optional && op)
-    code += ', ';
+    code += '; ';
 
   switch (op) {
     case 0:
@@ -434,8 +444,7 @@ function compile_link_instruction(command, optional: boolean) {
     case 4:
       // LinkPGCN x
       // Link to a PGC in the same domain.
-      // /!\ We don't want a leading coma here.
-      code = sprintf('return pgc = %i, dvd.playMenuByID("#menu-" + lang + "-" + domain + "-%i"), 1',
+      code += sprintf('pgc = %i; dvd.playMenuByID("#menu-" + lang + "-" + domain + "-%i"); return 1;',
         getbits(command, 14, 15), getbits(command, 14, 15));
       break;
     case 5:
