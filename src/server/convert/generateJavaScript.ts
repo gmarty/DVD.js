@@ -32,11 +32,15 @@ function generateJavaScript(dvdPath: string, callback) {
     'var lang = "en";',
     'var domain = 0;',
     'var pgc = 0;',
-    'var sprm = {};',
+    'var sprm = {ASTN: 0, SPSTN: 0, AGLN: 0, TTN: 0, VTS_TTN: 0, TT_PGCN: 0, PTTN: 0, HL_BTNN: 0, NVTMR: 0, NV_PGCN: 0, CC_PLT: 0, PLT: 0};',
+    'var g = Array(16);',
     'var MPGCIUT = [];',
     'var btnCmd = [];',
-    'var g = [];',
     'var dummy = 0;',
+    '',
+    'for (var i = 0; i < 16; i++) {',
+    '  g[i] = 0;',
+    '}'
   ];
 
   next(filesList[pointer].ifo);
@@ -174,7 +178,7 @@ function generateJavaScript(dvdPath: string, callback) {
         '    var vob = target.parentNode.dataset.vob;',
         '    var id = target.dataset.id;',
         '',
-        '    sprm["HL_BTNN"] = id;',
+        '    sprm["HL_BTNN"] = parseInt(id, 10);',
         '',
         '    if (target.tagName !== \'INPUT\' || domain === undefined || vob === undefined || id === undefined) {',
         '      return;',
