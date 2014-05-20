@@ -17,11 +17,10 @@ var CMP_OP_TABLE = [
 ];
 
 /**
- * Overridden here to use JavaScript %= comparators.
  * @const
  */
 var SET_OP_TABLE = [
-  '', '=', '<->', '+=', '-=', '*=', '%=', '%=', 'rnd', '&=', '|=', '^='
+  '', '=', '<->', '+=', '-=', '*=', '/=', '%=', 'rnd', '&=', '|=', '^='
 ];
 
 export = compile;
@@ -210,12 +209,27 @@ function compile_cmp_op(op) {
   return code;
 }
 
-function compile_set_op(op) {
+function compile_set_op(var1, var2, op) {
   var code = '';
-  if (op < SET_OP_TABLE.length && SET_OP_TABLE[op] !== '') {
-    code += sprintf(' %s ', SET_OP_TABLE[op]);
-  } else {
+
+  if (op >= SET_OP_TABLE.length || SET_OP_TABLE[op] === '') {
     console.error('jsdvdnav: Unknown set op');
+    return;
+  }
+
+  switch (op) {
+    case 2: // <->
+      code += 'var temp = ' + var1 + '; ' + var1 + ' = ' + var2 + '; ' + var1 + ' = temp;';
+      break;
+    case 6: // /=
+      code += var1 + ' = parseInt(' + var1 + ' / ' + var2 + ', 10)';
+      break;
+    case 8: // rnd
+      code += var1 + ' = Math.round(Math.random(0xFFFF))'; // Untested!!
+      break;
+    default:
+      code += sprintf('%s %s %s', var1, SET_OP_TABLE[op], var2);
+      break;
   }
 
   return code;
@@ -565,10 +579,12 @@ function compile_system_set(command) {
       } else {
         code += 'Register ';
       }
-      code += compile_g_reg(getbits(command, 19, 4));
-      code += compile_set_op(0x01);
       // '='
-      code += compile_reg_or_data(command, !!getbits(command, 60, 1), 47);
+      code += compile_set_op(
+        compile_g_reg(getbits(command, 19, 4)),
+        compile_reg_or_data(command, !!getbits(command, 60, 1), 47),
+        0x01
+      );
       break;
     case 6: // Set system reg 8 (Highlighted button)
       code += compile_system_reg(8);
@@ -590,10 +606,11 @@ function compile_set_version_1(command) {
   var set_op = getbits(command, 59, 4);
 
   if (set_op) {
-    code += compile_g_reg(getbits(command, 35, 4));
-    code += compile_set_op(set_op);
-    code += compile_reg_or_data(command, !!getbits(command, 60, 1), 31);
-    code += '';
+    code += compile_set_op(
+      compile_g_reg(getbits(command, 35, 4)),
+      compile_reg_or_data(command, !!getbits(command, 60, 1), 31),
+      set_op
+    );
   } else {
     code += 'console.log(\'NOP\')';
   }
@@ -606,10 +623,11 @@ function compile_set_version_2(command) {
   var set_op = getbits(command, 59, 4);
 
   if (set_op) {
-    code += compile_g_reg(getbits(command, 51, 4));
-    code += compile_set_op(set_op);
-    code += compile_reg_or_data(command, !!getbits(command, 60, 1), 47);
-    code += '';
+    code += compile_set_op(
+      compile_g_reg(getbits(command, 51, 4)),
+      compile_reg_or_data(command, !!getbits(command, 60, 1), 47),
+      set_op
+    );
   } else {
     code += 'console.log(\'NOP\')';
   }
@@ -622,10 +640,11 @@ function compile_set_version_3(command) {
   var set_op = getbits(command, 59, 4);
 
   if (set_op) {
-    code += compile_g_reg(getbits(command, 51, 4));
-    code += compile_set_op(set_op);
-    code += compile_reg_or_data_3(command, !!getbits(command, 60, 1), 47);
-    code += '';
+    code += compile_set_op(
+      compile_g_reg(getbits(command, 51, 4)),
+      compile_reg_or_data_3(command, !!getbits(command, 60, 1), 47),
+      set_op
+    );
   } else {
     code += 'console.log(\'NOP\')';
   }
