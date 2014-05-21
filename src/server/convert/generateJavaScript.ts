@@ -26,6 +26,7 @@ function generateJavaScript(dvdPath: string, callback) {
   var filesList = require(ifoPath);
 
   var pointer = 0;
+  var currentVideoTitle = 1;
   var code = [
     '\'use strict\';',
     '',
@@ -34,9 +35,11 @@ function generateJavaScript(dvdPath: string, callback) {
     'var pgc = 0;',
     'var sprm = {ASTN: 0, SPSTN: 0, AGLN: 0, TTN: 0, VTS_TTN: 0, TT_PGCN: 0, PTTN: 0, HL_BTNN: 0, NVTMR: 0, NV_PGCN: 0, CC_PLT: 0, PLT: 0};',
     'var g = Array(16);',
-    'var MPGCIUT = [];',
     'var PGCIUT = [];',
+    'var MPGCIUT = [];',
     'var btnCmd = [];',
+    'var VTT_TABLE = {};',
+    'var PTT_TABLE = {};',
     'var dummy = 0;',
     '',
     'for (var i = 0; i < 16; i++) {',
@@ -56,14 +59,20 @@ function generateJavaScript(dvdPath: string, callback) {
     // First Play PGC
     code = first_play_pgc(json, code);
 
-    // Menu PGCI Unit table
-    code = pgci_srp(json, code);
-
     // PGCI Unit table
     code = pgciut(json, code);
 
+    // Menu PGCI Unit table
+    code = pgci_srp(json, code);
+
     // Button commands
     code = btn_cmd(json, code);
+
+    // VTT table (used for JumpTT)
+    code = vtt_table(json, code);
+
+    // PTT table (used for JumpVTS_PTT)
+    code = ptt_table(json, code);
 
     pointer++;
     if (pointer < filesList.length) {
@@ -93,7 +102,7 @@ function generateJavaScript(dvdPath: string, callback) {
       // First Play PGC
       if (!json.first_play_pgc || !json.first_play_pgc.command_tbl.nr_of_pre) {
         console.log('No First Play PGC present');
-        return  code;
+        return code;
       }
 
       code = code.concat([
@@ -101,13 +110,53 @@ function generateJavaScript(dvdPath: string, callback) {
         '// First Play PGC',
           'function fp_pgc() {' + recompile(json.first_play_pgc.command_tbl.pre_cmds) + '}'
       ]);
-      return  code;
+      return code;
+    }
+
+    function pgciut(json, code) {
+      if (!json.vts_pgcit || !json.vts_pgcit.pgci_srp || !Array.isArray(json.vts_pgcit.pgci_srp)) {
+        console.log('No Menu PGCI Unit table present');
+        return code;
+      }
+      var index = pointer; // 0 for VIDEO_TS (VMGM) ; > 0 for VTS (VTSM)
+
+      code = code.concat([
+        '',
+          'PGCIUT[' + index + '] = [];'
+      ]);
+
+      for (var j = 0; j < json.vts_pgcit.nr_of_pgci_srp; j++) {
+        var pgci_srp = json.vts_pgcit.pgci_srp[j];
+        var pgcIndex = j + 1;
+        if (pgci_srp.pgc && pgci_srp.pgc.command_tbl) {
+          code = code.concat([
+              'PGCIUT[' + index + '][' + pgcIndex + '] = {',
+            'run: function() {',
+              '  domain = ' + index + ';',
+              '  pgc = ' + pgcIndex + ';',
+            '  console.log(domain, lang, pgc); // DEBUG',
+            '  if(this.pre()){return;}',
+              '  dvd.playByID("video-' + index + '");',
+            '  if(this.cell()){return;}'
+          ]);
+          // The post command should be executed at the end of the video.
+          //code.push('  this.post();');
+          code = code.concat([
+            '},',
+              'pre: function() {' + recompile(pgci_srp.pgc.command_tbl.pre_cmds) + '},',
+              'post: function() {' + recompile(pgci_srp.pgc.command_tbl.post_cmds) + '},',
+              'cell: function() {' + recompile(pgci_srp.pgc.command_tbl.cell_cmds) + '}',
+            '};'
+          ]);
+        }
+      }
+      return code;
     }
 
     function pgci_srp(json, code) {
       if (!json.pgci_ut || !json.pgci_ut.lu || !Array.isArray(json.pgci_ut.lu)) {
         console.log('No Menu PGCI Unit table present');
-        return  code;
+        return code;
       }
       var index = pointer; // 0 for VIDEO_TS (VMGM) ; > 0 for VTS (VTSM)
 
@@ -152,47 +201,6 @@ function generateJavaScript(dvdPath: string, callback) {
       return code;
     }
 
-    function pgciut(json, code) {
-      if (!json.vts_pgcit || !json.vts_pgcit.pgci_srp || !Array.isArray(json.vts_pgcit.pgci_srp)) {
-        console.log('No Menu PGCI Unit table present');
-        return  code;
-      }
-      var index = pointer; // 0 for VIDEO_TS (VMGM) ; > 0 for VTS (VTSM)
-
-      code = code.concat([
-        '',
-          'PGCIUT[' + index + '] = [];'
-      ]);
-
-      for (var j = 0; j < json.vts_pgcit.nr_of_pgci_srp; j++) {
-        var pgci_srp = json.vts_pgcit.pgci_srp[j];
-        var pgcIndex = j + 1;
-        if (pgci_srp.pgc && pgci_srp.pgc.command_tbl) {
-          code = code.concat([
-              'PGCIUT[' + index + '][' + pgcIndex + '] = {',
-            'run: function() {',
-              '  domain = ' + index + ';',
-              '  pgc = ' + pgcIndex + ';',
-            '  console.log(domain, lang, pgc); // DEBUG',
-            '  if(this.pre()){return;}',
-              '  dvd.playByID("video-' + index + '");',
-            '  if(this.cell()){return;}'
-          ]);
-          if (pgci_srp.pgc.cell_playback && pgci_srp.pgc.cell_playback[0].stc_discontinuity) {
-            code.push('  this.post();');
-          }
-          code = code.concat([
-            '},',
-              'pre: function() {' + recompile(pgci_srp.pgc.command_tbl.pre_cmds) + '},',
-              'post: function() {' + recompile(pgci_srp.pgc.command_tbl.post_cmds) + '},',
-              'cell: function() {' + recompile(pgci_srp.pgc.command_tbl.cell_cmds) + '}',
-            '};'
-          ]);
-        }
-      }
-      return code;
-    }
-
     function btn_cmd(json, code) {
       if (!json.menu_c_adt || !json.menu_c_adt.nr_of_vobs) {
         return code;
@@ -211,11 +219,59 @@ function generateJavaScript(dvdPath: string, callback) {
         code.push('btnCmd[' + pointer + '][' + vobPointer + '] = [];');
         for (var j = 0; j < pci.hli.hl_gi.btn_ns; j++) {
           var cmd = pci.hli.btnit[j].cmd;
-          code.push('btnCmd[' + pointer + '][' + vobPointer + '][' + j + '] = function(){domain = ' + pointer + ';' + recompile([cmd]) + '};');
+          code.push('btnCmd[' + pointer + '][' + vobPointer + '][' + j + '] = function() {domain = ' + pointer + ';' + recompile([cmd]) + '};');
         }
       }
 
-      return  code;
+      return code;
+    }
+
+    function vtt_table(json, code) {
+      if (!json.vts_pgcit || !json.vts_pgcit.pgci_srp || !Array.isArray(json.vts_pgcit.pgci_srp)) {
+        console.log('No PGCI Unit table present');
+        return code;
+      }
+      var domainIndex = pointer; // 0 for VIDEO_TS (VMGM) ; > 0 for VTS (VTSM)
+
+      for (var i = 0; i < json.vts_pgcit.nr_of_pgci_srp; i++) {
+        var pgci_srp = json.vts_pgcit.pgci_srp[i];
+        var pgcIndex = i + 1;
+        if (pgci_srp.pgc) {
+          code.push('VTT_TABLE[' + currentVideoTitle + '] = {domain: ' + domainIndex + ', pgc: ' + pgcIndex + '};');
+        }
+        currentVideoTitle++;
+      }
+
+      return code;
+    }
+
+    // The table matches PTT to chapters.
+    function ptt_table(json, code) {
+      if (!json.vts_pgcit || !json.vts_pgcit.pgci_srp || !Array.isArray(json.vts_pgcit.pgci_srp)) {
+        console.log('No PGCI Unit table present');
+        return code;
+      }
+      var domainIndex = pointer; // 0 for VIDEO_TS (VMGM) ; > 0 for VTS (VTSM)
+      var vtsIndex = 1;
+      var chapterIndex = 0;
+
+      code.push('PTT_TABLE[' + domainIndex + '] = {};');
+
+      for (var i = 0; i < json.vts_pgcit.nr_of_pgci_srp; i++) {
+        var pgci_srp = json.vts_pgcit.pgci_srp[i];
+        var pgcIndex = i + 1;
+        var pttIndex = 0;
+        code.push('PTT_TABLE[' + domainIndex + '][' + vtsIndex + '] = [];');
+
+        for (var j = 0; j < pgci_srp.pgc.nr_of_programs; j++) {
+          code.push('PTT_TABLE[' + domainIndex + '][' + vtsIndex + '][' + pttIndex + '] = {domain: ' + domainIndex + ', pgc: ' + pgcIndex + ', chapter: ' + chapterIndex + '};');
+          pttIndex++;
+          chapterIndex++;
+        }
+        vtsIndex++;
+      }
+
+      return code;
     }
 
     function addEventListener(json, code) {

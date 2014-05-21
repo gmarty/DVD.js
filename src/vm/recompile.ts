@@ -41,13 +41,10 @@ function compile(vm_commands: Array): string {
   if (vm_commands.length === 1) {
     return '\n  ' + vm_commands.map(function(vm_command) {
       return compileSingleCommand(vm_command);
-    });
+    }) + '\n';
   }
 
-  var code = '\n' + compileMultipleCommands(vm_commands);
-
-  // The trailing semicolons for each instruction are appended here.
-  return code;
+  return '\n' + compileMultipleCommands(vm_commands) + '\n';
 }
 
 function compileMultipleCommands(vm_commands) {
@@ -101,7 +98,9 @@ function compileSingleCommand(vm_command) {
     case 1: // Jump/Call or Link instructions
       if (getbits(command, 60, 1)) {
         code += compile_if_version_2(command);
+        code += '{ ';
         code += compile_jump_instruction(command);
+        code += ' }';
       } else {
         code += compile_if_version_1(command);
         code += '{ ';
@@ -412,10 +411,17 @@ function compile_linksub_instruction(command) {
 
   if (op < VM.link_table.length && VM.link_table[op] !== '') {
     switch (op) {
+      case 1:
+        // LinkTopC
+        // Link to current cell in the same PGC.
+        // We should have an infinite loop while we wait for a user interaction.
+        // For now, we just return 1 to avoid the post command to be executed.
+        code += sprintf('return 1;');
+        break;
       case 13:
         // LinkTailPGC
         // Link to post-command section of current PGC.
-        code += sprintf('MPGCIUT[domain][lang][pgc].post();', button);
+        code += sprintf('MPGCIUT[domain][lang][pgc].post();');
         break;
       default:
         var button = getbits(command, 15, 6);
@@ -490,21 +496,25 @@ function compile_jump_instruction(command) {
     case 2:
       // JumpTT x
       // Jump to a video title.
-      code += sprintf('dvd.playByID("video-%s"); return 1;',
-        getbits(command, 22, 7));
+      code += sprintf('var vtt = VTT_TABLE[%s]; PGCIUT[vtt.domain][vtt.pgc].run(); return 1;',
+        getbits(command, 22, 7)
+      );
       break;
     case 3:
       // JumpVTS_TT x
       // Jump to a video title in the current VTS.
-      code += sprintf('console.log(\'JumpVTS_TT %s\'); return 1;',
-        getbits(command, 22, 7));
+      code += sprintf('var vtt = PTT_TABLE[domain][%s][0]; PGCIUT[vtt.domain][vtt.pgc].run(); return 1;',
+        getbits(command, 22, 7)
+      );
       break;
     case 5:
       // JumpVTS_PTT x:y
       // Jump to a PTT in a specified VTS.
-      code += sprintf('dvd.playByID("video-%s"); dvd.playChapter(%s); return 1;',
+      // @todo Use a table here
+      //code += sprintf('console.log(\'JumpVTS_PTT %s:%s\'); return 1;',
+      code += sprintf('var ptt = PTT_TABLE[domain][%s][%s]; PGCIUT[ptt.domain][ptt.pgc].run(); dvd.playChapter(ptt.chapter); return 1;',
         getbits(command, 22, 7),
-        getbits(command, 41, 10) - 1 // The chapter numbers start at 1.
+          getbits(command, 41, 10) - 1
       );
       break;
     case 6:
@@ -517,6 +527,7 @@ function compile_jump_instruction(command) {
           break;
         case 1:
           // JumpSS VMGM (menu x)
+          // x is the type of menu (Root, Title...)
           code += sprintf('console.log(\'JumpSS VMGM (menu %s)\'); return 1;',
             getbits(command, 19, 4)
           );
@@ -548,22 +559,30 @@ function compile_jump_instruction(command) {
         case 0:
           // CallSS FP (rsm_cell x)
           code += sprintf('console.log(\'CallSS FP (rsm_cell %s)\'); return 1;',
-            getbits(command, 31, 8));
+            getbits(command, 31, 8)
+          );
           break;
         case 1:
           // CallSS VMGM (menu x, rsm_cell y)
+          // x is the type of menu (Root, Title...)
           code += sprintf('console.log(\'CallSS VMGM (menu %s, rsm_cell %s)\'); return 1;',
             getbits(command, 19, 4), getbits(command, 31, 8));
           break;
         case 2:
           // CallSS VTSM (menu x, rsm_cell y)
           code += sprintf('console.log(\'CallSS VTSM (menu %s, rsm_cell %s)\'); return 1;',
-            getbits(command, 19, 4), getbits(command, 31, 8));
+            getbits(command, 19, 4),
+            getbits(command, 31, 8)
+          );
           break;
         case 3:
           // CallSS VMGM (pgc x, rsm_cell y)
-          code += sprintf(' console.log(\'CallSS VMGM (pgc %s, rsm_cell %s)\'); return 1;',
-            getbits(command, 46, 15), getbits(command, 31, 8));
+          // @todo What to do with the value of rsm_cell?
+          code += sprintf('setTimeout(MPGCIUT[0][lang][%s].run.bind(MPGCIUT[0][lang][%s])) /* rsm_cell %s*/; return 1;',
+            getbits(command, 46, 15),
+            getbits(command, 46, 15),
+            getbits(command, 31, 8)
+          );
           break;
       }
       break;
@@ -590,7 +609,6 @@ function compile_system_set(command) {
           code += '; '
         }
       }
-      code = code.substring(0, code.length - 2); // Removing the semicolon.
       break;
     case 2: // Set system reg 9 & 10 (Navigation timer, Title PGC number)
       code += compile_system_reg(9);
