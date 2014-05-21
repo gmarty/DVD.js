@@ -60,7 +60,7 @@ function compileMultipleCommands(vm_commands) {
   vm_commands.forEach(function(vm_command, line) {
     code = code.concat([
         '    case ' + (line + 1) + ':',
-        '      ' + compileSingleCommand(vm_command) + ';',
+        '      ' + compileSingleCommand(vm_command) + '',
       '      break;',
     ]);
   });
@@ -229,16 +229,18 @@ function compile_set_op(var1, var2, op) {
 
   switch (op) {
     case 2: // <->
-      code += 'var temp = ' + var1 + '; ' + var1 + ' = ' + var2 + '; ' + var1 + ' = temp;';
+      code += 'var temp = ' + var1 + ';' +
+        ' ' + var1 + ' = ' + var2 + ';' +
+        ' ' + var1 + ' = temp;';
       break;
     case 6: // /=
-      code += var1 + ' = parseInt(' + var1 + ' / ' + var2 + ', 10)';
+      code += var1 + ' = parseInt(' + var1 + ' / ' + var2 + ', 10);';
       break;
     case 8: // rnd
-      code += var1 + ' = Math.round(Math.random(0xFFFF))'; // Untested!!
+      code += var1 + ' = Math.round(Math.random(0xFFFF));'; // Untested!!
       break;
     default:
-      code += sprintf('%s %s %s', var1, SET_OP_TABLE[op], var2);
+      code += sprintf('%s %s %s;', var1, SET_OP_TABLE[op], var2);
       break;
   }
 
@@ -380,22 +382,22 @@ function compile_special_instruction(command) {
     case 0:
       // Nop
       // No operation.
-      code += 'console.log(\'NOP\')';
+      code += 'console.log(\'NOP\');';
       break;
     case 1:
       // GoTo
       // Go to a specified command line.
-      code += sprintf('pc = %1s', getbits(command, 7, 8));
+      code += sprintf('pc = %1s;', getbits(command, 7, 8));
       break;
     case 2:
       // Break
       // Exit the current command section.
-      code += 'console.log(\'Break\')';
+      code += 'return;';
       break;
     case 3:
       // SetTmpPML
       // Set Temporary Parental Management Level.
-      code += sprintf('/* SetTmpPML %1s */ pc = %2s', getbits(command, 11, 4), getbits(command, 7, 8));
+      code += sprintf('/* SetTmpPML %1s */ dummy = %2s;', getbits(command, 11, 4), getbits(command, 7, 8));
       break;
     default:
       console.error('jsdvdnav: Unknown special instruction (%i)', getbits(command, 51, 4));
@@ -406,21 +408,23 @@ function compile_special_instruction(command) {
 
 function compile_linksub_instruction(command) {
   var code = '';
-  var linkop = getbits(command, 7, 8);
-  var button = getbits(command, 15, 6);
+  var op = getbits(command, 7, 8);
 
-  if (linkop < VM.link_table.length && VM.link_table[linkop] !== '') {
-    switch (VM.link_table[linkop]) {
-      case 'LinkTailPGC':
-        code += sprintf('MPGCIUT[domain][lang][pgc].post()', button);
+  if (op < VM.link_table.length && VM.link_table[op] !== '') {
+    switch (op) {
+      case 13:
+        // LinkTailPGC
+        // Link to post-command section of current PGC.
+        code += sprintf('MPGCIUT[domain][lang][pgc].post();', button);
         break;
       default:
-        code += sprintf('dummy/*%s (button %s)*/', VM.link_table[linkop], button);
+        var button = getbits(command, 15, 6);
+        code += sprintf('dummy/*%s (button %s)*/', VM.link_table[op], button);
         break;
     }
   } else {
-    code += 'console.log(\'Unknown linksub instruction (' + linkop + ')\')';
-    console.error('jsdvdnav: Unknown linksub instruction (%i)', linkop);
+    code += 'console.log(\'Unknown linksub instruction (' + op + ')\')';
+    console.error('jsdvdnav: Unknown linksub instruction (%i)', op);
   }
 
   return code;
@@ -481,22 +485,24 @@ function compile_jump_instruction(command) {
     case 1:
       // Exit
       // Terminate the playback of a video DVD.
-      code += 'return console.log(\'Exit\'), 1';
+      code += 'console.log(\'Exit\'); return 1;';
       break;
     case 2:
       // JumpTT x
       // Jump to a video title.
-      code += sprintf('return dvd.playByID("video-%s"), 1', getbits(command, 22, 7));
+      code += sprintf('dvd.playByID("video-%s"); return 1;',
+        getbits(command, 22, 7));
       break;
     case 3:
       // JumpVTS_TT x
       // Jump to a video title in the current VTS.
-      code += sprintf('return console.log(\'JumpVTS_TT %s\'), 1', getbits(command, 22, 7));
+      code += sprintf('console.log(\'JumpVTS_TT %s\'); return 1;',
+        getbits(command, 22, 7));
       break;
     case 5:
       // JumpVTS_PTT x:y
       // Jump to a PTT in a specified VTS.
-      code += sprintf('return dvd.playByIndex("video-%s"), dvd.playChapter(%s), 1',
+      code += sprintf('dvd.playByID("video-%s"); dvd.playChapter(%s); return 1;',
         getbits(command, 22, 7), getbits(command, 41, 10));
       break;
     case 6:
@@ -505,17 +511,17 @@ function compile_jump_instruction(command) {
       switch (getbits(command, 23, 2)) {
         case 0:
           // JumpSS FP
-          code += 'return console.log(\'JumpSS FP\'), 1';
+          code += 'console.log(\'JumpSS FP\'); return 1;';
           break;
         case 1:
           // JumpSS VMGM (menu x)
-          code += sprintf('return console.log(\'JumpSS VMGM (menu %s)\'), 1',
+          code += sprintf('console.log(\'JumpSS VMGM (menu %s)\'); return 1;',
             getbits(command, 19, 4)
           );
           break;
         case 2:
           // JumpSS VTSM (vts x, title y, menu z)
-          code += sprintf('setTimeout(MPGCIUT[%s][lang/* Should be `%s` */][%s].run.bind(MPGCIUT[%s][lang/* Should be `%s` */][%s])); return 1',
+          code += sprintf('setTimeout(MPGCIUT[%s][lang/* Should be `%s` */][%s].run.bind(MPGCIUT[%s][lang/* Should be `%s` */][%s])); return 1;',
             getbits(command, 30, 7),
             getbits(command, 38, 7),
             getbits(command, 19, 4),
@@ -526,7 +532,7 @@ function compile_jump_instruction(command) {
           break;
         case 3:
           // JumpSS VMGM (pgc x)
-          code += sprintf('setTimeout(MPGCIUT[0][lang][%s].run.bind(MPGCIUT[0][lang][%s])); return 1',
+          code += sprintf('setTimeout(MPGCIUT[0][lang][%s].run.bind(MPGCIUT[0][lang][%s])); return 1;',
             getbits(command, 46, 15),
             getbits(command, 46, 15)
           );
@@ -539,27 +545,29 @@ function compile_jump_instruction(command) {
       switch (getbits(command, 23, 2)) {
         case 0:
           // CallSS FP (rsm_cell x)
-          code += sprintf('return console.log(\'CallSS FP (rsm_cell %s)\'), 1', getbits(command, 31, 8));
+          code += sprintf('console.log(\'CallSS FP (rsm_cell %s)\'); return 1;',
+            getbits(command, 31, 8));
           break;
         case 1:
           // CallSS VMGM (menu x, rsm_cell y)
-          code += sprintf('return console.log(\'CallSS VMGM (menu %s, rsm_cell %s)\'), 1', getbits(command, 19, 4), getbits(command, 31, 8));
+          code += sprintf('console.log(\'CallSS VMGM (menu %s, rsm_cell %s)\'); return 1;',
+            getbits(command, 19, 4), getbits(command, 31, 8));
           break;
         case 2:
           // CallSS VTSM (menu x, rsm_cell y)
-          code += sprintf('return console.log(\'CallSS VTSM (menu %s, rsm_cell %s)\'), 1', getbits(command, 19, 4), getbits(command, 31, 8));
+          code += sprintf('console.log(\'CallSS VTSM (menu %s, rsm_cell %s)\'); return 1;',
+            getbits(command, 19, 4), getbits(command, 31, 8));
           break;
         case 3:
           // CallSS VMGM (pgc x, rsm_cell y)
-          code += sprintf('return console.log(\'CallSS VMGM (pgc %s, rsm_cell %s)\'), 1', getbits(command, 46, 15), getbits(command, 31, 8));
+          code += sprintf(' console.log(\'CallSS VMGM (pgc %s, rsm_cell %s)\'); return 1;',
+            getbits(command, 46, 15), getbits(command, 31, 8));
           break;
       }
       break;
     default:
       console.error('jsdvdnav: Unknown Jump/Call instruction');
   }
-
-  //code += ', return 1'; // Jump commands return 1.
 
   return code;
 }
@@ -622,13 +630,13 @@ function compile_system_set(command) {
 
 function compile_set_version_1(command) {
   var code = '';
-  var set_op = getbits(command, 59, 4);
+  var op = getbits(command, 59, 4);
 
-  if (set_op) {
+  if (op) {
     code += compile_set_op(
       compile_g_reg(getbits(command, 35, 4)),
       compile_reg_or_data(command, !!getbits(command, 60, 1), 31),
-      set_op
+      op
     );
   } else {
     code += 'console.log(\'NOP\')';
@@ -639,13 +647,13 @@ function compile_set_version_1(command) {
 
 function compile_set_version_2(command) {
   var code = '';
-  var set_op = getbits(command, 59, 4);
+  var op = getbits(command, 59, 4);
 
-  if (set_op) {
+  if (op) {
     code += compile_set_op(
       compile_g_reg(getbits(command, 51, 4)),
       compile_reg_or_data(command, !!getbits(command, 60, 1), 47),
-      set_op
+      op
     );
   } else {
     code += 'console.log(\'NOP\')';
@@ -656,13 +664,13 @@ function compile_set_version_2(command) {
 
 function compile_set_version_3(command) {
   var code = '';
-  var set_op = getbits(command, 59, 4);
+  var op = getbits(command, 59, 4);
 
-  if (set_op) {
+  if (op) {
     code += compile_set_op(
       compile_g_reg(getbits(command, 51, 4)),
       compile_reg_or_data_3(command, !!getbits(command, 60, 1), 47),
-      set_op
+      op
     );
   } else {
     code += 'console.log(\'NOP\')';
