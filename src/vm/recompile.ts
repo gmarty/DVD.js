@@ -503,7 +503,9 @@ function compile_jump_instruction(command) {
       // JumpVTS_PTT x:y
       // Jump to a PTT in a specified VTS.
       code += sprintf('dvd.playByID("video-%s"); dvd.playChapter(%s); return 1;',
-        getbits(command, 22, 7), getbits(command, 41, 10));
+        getbits(command, 22, 7),
+        getbits(command, 41, 10) - 1 // The chapter numbers start at 1.
+      );
       break;
     case 6:
       // JumpSS
