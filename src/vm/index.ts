@@ -2888,7 +2888,7 @@ class VM {
 
   private print_system_reg(reg) {
     var msg = '';
-    if (reg < VM.system_reg_abbr_table.length / VM.system_reg_abbr_table[0].length) {
+    if (reg < VM.system_reg_abbr_table.length && VM.system_reg_table[reg].length) {
       msg += sprintf('%s (SRPM:%d)', VM.system_reg_table[reg], reg);
     } else {
       console.error('jsdvdnav: Unknown system register (reg=%d)', reg);
@@ -2922,7 +2922,7 @@ class VM {
 
   private print_cmp_op(op) {
     var msg = '';
-    if (op < VM.cmp_op_table.length / VM.cmp_op_table[0].length) {
+    if (op < VM.cmp_op_table.length && VM.cmp_op_table[op].length) {
       msg += sprintf(' %s ', VM.cmp_op_table[op]);
     } else {
       console.error('jsdvdnav: Unknown compare op');
@@ -2933,7 +2933,7 @@ class VM {
 
   private print_set_op(op) {
     var msg = '';
-    if (op < VM.set_op_table.length / VM.cmp_op_table[0].length) {
+    if (op < VM.set_op_table.length && VM.set_op_table[op].length) {
       msg += sprintf(' %s ', VM.set_op_table[op]);
     } else {
       console.error('jsdvdnav: Unknown set op');
@@ -3101,7 +3101,7 @@ class VM {
     var linkop = this.getbits(command, 7, 8);
     var button = this.getbits(command, 15, 6);
 
-    if (linkop < VM.link_table.length / VM.link_table[0].length) {
+    if (linkop < VM.link_table.length && VM.link_table[linkop].length) {
       //msg += sprintf("%s (button %" PRIu8 ")", VM.link_table[linkop], button);
       msg += sprintf('%s (button %s)', VM.link_table[linkop], button);
     } else {
