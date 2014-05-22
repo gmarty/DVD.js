@@ -40,6 +40,7 @@ function generateJavaScript(dvdPath: string, callback) {
     'var btnCmd = [];',
     'var VTT_TABLE = {};',
     'var PTT_TABLE = {};',
+    'var MENU_TYPES = [];',
     'var dummy = 0;',
     '',
     'for (var i = 0; i < 16; i++) {',
@@ -73,6 +74,9 @@ function generateJavaScript(dvdPath: string, callback) {
 
     // PTT table (used for JumpVTS_PTT)
     code = ptt_table(json, code);
+
+    // Menu type table (used for JumpSS VMGM, JumpSS VTSM, CallSS VMGM and CallSS VTSM)
+    code = menu_type_table(json, code);
 
     pointer++;
     if (pointer < filesList.length) {
@@ -272,6 +276,73 @@ function generateJavaScript(dvdPath: string, callback) {
       }
 
       return code;
+    }
+
+    // The table matches menu types to menu pgc.
+    function menu_type_table(json, code) {
+      if (!json.pgci_ut || !json.pgci_ut.lu || !Array.isArray(json.pgci_ut.lu)) {
+        console.log('No Menu PGCI Unit table present');
+        return code;
+      }
+      var domainIndex = pointer; // 0 for VIDEO_TS (VMGM) ; > 0 for VTS (VTSM)
+
+      code.push('MENU_TYPES[' + domainIndex + '] = {};');
+
+      for (var i = 0; i < json.pgci_ut.nr_of_lus; i++) {
+        var lu = json.pgci_ut.lu[i];
+        var lang = utils.bit2str(lu.lang_code);
+        code.push('MENU_TYPES[' + domainIndex + '].' + lang + ' = [];');
+
+        for (var j = 0; j < lu.pgcit.nr_of_pgci_srp; j++) {
+          var pgci_srp = lu.pgcit.pgci_srp[j];
+          var pgcIndex = j + 1;
+          var menuType = pgci_srp.entry_id & 0x0F;
+          var menuName = ifo_print_menu_name(menuType);
+          if (menuType === 0) {
+            continue;
+          }
+          if (pgci_srp.pgc) {
+            code.push('MENU_TYPES[' + domainIndex + '].' + lang + '[' + menuType + ' /* ' + menuName + ' */] = {' +
+              'domain: ' + domainIndex + ', ' +
+              'lang: "' + lang + '", ' +
+              'pgc: ' + pgcIndex + '};');
+          }
+        }
+      }
+
+      return code;
+
+      /**
+       * Function passed as reference.
+       * From /src/dvdread/ifo_print_html.ts.
+       * @param {number} type
+       * @return {string}
+       */
+      function ifo_print_menu_name(type) {
+        switch (type) {
+          case 2:
+            return 'Title';
+            break;
+          case 3:
+            return 'Root';
+            break;
+          case 4:
+            return 'Sub-Picture';
+            break;
+          case 5:
+            return 'Audio';
+            break;
+          case 6:
+            return 'Angle';
+            break;
+          case 7:
+            return 'PTT (Chapter)';
+            break;
+          default:
+            return 'Unknown';
+            break;
+        }
+      }
     }
 
     function addEventListener(json, code) {

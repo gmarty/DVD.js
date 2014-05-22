@@ -503,7 +503,7 @@ function compile_jump_instruction(command) {
     case 3:
       // JumpVTS_TT x
       // Jump to a video title in the current VTS.
-      code += sprintf('var vtt = PTT_TABLE[domain][%s][0]; PGCIUT[vtt.domain][vtt.pgc].run(); return 1;',
+      code += sprintf('var vtt = PTT_TABLE[domain][%s][0]; PGCIUT[vtt.domain][vtt.pgc].run(); dvd.playChapter(ptt.chapter); return 1;',
         getbits(command, 22, 7)
       );
       break;
@@ -534,10 +534,7 @@ function compile_jump_instruction(command) {
           break;
         case 2:
           // JumpSS VTSM (vts x, title y, menu z)
-          code += sprintf('setTimeout(MPGCIUT[%s][lang/* Should be `%s` */][%s].run.bind(MPGCIUT[%s][lang/* Should be `%s` */][%s])); return 1;',
-            getbits(command, 30, 7),
-            getbits(command, 38, 7),
-            getbits(command, 19, 4),
+          code += sprintf('var menu = MENU_TYPES[%s][lang/* Should be %s */][%s]; setTimeout(MPGCIUT[menu.domain][menu.lang][menu.pgc].run.bind(MPGCIUT[menu.domain][menu.lang][menu.pgc])); return 1;',
             getbits(command, 30, 7),
             getbits(command, 38, 7),
             getbits(command, 19, 4)
@@ -545,6 +542,7 @@ function compile_jump_instruction(command) {
           break;
         case 3:
           // JumpSS VMGM (pgc x)
+          // pgc is entry pgc
           code += sprintf('setTimeout(MPGCIUT[0][lang][%s].run.bind(MPGCIUT[0][lang][%s])); return 1;',
             getbits(command, 46, 15),
             getbits(command, 46, 15)
