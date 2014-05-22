@@ -496,6 +496,7 @@ function compile_jump_instruction(command) {
     case 2:
       // JumpTT x
       // Jump to a video title.
+      // @todo We need to set the video current time here.
       code += sprintf('var vtt = VTT_TABLE[%s]; PGCIUT[vtt.domain][vtt.pgc].run(); return 1;',
         getbits(command, 22, 7)
       );
@@ -503,7 +504,7 @@ function compile_jump_instruction(command) {
     case 3:
       // JumpVTS_TT x
       // Jump to a video title in the current VTS.
-      code += sprintf('var vtt = PTT_TABLE[domain][%s][0]; PGCIUT[vtt.domain][vtt.pgc].run(); dvd.playChapter(ptt.chapter); return 1;',
+      code += sprintf('var vtt = PTT_TABLE[domain][%s][0]; PGCIUT[vtt.domain][vtt.pgc].run(); dvd.playChapter(vtt.chapter); return 1;',
         getbits(command, 22, 7)
       );
       break;
@@ -528,7 +529,7 @@ function compile_jump_instruction(command) {
         case 1:
           // JumpSS VMGM (menu x)
           // x is the type of menu (Root, Title...)
-          code += sprintf('console.log(\'JumpSS VMGM (menu %s)\'); return 1;',
+          code += sprintf('var menu = MENU_TYPES[0][lang][%s]; setTimeout(MPGCIUT[menu.domain][menu.lang][menu.pgc].run.bind(MPGCIUT[menu.domain][menu.lang][menu.pgc])); return 1;',
             getbits(command, 19, 4)
           );
           break;
