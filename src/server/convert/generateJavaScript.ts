@@ -362,7 +362,7 @@ function generateJavaScript(dvdPath: string, callback) {
         '    var vob = target.parentNode.dataset.vob;',
         '    var id = target.dataset.id;',
         '',
-        '    sprm["HL_BTNN"] = parseInt(id, 10);',
+        '    sprm["HL_BTNN"] = parseInt(id, 10) * 0x0400;',
         '',
         '    if (target.tagName !== \'INPUT\' || domain === undefined || vob === undefined || id === undefined) {',
         '      return;',
