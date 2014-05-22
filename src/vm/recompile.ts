@@ -396,10 +396,14 @@ function compile_special_instruction(command) {
     case 3:
       // SetTmpPML
       // Set Temporary Parental Management Level.
-      code += sprintf('/* SetTmpPML %1s */ dummy = %2s;', getbits(command, 11, 4), getbits(command, 7, 8));
+      code += sprintf('console.log(\'SetTmpPML %1s = %2s\');',
+        getbits(command, 11, 4),
+        getbits(command, 7, 8)
+      );
       break;
     default:
-      console.error('jsdvdnav: Unknown special instruction (%i)', getbits(command, 51, 4));
+      code += 'console.log(\'Unknown special instruction (' + op + ')\');';
+      console.error('jsdvdnav: Unknown special instruction (%i)', op);
   }
 
   return code;
@@ -424,12 +428,14 @@ function compile_linksub_instruction(command) {
         code += sprintf('MPGCIUT[domain][lang][pgc].post();');
         break;
       default:
-        var button = getbits(command, 15, 6);
-        code += sprintf('dummy/*%s (button %s)*/', VM.link_table[op], button);
+        code += sprintf('console.log(\'%s (button %d)\');',
+          VM.link_table[op],
+          getbits(command, 15, 6)
+        );
         break;
     }
   } else {
-    code += 'console.log(\'Unknown linksub instruction (' + op + ')\')';
+    code += 'console.log(\'Unknown linksub instruction (' + op + ')\');';
     console.error('jsdvdnav: Unknown linksub instruction (%i)', op);
   }
 
@@ -463,23 +469,30 @@ function compile_link_instruction(command, optional: boolean) {
     case 5:
       // LinkPTT x (button y)
       // Link to a PTT in the current VTS.
-      code += sprintf('console.log(\'LinkPTT %s (button %s)\')',
-        getbits(command, 9, 10), getbits(command, 15, 6));
+      code += sprintf('console.log(\'LinkPTT %s (button %d)\')',
+        getbits(command, 9, 10),
+        getbits(command, 15, 6)
+      );
       break;
     case 6:
       // LinkPGN x (button y)
       // Link to a program in the same PGC.
-      code += sprintf('console.log(\'LinkPGN %s (button %s)\')',
-        getbits(command, 6, 7), getbits(command, 15, 6));
+      code += sprintf('console.log(\'LinkPGN %s (button %d)\')',
+        getbits(command, 6, 7),
+        getbits(command, 15, 6)
+      );
       break;
     case 7:
       // LinkCN x (button y)
       // Link to a cell in the same PGC.
-      code += sprintf('console.log(\'LinkCN %s (button %s)\')',
-        getbits(command, 7, 8), getbits(command, 15, 6));
+      code += sprintf('console.log(\'LinkCN %s (button %d)\')',
+        getbits(command, 7, 8),
+        getbits(command, 15, 6)
+      );
       break;
     default:
-      console.error('jsdvdnav: Unknown link instruction');
+      code += 'console.log(\'Unknown link instruction (' + op + ')\');';
+      console.error('jsdvdnav: Unknown link instruction (%i)', op);
   }
 
   return code;
@@ -487,7 +500,9 @@ function compile_link_instruction(command, optional: boolean) {
 
 function compile_jump_instruction(command) {
   var code = '';
-  switch (getbits(command, 51, 4)) {
+  var op = getbits(command, 51, 4);
+
+  switch (op) {
     case 1:
       // Exit
       // Terminate the playback of a video DVD.
@@ -586,7 +601,8 @@ function compile_jump_instruction(command) {
       }
       break;
     default:
-      console.error('jsdvdnav: Unknown Jump/Call instruction');
+      code += 'console.log(\'Unknown Jump/Call instruction (' + op + ')\');';
+      console.error('jsdvdnav: Unknown Jump/Call instruction (%i)', op);
   }
 
   return code;
@@ -605,7 +621,7 @@ function compile_system_set(command) {
           code += compile_system_reg(i);
           code += ' = ';
           code += compile_reg_or_data_2(command, !!getbits(command, 60, 1), 47 - (i * 8));
-          code += '; '
+          code += ';';
         }
       }
       break;
@@ -616,6 +632,7 @@ function compile_system_set(command) {
       code += ' ';
       code += compile_system_reg(10);
       code += sprintf(' = %s', getbits(command, 30, 15));
+      code += ';';
       // ??
       break;
     case 3: // Mode: Counter / Register + Set
@@ -631,14 +648,16 @@ function compile_system_set(command) {
         compile_reg_or_data(command, !!getbits(command, 60, 1), 47),
         0x01
       );
+      code += ';';
       break;
     case 6: // Set system reg 8 (Highlighted button)
       code += compile_system_reg(8);
       if (getbits(command, 60, 1)) { // immediate
-        code += sprintf(' = dummy/*%s (button no %d)*/', utils.toHex(getbits(command, 31, 16)), getbits(command, 31, 6));
+        code += sprintf(' = %s /* (button %d) */', utils.toHex(getbits(command, 31, 16)), getbits(command, 31, 6));
       } else {
         code += sprintf(' = g[%s]', utils.toHex(getbits(command, 19, 4)));
       }
+      code += ';';
       break;
     default:
       console.error('jsdvdnav: Unknown system set instruction (%i)', getbits(command, 59, 4));
