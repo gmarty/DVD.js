@@ -264,7 +264,7 @@ function generateJavaScript(dvdPath: string, callback) {
       }
       var domainIndex = pointer; // 0 for VIDEO_TS (VMGM) ; > 0 for VTS (VTSM)
       var vtsIndex = 1;
-      var chapterIndex = 0;
+      var chapterIndex = 1;
 
       code.push('PTT_TABLE[' + domainIndex + '] = {};');
 
