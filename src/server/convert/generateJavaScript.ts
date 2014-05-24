@@ -116,9 +116,7 @@ function generateJavaScript(dvdPath: string, callback) {
         // We need to delay startup to allow the browser to preload the video
         // and get the VTT files.
         // @todo Listen to video events of all videos.
-        '  setTimeout(function() {',
-        '  ' + recompile(json.first_play_pgc.command_tbl.pre_cmds),
-        '  }, 500);',
+          '  setTimeout(function() {' + recompile(json.first_play_pgc.command_tbl.pre_cmds) + '}, 500);',
         '}',
       ]);
       return code;

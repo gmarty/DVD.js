@@ -37,17 +37,18 @@ function compile(vm_commands: Array): string {
     return '';
   }
 
-  // @todo Add heuristics to determine if there is a Goto command.
-  if (vm_commands.length === 1) {
-    return '\n  ' + vm_commands.map(function(vm_command) {
-      return compileSingleCommand(vm_command);
-    }) + '\n';
+  if (hasGoTo(vm_commands)) {
+    return '\n' + compileCommandsWithGoTo(vm_commands) + '\n';
   }
 
-  return '\n' + compileMultipleCommands(vm_commands) + '\n';
+  return vm_commands
+    .map(function(vm_command) {
+      return '\n  ' + compileSingleCommand(vm_command);
+    })
+    .join('') + '\n';
 }
 
-function compileMultipleCommands(vm_commands) {
+function compileCommandsWithGoTo(vm_commands) {
   var code = [
     'var pc = 1;',
     'while(true) {',
@@ -70,6 +71,22 @@ function compileMultipleCommands(vm_commands) {
   ]);
 
   return code.join('\n');
+}
+
+/**
+ * Determine whether the set of commands has a GoTo command.
+ *
+ * @param {Array} vm_commands
+ * @returns {boolean}
+ */
+function hasGoTo(vm_commands) {
+  return vm_commands.some(function(vm_command) {
+    var command = vm_command.bytes.map(function(byte: number): string {
+      return sprintf('%08i', (byte).toString(2));
+    }).join('');
+
+    return getbits(command, 63, 3) === 0 && getbits(command, 51, 4) === 1;
+  });
 }
 
 function compileSingleCommand(vm_command) {
@@ -469,7 +486,7 @@ function compile_link_instruction(command, optional: boolean) {
     case 5:
       // LinkPTT x (button y)
       // Link to a PTT in the current VTS.
-      code += sprintf('console.log(\'LinkPTT %s (button %d)\')',
+      code += sprintf('console.log(\'LinkPTT %s (button %d)\');',
         getbits(command, 9, 10),
         getbits(command, 15, 6)
       );
@@ -477,7 +494,7 @@ function compile_link_instruction(command, optional: boolean) {
     case 6:
       // LinkPGN x (button y)
       // Link to a program in the same PGC.
-      code += sprintf('console.log(\'LinkPGN %s (button %d)\')',
+      code += sprintf('console.log(\'LinkPGN %s (button %d)\');',
         getbits(command, 6, 7),
         getbits(command, 15, 6)
       );
@@ -485,7 +502,7 @@ function compile_link_instruction(command, optional: boolean) {
     case 7:
       // LinkCN x (button y)
       // Link to a cell in the same PGC.
-      code += sprintf('console.log(\'LinkCN %s (button %d)\')',
+      code += sprintf('console.log(\'LinkCN %s (button %d)\');',
         getbits(command, 7, 8),
         getbits(command, 15, 6)
       );
@@ -610,11 +627,12 @@ function compile_jump_instruction(command) {
 
 function compile_system_set(command) {
   var code = '';
+  var op = getbits(command, 59, 4);
   var i = 0;
   // FIXME: What about SPRM11 ? Karaoke
   // Surely there must be some system set command for that?
 
-  switch (getbits(command, 59, 4)) {
+  switch (op) {
     case 1: // Set system reg 1 &| 2 &| 3 (Audio, Subp. Angle)
       for (i = 1; i <= 3; i++) {
         if (getbits(command, 47 - (i * 8), 1)) {
@@ -660,7 +678,8 @@ function compile_system_set(command) {
       code += ';';
       break;
     default:
-      console.error('jsdvdnav: Unknown system set instruction (%i)', getbits(command, 59, 4));
+      code += 'console.log(\'Unknown system set instruction (' + op + ')\');';
+      console.error('jsdvdnav: Unknown system set instruction (%i)', op);
   }
 
   return code;
@@ -677,7 +696,7 @@ function compile_set_version_1(command) {
       op
     );
   } else {
-    code += 'console.log(\'NOP\')';
+    code += 'console.log(\'NOP\');';
   }
 
   return code;
@@ -694,7 +713,7 @@ function compile_set_version_2(command) {
       op
     );
   } else {
-    code += 'console.log(\'NOP\')';
+    code += 'console.log(\'NOP\');';
   }
 
   return code;
@@ -711,7 +730,7 @@ function compile_set_version_3(command) {
       op
     );
   } else {
-    code += 'console.log(\'NOP\')';
+    code += 'console.log(\'NOP\');';
   }
 
   return code;
