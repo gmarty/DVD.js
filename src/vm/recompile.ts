@@ -188,7 +188,7 @@ function compile_system_reg(reg) {
 function compile_g_reg(reg) {
   var code = '';
   if (reg < 0x10) {
-    code += sprintf('g[%s]', utils.toHex(reg));
+    code += sprintf('gprm[%s]', utils.toHex(reg));
   } else {
     console.error('jsdvdnav: Unknown general register');
   }
@@ -267,7 +267,7 @@ function compile_reg_or_data_2(command, immediate: boolean, start) {
   if (immediate) {
     code += sprintf('%s', utils.toHex(getbits(command, start - 1, 7)));
   } else {
-    code += sprintf('g[%s]', utils.toHex(getbits(command, start - 4, 4)));
+    code += sprintf('gprm[%s]', utils.toHex(getbits(command, start - 4, 4)));
   }
 
   return code;
@@ -655,7 +655,7 @@ function compile_system_set(command) {
       if (getbits(command, 60, 1)) { // immediate
         code += sprintf(' = %s /* (button %d) */', utils.toHex(getbits(command, 31, 16)), getbits(command, 31, 6));
       } else {
-        code += sprintf(' = g[%s]', utils.toHex(getbits(command, 19, 4)));
+        code += sprintf(' = gprm[%s]', utils.toHex(getbits(command, 19, 4)));
       }
       code += ';';
       break;

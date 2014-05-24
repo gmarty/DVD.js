@@ -33,8 +33,8 @@ function generateJavaScript(dvdPath: string, callback) {
     'var lang = "en";',
     'var domain = 0;',
     'var pgc = 0;',
+    'var gprm = Array(16);',
     'var sprm = {ASTN: 0, SPSTN: 0, AGLN: 0, TTN: 0, VTS_TTN: 0, TT_PGCN: 0, PTTN: 0, HL_BTNN: 0, NVTMR: 0, NV_PGCN: 0, CC_PLT: 0, PLT: 0};',
-    'var g = Array(16);',
     'var PGCIUT = [];',
     'var MPGCIUT = [];',
     'var btnCmd = [];',
@@ -44,7 +44,7 @@ function generateJavaScript(dvdPath: string, callback) {
     'var dummy = 0;',
     '',
     'for (var i = 0; i < 16; i++) {',
-    '  g[i] = 0;',
+    '  gprm[i] = 0;',
     '}'
   ];
 
