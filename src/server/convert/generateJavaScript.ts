@@ -34,7 +34,7 @@ function generateJavaScript(dvdPath: string, callback) {
     'var domain = 0;',
     'var pgc = 0;',
     'var gprm = Array(16);',
-    'var sprm = {ASTN: 0, SPSTN: 0, AGLN: 0, TTN: 0, VTS_TTN: 0, TT_PGCN: 0, PTTN: 0, HL_BTNN: 0, NVTMR: 0, NV_PGCN: 0, CC_PLT: 0, PLT: 0};',
+    'var sprm = {ASTN: 15, SPSTN: 62, AGLN: 1, TTN: 1, VTS_TTN: 1, TT_PGCN: 0, PTTN: 1, HL_BTNN: 1 * 0x400, NVTMR: 0, NV_PGCN: 0, CC_PLT: 0, PLT: 15};',
     'var PGCIUT = [];',
     'var MPGCIUT = [];',
     'var btnCmd = [];',
