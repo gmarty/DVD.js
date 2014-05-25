@@ -20,6 +20,25 @@ var assert = utils.assert;
 
 export = VM;
 
+// Audio stream number
+/** @const */ var AST_REG = 1;
+// Subpicture stream number
+/** @const */ var SPST_REG = 2;
+// Angle number
+/** @const */ var AGL_REG = 3;
+// Title Track Number
+/** @const */ var TTN_REG = 4;
+// VTS Title Track Number
+/** @const */ var VTS_TTN_REG = 5;
+// PGC Number for this Title Track
+/** @const */ var TT_PGCN_REG = 6;
+// Current Part of Title (PTT) number for (One_Sequential_PGC_Title)
+/** @const */ var PTTN_REG = 7;
+// Highlighted Button Number (btn nr 1 == value 1024)
+/** @const */ var HL_BTNN_REG = 8;
+// Parental Level
+/** @const */ var PTL_REG = 13;
+
 // link command types
 enum link_cmd {
   LinkNoLink,
@@ -69,16 +88,6 @@ enum link_cmd {
  */
 class DvdState {
   public registers = new Registers();
-
-  /*public AST_REG = 0;
-   public SPST_REG = 0;
-   public AGL_REG = 0;
-   public TTN_REG = 0;
-   public VTS_TTN_REG = 0;
-   //public TT_PGCN_REG = 0;
-   public PTTN_REG = 0;
-   public HL_BTNN_REG = 0;
-   public PTL_REG = 0;*/
 
   public domain = 0;
   public vtsN = 0;            // 0 is vmgm?
@@ -197,15 +206,15 @@ class VM {
     this.state = new DvdState();
     this.state.registers.SPRM[0] = DVD_MENU_LANGUAGE.charCodeAt(1);   // Player Menu Language code
     this.state.registers.SPRM[1] = DVD_MENU_LANGUAGE.charCodeAt(0);   // Player Menu Language code
-    this.state.AST_REG = 15;          // 15 why?
-    this.state.SPST_REG = 62;         // 62 why?
-    this.state.AGL_REG = 1;
-    this.state.TTN_REG = 1;
-    this.state.VTS_TTN_REG = 1;
-    //this.state.TT_PGCN_REG = 0;
-    this.state.PTTN_REG = 1;
-    this.state.HL_BTNN_REG = 1 << 10;
-    this.state.PTL_REG = 15;                          // Parental Level
+    this.state.registers.SPRM[AST_REG] = 15;           // 15 why?
+    this.state.registers.SPRM[SPST_REG] = 62;          // 62 why?
+    this.state.registers.SPRM[AGL_REG] = 1;
+    this.state.registers.SPRM[TTN_REG] = 1;
+    this.state.registers.SPRM[VTS_TTN_REG] = 1;
+    this.state.registers.SPRM[TT_PGCN_REG] = 0;        // Unused
+    this.state.registers.SPRM[PTTN_REG] = 1;
+    this.state.registers.SPRM[HL_BTNN_REG] = 1 << 10;
+    this.state.registers.SPRM[PTL_REG] = 15;           // Parental Level
     this.state.registers.SPRM[12] = COUNTRY_CODE.charCodeAt(1);       // Parental Management Country Code
     this.state.registers.SPRM[13] = COUNTRY_CODE.charCodeAt(0);       // Parental Management Country Code
     this.state.registers.SPRM[14] = 0x0100;            // Try Pan&Scan
@@ -336,12 +345,12 @@ class VM {
   public position_get() {
     var position = new VMPosition();
 
-    position.button = this.state.HL_BTNN_REG >> 10;
+    position.button = this.state.registers.SPRM[HL_BTNN_REG] >> 10;
     position.vts = this.state.vtsN;
     position.domain = this.state.domain;
-    position.spu_channel = this.state.SPST_REG;
-    position.audio_channel = this.state.AST_REG;
-    position.angle_channel = this.state.AGL_REG;
+    position.spu_channel = this.state.registers.SPRM[SPST_REG];
+    position.audio_channel = this.state.registers.SPRM[AST_REG];
+    position.angle_channel = this.state.registers.SPRM[AGL_REG];
     position.hop_channel = this.hop_channel; // Increases by one on each hop.
     position.cell = this.state.cellN;
     position.cell_restart = this.state.cell_restart;
@@ -699,7 +708,7 @@ class VM {
   }
 
   public get_audio_active_stream() {
-    var audioN = this.state.AST_REG;
+    var audioN = this.state.registers.SPRM[AST_REG];
     var streamN = this.get_audio_stream(audioN);
 
     // If no such stream, then select the first one that exists.
@@ -716,7 +725,7 @@ class VM {
   }
 
   public get_subp_active_stream(mode) {
-    var subpN = this.state.SPST_REG & ~0x40;
+    var subpN = this.state.registers.SPRM[SPST_REG] & ~0x40;
     var streamN = this.get_subp_stream(subpN, mode);
 
     // If no such stream, then select the first one that exists.
@@ -729,7 +738,7 @@ class VM {
       }
     }
 
-    if (this.state.domain === DVDDomain.DVD_DOMAIN_VTSTitle && !(this.state.SPST_REG & 0x40)) {
+    if (this.state.domain === DVDDomain.DVD_DOMAIN_VTSTitle && !(this.state.registers.SPRM[SPST_REG] & 0x40)) {
       // Bit 7 set means hide, and only let Forced display show.
       return (streamN | 0x80);
     } else {
@@ -743,14 +752,14 @@ class VM {
 
     if (this.state.domain === DVDDomain.DVD_DOMAIN_VTSTitle) {
       // TTN_REG does not always point to the correct title.
-      if (this.state.TTN_REG > this.vmgi.tt_srpt.nr_of_srpts) {
+      if (this.state.registers.SPRM[TTN_REG] > this.vmgi.tt_srpt.nr_of_srpts) {
         return {current: current, num_avail: num_avail};
       }
-      var title = this.vmgi.tt_srpt.title[this.state.TTN_REG - 1];
-      if (title.title_set_nr !== this.state.vtsN || title.vts_ttn !== this.state.VTS_TTN_REG) {
+      var title = this.vmgi.tt_srpt.title[this.state.registers.SPRM[TTN_REG] - 1];
+      if (title.title_set_nr !== this.state.vtsN || title.vts_ttn !== this.state.registers.SPRM[VTS_TTN_REG]) {
         return {current: current, num_avail: num_avail};
       }
-      current = this.state.AGL_REG;
+      current = this.state.registers.SPRM[AGL_REG];
       num_avail = title.nr_of_angles;
     }
 
@@ -762,7 +771,7 @@ class VM {
     switch (this.state.domain) {
       case DVDDomain.DVD_DOMAIN_VTSTitle:
         num_avail = this.vtsi.vtsi_mat.nr_of_vts_audio_streams;
-        current = this.state.AST_REG;
+        current = this.state.registers.SPRM[AST_REG];
         break;
       case DVDDomain.DVD_DOMAIN_VTSMenu:
         num_avail = this.vtsi.vtsi_mat.nr_of_vtsm_audio_streams; // 1
@@ -781,7 +790,7 @@ class VM {
     switch (this.state.domain) {
       case DVDDomain.DVD_DOMAIN_VTSTitle:
         num_avail = this.vtsi.vtsi_mat.nr_of_vts_subp_streams;
-        current = this.state.SPST_REG;
+        current = this.state.registers.SPRM[SPST_REG];
         break;
       case DVDDomain.DVD_DOMAIN_VTSMenu:
         num_avail = this.vtsi.vtsi_mat.nr_of_vtsm_subp_streams; // 1
@@ -1034,7 +1043,7 @@ class VM {
             break;
           case 1: // Angle block
             // Loop and check each cell instead? So we don't get outside the block?
-            this.state.cellN += this.state.AGL_REG - 1;
+            this.state.cellN += this.state.registers.SPRM[AGL_REG] - 1;
             if (false) {
               assert(this.state.cellN <= this.state.pgc.nr_of_cells);
               assert(this.state.pgc.cell_playback[this.state.cellN - 1].block_mode !== 0);
@@ -1042,7 +1051,7 @@ class VM {
             } else {
               if (!(this.state.cellN <= this.state.pgc.nr_of_cells) || !(this.state.pgc.cell_playback[this.state.cellN - 1].block_mode !== 0) || !(this.state.pgc.cell_playback[this.state.cellN - 1].block_type === 1)) {
                 console.error('jsdvdnav: Invalid angle block');
-                this.state.cellN -= this.state.AGL_REG - 1;
+                this.state.cellN -= this.state.registers.SPRM[AGL_REG] - 1;
               }
             }
             break;
@@ -1167,20 +1176,20 @@ class VM {
         case link_cmd.LinkNoLink:
           // BUTTON number:data1
           if (link_values.data1 !== 0)
-            this.state.HL_BTNN_REG = link_values.data1 << 10;
+            this.state.registers.SPRM[HL_BTNN_REG] = link_values.data1 << 10;
           return false;  // no actual jump
         case link_cmd.LinkTopC:
           // Restart playing from the beginning of the current Cell.
           // BUTTON number:data1
           if (link_values.data1 !== 0)
-            this.state.HL_BTNN_REG = link_values.data1 << 10;
+            this.state.registers.SPRM[HL_BTNN_REG] = link_values.data1 << 10;
           link_values = this.play_Cell();
           break;
         case link_cmd.LinkNextC:
           // Link to Next Cell
           // BUTTON number:data1
           if (link_values.data1 !== 0)
-            this.state.HL_BTNN_REG = link_values.data1 << 10;
+            this.state.registers.SPRM[HL_BTNN_REG] = link_values.data1 << 10;
           this.state.cellN += 1;
           link_values = this.play_Cell();
           break;
@@ -1188,7 +1197,7 @@ class VM {
           // Link to Previous Cell
           // BUTTON number:data1
           if (link_values.data1 !== 0)
-            this.state.HL_BTNN_REG = link_values.data1 << 10;
+            this.state.registers.SPRM[HL_BTNN_REG] = link_values.data1 << 10;
           assert(this.state.cellN > 1);
           this.state.cellN -= 1;
           link_values = this.play_Cell();
@@ -1197,14 +1206,14 @@ class VM {
           // Link to Top of current Program
           // BUTTON number:data1
           if (link_values.data1 !== 0)
-            this.state.HL_BTNN_REG = link_values.data1 << 10;
+            this.state.registers.SPRM[HL_BTNN_REG] = link_values.data1 << 10;
           link_values = this.play_PG();
           break;
         case link_cmd.LinkNextPG:
           // Link to Next Program
           // BUTTON number:data1
           if (link_values.data1 !== 0)
-            this.state.HL_BTNN_REG = link_values.data1 << 10;
+            this.state.registers.SPRM[HL_BTNN_REG] = link_values.data1 << 10;
           this.state.pgN += 1;
           link_values = this.play_PG();
           break;
@@ -1212,7 +1221,7 @@ class VM {
           // Link to Previous Program
           // BUTTON number:data1
           if (link_values.data1 !== 0)
-            this.state.HL_BTNN_REG = link_values.data1 << 10;
+            this.state.registers.SPRM[HL_BTNN_REG] = link_values.data1 << 10;
           assert(this.state.pgN > 1);
           this.state.pgN -= 1;
           link_values = this.play_PG();
@@ -1221,14 +1230,14 @@ class VM {
           // Restart playing from beginning of current Program Chain
           // BUTTON number:data1
           if (link_values.data1 !== 0)
-            this.state.HL_BTNN_REG = link_values.data1 << 10;
+            this.state.registers.SPRM[HL_BTNN_REG] = link_values.data1 << 10;
           link_values = this.play_PGC();
           break;
         case link_cmd.LinkNextPGC:
           // Link to Next Program Chain
           // BUTTON number:data1
           if (link_values.data1 !== 0)
-            this.state.HL_BTNN_REG = link_values.data1 << 10;
+            this.state.registers.SPRM[HL_BTNN_REG] = link_values.data1 << 10;
           assert(this.state.pgc.next_pgc_nr !== 0);
           if (this.set_PGCN(this.state.pgc.next_pgc_nr))
             link_values = this.play_PGC();
@@ -1239,7 +1248,7 @@ class VM {
           // Link to Previous Program Chain
           // BUTTON number:data1
           if (link_values.data1 !== 0)
-            this.state.HL_BTNN_REG = link_values.data1 << 10;
+            this.state.registers.SPRM[HL_BTNN_REG] = link_values.data1 << 10;
           assert(this.state.pgc.prev_pgc_nr !== 0);
           if (this.set_PGCN(this.state.pgc.prev_pgc_nr))
             link_values = this.play_PGC();
@@ -1250,7 +1259,7 @@ class VM {
           // Link to GoUp Program Chain
           // BUTTON number:data1
           if (link_values.data1 !== 0)
-            this.state.HL_BTNN_REG = link_values.data1 << 10;
+            this.state.registers.SPRM[HL_BTNN_REG] = link_values.data1 << 10;
           assert(this.state.pgc.goup_pgc_nr !== 0);
           if (this.set_PGCN(this.state.pgc.goup_pgc_nr))
             link_values = this.play_PGC();
@@ -1261,7 +1270,7 @@ class VM {
           // Link to Tail of Program Chain
           // BUTTON number:data1
           if (link_values.data1 !== 0)
-            this.state.HL_BTNN_REG = link_values.data1 << 10;
+            this.state.registers.SPRM[HL_BTNN_REG] = link_values.data1 << 10;
           link_values = this.play_PGC_post();
           break;
         case link_cmd.LinkRSM:
@@ -1281,14 +1290,14 @@ class VM {
           this.set_PGCN(this.state.rsm_pgcN);
 
           // These should never be set in SystemSpace and/or MenuSpace
-          // this.state.TTN_REG = rsm_tt; ??
-          // this.state.TT_PGCN_REG = this.state.rsm_pgcN; ??
+          // this.state.registers.SPRM[TTN_REG] = rsm_tt; ??
+          // this.state.registers.SPRM[TT_PGCN_REG] = this.state.rsm_pgcN; ??
           for (i = 0; i < 5; i++) {
             this.state.registers.SPRM[4 + i] = this.state.rsm_regs[i];
           }
 
           if (link_values.data1 !== 0)
-            this.state.HL_BTNN_REG = link_values.data1 << 10;
+            this.state.registers.SPRM[HL_BTNN_REG] = link_values.data1 << 10;
 
           if (this.state.rsm_cellN === 0) {
             assert(this.state.cellN); // Checking if this ever happens
@@ -1320,8 +1329,8 @@ class VM {
           // PGC Pre-Commands are not executed
           assert(this.state.domain === DVDDomain.DVD_DOMAIN_VTSTitle);
           if (link_values.data2 !== 0)
-            this.state.HL_BTNN_REG = link_values.data2 << 10;
-          if (!this.set_VTS_PTT(this.state.vtsN, this.state.VTS_TTN_REG, link_values.data1))
+            this.state.registers.SPRM[HL_BTNN_REG] = link_values.data2 << 10;
+          if (!this.set_VTS_PTT(this.state.vtsN, this.state.registers.SPRM[VTS_TTN_REG], link_values.data1))
             link_values.command = link_cmd.Exit;
           else
             link_values = this.play_PG();
@@ -1330,7 +1339,7 @@ class VM {
           // Link to Program Number:data1
           // BUTTON number:data2
           if (link_values.data2 !== 0)
-            this.state.HL_BTNN_REG = link_values.data2 << 10;
+            this.state.registers.SPRM[HL_BTNN_REG] = link_values.data2 << 10;
           // Update any other state, PTTN perhaps?
           this.state.pgN = link_values.data1;
           link_values = this.play_PG();
@@ -1339,7 +1348,7 @@ class VM {
           // Link to Cell Number:data1
           // BUTTON number:data2
           if (link_values.data2 !== 0)
-            this.state.HL_BTNN_REG = link_values.data2 << 10;
+            this.state.registers.SPRM[HL_BTNN_REG] = link_values.data2 << 10;
           // Update any other state, pgN, PTTN perhaps?
           this.state.cellN = link_values.data1;
           link_values = this.play_Cell();
@@ -1443,10 +1452,10 @@ class VM {
           // I don't know what title is supposed to be used for.
           // `Alien` or `Aliens` has this !== 1, I think.
           // assert(link_values.data2 === 1);
-          this.state.VTS_TTN_REG = link_values.data2;
+          this.state.registers.SPRM[VTS_TTN_REG] = link_values.data2;
           // TTN_REG (SPRM4), VTS_TTN_REG (SPRM5), TT_PGCN_REG (SPRM6) are linked,
           // so if one changes, the others must change to match it.
-          this.state.TTN_REG = this.get_TT(this.state.vtsN, this.state.VTS_TTN_REG);
+          this.state.registers.SPRM[TTN_REG] = this.get_TT(this.state.vtsN, this.state.registers.SPRM[VTS_TTN_REG]);
           if (!this.set_MENU(link_values.data3))
             assert(0);
           link_values = this.play_PGC();
@@ -1567,13 +1576,13 @@ class VM {
     pgcN = this.vtsi.vts_ptt_srpt.title[vts_ttn - 1].ptt[part - 1].pgcn;
     pgN = this.vtsi.vts_ptt_srpt.title[vts_ttn - 1].ptt[part - 1].pgn;
 
-    this.state.TT_PGCN_REG = pgcN;
-    this.state.PTTN_REG = part;
-    this.state.TTN_REG = this.get_TT(vtsN, vts_ttn);
-    if ((this.state.TTN_REG) === 0)
+    this.state.registers.SPRM[TT_PGCN_REG] = pgcN;
+    this.state.registers.SPRM[PTTN_REG] = part;
+    this.state.registers.SPRM[TTN_REG] = this.get_TT(vtsN, vts_ttn);
+    if ((this.state.registers.SPRM[TTN_REG]) === 0)
       return false;
 
-    this.state.VTS_TTN_REG = vts_ttn;
+    this.state.registers.SPRM[VTS_TTN_REG] = vts_ttn;
     this.state.vtsN = vtsN;  // Not sure about this one. We can get to it easily from TTN_REG
     // Any other registers?
 
@@ -1604,10 +1613,10 @@ class VM {
     pgcN = pgcn;
     pgN = pgn;
 
-    this.state.TT_PGCN_REG = pgcN;
-    this.state.TTN_REG = this.get_TT(vtsN, vts_ttn);
-    assert((this.state.TTN_REG) !== 0);
-    this.state.VTS_TTN_REG = vts_ttn;
+    this.state.registers.SPRM[TT_PGCN_REG] = pgcN;
+    this.state.registers.SPRM[TTN_REG] = this.get_TT(vtsN, vts_ttn);
+    assert((this.state.registers.SPRM[TTN_REG]) !== 0);
+    this.state.registers.SPRM[VTS_TTN_REG] = vts_ttn;
     this.state.vtsN = vtsN;  // Not sure about this one. We can get to it easily from TTN_REG
     // Any other registers?
 
@@ -1616,7 +1625,7 @@ class VM {
     var obj = this.get_current_title_part();
     title = obj.title;
     part = obj.part;
-    this.state.PTTN_REG = part;
+    this.state.registers.SPRM[PTTN_REG] = part;
     return res;
   }
 
@@ -1654,7 +1663,7 @@ class VM {
     this.state.pgN = 1;
 
     if (this.state.domain === DVDDomain.DVD_DOMAIN_VTSTitle)
-      this.state.TT_PGCN_REG = pgcN;
+      this.state.registers.SPRM[TT_PGCN_REG] = pgcN;
 
     return true;
   }
@@ -1678,14 +1687,14 @@ class VM {
     this.state.pgN = new_pgN;
 
     if (this.state.domain === DVDDomain.DVD_DOMAIN_VTSTitle) {
-      if (this.state.TTN_REG > this.vmgi.tt_srpt.nr_of_srpts) {
+      if (this.state.registers.SPRM[TTN_REG] > this.vmgi.tt_srpt.nr_of_srpts) {
         return false; // ??
       }
 
       var obj = this.get_current_title_part();
       dummy = obj.title;
       part = obj.part;
-      this.state.PTTN_REG = part;
+      this.state.registers.SPRM[PTTN_REG] = part;
     }
     return true;
   }
@@ -1704,7 +1713,7 @@ class VM {
     this.state.rsm_vtsN = this.state.vtsN;
     this.state.rsm_pgcN = this.get_PGCN();
 
-    // assert(this.state.rsm_pgcN === this.state.TT_PGCN_REG);  for DVDDomain.DVD_DOMAIN_VTSTitle
+    // assert(this.state.rsm_pgcN === this.state.registers.SPRM[TT_PGCN_REG]);  for DVDDomain.DVD_DOMAIN_VTSTitle
 
     for (i = 0; i < 5; i++) {
       this.state.rsm_regs[i] = this.state.registers.SPRM[4 + i];
@@ -2740,9 +2749,9 @@ class VM {
       this.state.pgN,
       this.state.cellN,
       this.state.blockN,
-      this.state.VTS_TTN_REG,
-      this.state.TTN_REG,
-      this.state.TT_PGCN_REG));
+      this.state.registers.SPRM[VTS_TTN_REG],
+      this.state.registers.SPRM[TTN_REG],
+      this.state.registers.SPRM[TT_PGCN_REG]));
   }
 
   /**
