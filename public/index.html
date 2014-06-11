@@ -7,6 +7,7 @@
 <meta name="msapplication-TileColor" content="#00aba9">
 <meta name="msapplication-TileImage" content="/mstile-144x144.png">
 <link href="bower_components/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
+<link href="lib/x-video/x-video.css" rel="stylesheet">
 <link href="favicon-196x196.png" rel="icon" sizes="196x196">
 <link href="favicon-160x160.png" rel="icon" sizes="160x160">
 <link href="favicon-96x96.png" rel="icon" sizes="96x96">
@@ -17,8 +18,60 @@ body {
   padding-top: 20px;
   padding-bottom: 20px;
 }
+
 .navbar {
   margin-bottom: 20px;
+}
+
+.video-container {
+  width: 720px;
+  height: 480px;
+  position: relative;
+}
+
+x-video {
+  margin: auto;
+}
+
+input[type="button"].btn {
+  position: absolute;
+  opacity: .5;
+  padding: 0;
+  margin: 0;
+  border-radius: 10px;
+  border: 3px solid black;
+  color: rgba(127, 127, 127, 0.5);
+}
+
+.thumbnail {
+  width: 12rem;
+  height: 17rem;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center 0;
+  float: left;
+  margin: 0 1rem 1rem 0;
+  padding: 0;
+}
+
+.thumbnail a {
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.thumbnail a span {
+  color: #fff;
+  text-decoration: none;
+  display: block;
+  width: 100%;
+  height: 6rem;
+  background: rgba(0, 0, 0, .5);
+  bottom: 0;
+  position: absolute;
+  padding: .5rem;
+  font-size: 1.2rem;
 }
 </style>
 </head>
@@ -41,13 +94,8 @@ body {
     </div>
   </div>
   <div class="row">
-    <div class="col-xs-12 col-sm-3 col-md-2 col-lg-2">
-      <select id="dvdPicker" class="form-control" disabled>
-        <option value="">Pick a title</option>
-      </select>
-    </div>
-    <div class="col-xs-12 col-sm-9 col-md-10 col-lg-10">
-      <video class="img-responsive" style="width:100%;background:#000"></video>
+    <div>
+      <div class="video-container"></div>
     </div>
   </div>
   <footer>
@@ -55,157 +103,12 @@ body {
     </p>
   </footer>
 </div>
-<script src="bower_components/requirejs/require.js"></script>
-<script>
-'use strict';
-
-// We load jQuery as a AMD module, then load Bootstrap async
-// (dirty... I know, there must be a better way).
-require(['bower_components/jquery/dist/jquery.min.js'],
-    require.bind(null, ['bower_components/bootstrap/dist/js/bootstrap.min.js']));
-
-// We load the main script.
-require([
-  'js/dvdjs/dvdnav/index',
-  'js/dvdjs/utils'
-], function(Dvdnav, utils) {
-  var dvdPicker = document.querySelector('#dvdPicker');
-  var screen = document.querySelector('video');
-  var cEvent = 'color: red;';
-
-  // Open the DVD.
-  var dvdnav = new Dvdnav(screen);
-
-  // Request the list of DVDs from the server.
-  dvdnav.getDVDList(function(dvds) {
-    // Add options to the drop down.
-    dvds.forEach(function(dvd) {
-      var opt = document.createElement('option');
-      opt.value = dvd;
-      opt.innerHTML = utils.formatTitle(dvd);
-      dvdPicker.appendChild(opt);
-    });
-    dvdPicker.removeAttribute('disabled');
-  });
-
-  // Open and start a DVD when selected from the list.
-  dvdPicker.addEventListener('change', function(event) {
-    var dvd = String(event.target.value);
-
-    if (!dvd) {
-      return;
-    }
-
-    dvdnav.open(dvd, function() {
-      dvdnav.start();
-    });
-  }, false);
-
-  // Listen to the various events emitted by dvdnav.
-  dvdnav.on('vtsChange', function(event) {
-    //console.log('%cdvdnav event', cEvent, event);
-    /* Some status information like video aspect and video scale permissions do
-     * not change inside a VTS. Therefore this event can be used to query such
-     * information only when necessary and update the decoding/displaying
-     * accordingly. */
-  });
-
-  dvdnav.on('spuClutChange', function() {
-    //console.log('%cdvdnav event', cEvent);
-  });
-
-  dvdnav.on('spuStreamChange', function(event) {
-    //console.log('%cdvdnav event', cEvent, event);
-  });
-
-  dvdnav.on('audioStreamChange', function(event) {
-    //console.log('%cdvdnav event', cEvent, event);
-  });
-
-  dvdnav.on('cellChange', function(event) {
-    //console.log('%cdvdnav event', cEvent, event);
-    /* Some status information like the current Title and Part numbers do not
-     * change inside a cell. Therefore this event can be used to query such
-     * information only when necessary and update the decoding/displaying
-     * accordingly. */
-    /*var tt = 0, ptt = 0;
-     var pos, len;
-
-     //dvdnav.current_title_info(dvdnav, tt, ptt);
-     //dvdnav.get_position(dvdnav, pos, len);
-     console.log('Cell change: Title %d, Chapter %d', tt, ptt);
-     console.log('At position %.0f%% inside the feature', 100 * pos / len);*/
-  });
-
-  dvdnav.on('stop', function() {
-    //console.log('%cdvdnav event', cEvent);
-  });
-
-  dvdnav.on('hopChannel', function() {
-    //console.log('%cdvdnav event', cEvent);
-  });
-
-  dvdnav.on('highlight', function(event) {
-    //console.log('%cdvdnav event', cEvent, event);
-  });
-
-  dvdnav.on('wait', function() {
-    //console.log('%cdvdnav event', cEvent);
-  });
-
-  dvdnav.on('stillFrame', function(event) {
-    //console.log('%cdvdnav event', cEvent, event);
-  });
-
-  dvdnav.on('nop', function() {
-    //console.log('%cdvdnav event', cEvent);
-  });
-
-  dvdnav.on('blockOk', function() {
-    //console.log('%cdvdnav event', cEvent);
-  });
-
-  dvdnav.on('navPacket', function() {
-    //console.log('%cdvdnav event', cEvent);
-    /* A NAV packet provides PTS discontinuity information, angle linking information and
-     * button definitions for DVD menus. Angles are handled completely inside libdvdnav.
-     * For the menus to work, the NAV packet information has to be passed to the overlay
-     * engine of the player so that it knows the dimensions of the button areas. */
-
-    /* Applications with fifos should not use these functions to retrieve NAV packets,
-     * they should implement their own NAV handling, because the packet you get from these
-     * functions will already be ahead in the stream which can cause state inconsistencies.
-     * Applications with fifos should therefore pass the NAV packet through the fifo
-     * and decoding pipeline just like any other data. */
-
-    /*console.log(dvdnav.pci);
-     console.log(dvdnav.dsi);
-
-     if (dvdnav.pci.hli.hl_gi.btn_ns > 0) {
-     var button;
-
-     console.log('Found %i DVD menu buttons...', dvdnav.pci.hli.hl_gi.btn_ns);
-
-     for (button = 0; button < dvdnav.pci.hli.hl_gi.btn_ns; button++) {
-     var btni = dvdnav.pci.hli.btnit[button];
-     console.log('Button %i top-left @ (%i,%i), bottom-right @ (%i,%i)',
-     button + 1, btni.x_start, btni.y_start,
-     btni.x_end, btni.y_end);
-     }
-
-     button = 0;
-     while ((button <= 0) || (button > dvdnav.pci.hli.hl_gi.btn_ns)) {
-     console.log('Which button (1 to %i): ', dvdnav.pci.hli.hl_gi.btn_ns);
-     //scanf('%i', &button);
-     }
-
-     console.log('Selecting button %i...', button);
-     // This is the point where applications with fifos have to hand in a NAV packet
-     // which has traveled through the fifos. See the notes above.
-     //dvdnav_button_select_and_activate(dvdnav, pci, button);
-     }*/
-  });
-});
-</script>
+<script src="bower_components/underscore/underscore.js"></script>
+<script src="bower_components/jquery/dist/jquery.min.js"></script>
+<script src="bower_components/backbone/backbone.js"></script>
+<script src="bower_components/x-tag-core/dist/x-tag-core.min.js"></script>
+<script src="lib/x-video/x-video.complete.js"></script>
+<script src="js/dvdjs/app/buildTag.js"></script>
+<script src="js/dvdjs/app/router.js"></script>
 </body>
 </html>
