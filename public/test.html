@@ -60,12 +60,7 @@ body {
       <p><span id="webm" class="glyphicon glyphicon-question-sign"></span> Webm video format</p>
     </div>
     <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
-      <p><span id="mse" class="glyphicon glyphicon-question-sign"></span> Media source API</p>
-    </div>
-    <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
-      <p><span id="vtt" class="glyphicon glyphicon-question-sign"></span> Subtitles via WebVTT<br>
-        <small>(optional)</small>
-      </p>
+      <p><span id="vtt" class="glyphicon glyphicon-question-sign"></span> Subtitles via WebVTT<br></p>
     </div>
     <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
       <p><span id="mvt" class="glyphicon glyphicon-question-sign"></span> Multiple video tracks<br>
@@ -74,21 +69,6 @@ body {
     </div>
     <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
       <p><span id="mat" class="glyphicon glyphicon-question-sign"></span> Multiple audio tracks<br>
-        <small>(optional)</small>
-      </p>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col-xs-12">
-      <h2>Other support</h2>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
-      <p><span id="ws" class="glyphicon glyphicon-question-sign"></span> WebSockets</p>
-    </div>
-    <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
-      <p><span id="bws" class="glyphicon glyphicon-question-sign"></span> Binary WebSockets<br>
         <small>(optional)</small>
       </p>
     </div>
@@ -119,7 +99,7 @@ require(['bower_components/jquery/jquery.min.js'],
     require.bind(null, ['bower_components/bootstrap/dist/js/bootstrap.min.js']));
 
 require(['bower_components/platform/platform.js'], function(platform) {
-  document.querySelector('#platform').innerHTML = platform.description;
+  document.querySelector('#platform').textContent = platform.description;
 });
 
 (function() {
@@ -137,14 +117,6 @@ require(['bower_components/platform/platform.js'], function(platform) {
   support('webm', function() {
     return !!(videoElement) && videoElement.canPlayType &&
         videoElement.canPlayType('video/webm;codecs=vp8,vorbis');
-  });
-
-  // Detect media source extension support.
-  // See http://www.w3.org/TR/media-source/
-  support('mse', function() {
-    var mediaSource = window.MediaSource || window.WebKitMediaSource;
-    return !!(mediaSource) && mediaSource.isTypeSupported &&
-        mediaSource.isTypeSupported('video/webm;codecs=vp8,vorbis');
   });
 
   // Detect subtitles via WebVTT support.
@@ -167,31 +139,6 @@ require(['bower_components/platform/platform.js'], function(platform) {
   // See http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#audiotracklist
   support('mat', function() {
     return 'audioTracks' in videoElement || 'MediaController' in window;
-  });
-
-  // Detect WebSockets support.
-  // See https://github.com/Modernizr/Modernizr/blob/master/feature-detects/websockets.js
-  support('ws', function() {
-    return 'WebSocket' in window && window.WebSocket.CLOSING === 2;
-  });
-
-  // Detect binary WebSockets support.
-  // See https://github.com/Modernizr/Modernizr/blob/master/feature-detects/websockets/binary.js
-  support('bws', function() {
-    var protocol = 'https:' == location.protocol ? 'wss' : 'ws';
-    var protoBin = false;
-
-    if ('WebSocket' in window) {
-      if (protoBin = 'binaryType' in WebSocket.prototype) {
-        return protoBin;
-      }
-      try {
-        return !!(new WebSocket(protocol + '://.').binaryType);
-      } catch (e) {
-      }
-    }
-
-    return false;
   });
 
   // Detect file API support.
