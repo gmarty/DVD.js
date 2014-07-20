@@ -26,6 +26,50 @@ the content of a DVD to make it playable on a browser using native features:
 6. VM commands are compiled into JavaScript
 7. The video is encoded to Webm
 
+## Install
+
+Clone the repo locally and install the dependencies with `npm install`.
+
+You'll need to install the latest version of [ffmpeg](http://ffmpeg.org/).
+
+Then, compile the TS files to JavaScript with:
+```javascript
+grunt
+```
+
+Create the folder that will hold your DVD, e.g.:
+```bash
+$ cd /home/user/
+$ mkdir dvd
+$ pwd
+/home/user/dvd
+```
+
+Then update the `dvdPath` property of the config file in `config/app.json` to
+match the path to the folder created above.
+
+Copy an unprotected DVD into a subfolder of `dvd/` (e.g. in
+`/home/user/dvd/Sita Sings the Blues/`)
+
+To convert the DVD, do:
+```bash
+node bin/convert /home/user/dvd/Sita Sings the Blues/
+```
+
+Wait for a while (reencoding video takes a loooooong time).
+
+Start the web server:
+```bash
+node bin/http-server
+```
+
+Finally, point your browser to...
+```
+http://localhost:3000/
+```
+
+... and enjoy your DVD from your browser!
+
 ## Support
 
 All browsers supporting the following features:
