@@ -95,7 +95,7 @@ body {
 
 // We load jQuery as a AMD module, then load Bootstrap async
 // (dirty... I know, there must be a better way).
-require(['bower_components/jquery/jquery.min.js'],
+require(['bower_components/jquery/dist/jquery.min.js'],
     require.bind(null, ['bower_components/bootstrap/dist/js/bootstrap.min.js']));
 
 require(['bower_components/platform/platform.js'], function(platform) {
