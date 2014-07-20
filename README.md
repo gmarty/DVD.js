@@ -28,7 +28,8 @@ the content of a DVD to make it playable on a browser using native features:
 
 ## Install
 
-Clone the repo locally and install the dependencies with `npm install`.
+Clone the repo locally and install the dependencies with `npm install` and
+`bower install`.
 
 You'll need to install the latest version of [ffmpeg](http://ffmpeg.org/).
 
