@@ -4,7 +4,7 @@
 
 
 function buildTag(metadata) {
-  return '<x-video controls style="width: 720px; height: 480px;">' +
+  return '<x-video controls style="width: 100%; max-width: 720px; max-height: 480px;">' +
     metadata
       .map(function(videos, id) {
         return buildXMenuTag(videos, id) + buildVideoTag(videos, id);
