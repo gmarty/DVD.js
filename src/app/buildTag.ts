@@ -7,14 +7,12 @@ function buildTag(metadata) {
   return '<x-video controls style="width: 720px; height: 480px;">' +
     metadata
       .map(function(videos, id) {
-        return buildXMenuTag(videos, id) +
-          buildVideoTag(videos, id);
+        return buildXMenuTag(videos, id) + buildVideoTag(videos, id);
       })
       .join('') +
     '</x-video>';
 
   function buildXMenuTag(videos, id) {
-    var lang = 'en';
     var tpl = '';
 
     for (var lang in videos.menu) {
@@ -22,7 +20,12 @@ function buildTag(metadata) {
         var cellID = menu.cellID;
         var vobID = menu.vobID;
 
-        tpl += '<x-menu id="menu-' + lang + '-' + id + '-' + menu.pgc + '" data-domain="' + id + '" data-cell="' + cellID + '" data-vob="' + vobID + '" lang="' + lang + '">';
+        tpl += '<x-menu ' +
+          'id="menu-' + lang + '-' + id + '-' + menu.pgc + '" ' +
+          'data-domain="' + id + '" ' +
+          'data-cell="' + cellID + '" ' +
+          'data-vob="' + vobID + '" ' +
+          'lang="' + lang + '">';
 
         if (cellID !== null || vobID !== null) {
 
@@ -46,7 +49,8 @@ function buildTag(metadata) {
   }
 
   function buildVideoTag(videos, id) {
-    if (!(videos.video && videos.video.length) && !((videos.vtt && videos.vtt.length))) {
+    if (!(videos.video && videos.video.length) &&
+      !((videos.vtt && videos.vtt.length))) {
       return '';
     }
 
@@ -66,9 +70,12 @@ function buildTag(metadata) {
         if (index === 0) {
           defaultAttr = ' default'
         }
-        return '<track kind="chapters" src="' + track + '" srclang="en"' +
+        return '<track ' +
+          'kind="chapters" ' +
+          'src="' + track + '" ' +
+          'srclang="en"' +
           defaultAttr + '/>'
       })
-      .join();
+      .join('');
   }
 }

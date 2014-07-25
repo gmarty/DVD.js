@@ -1,3 +1,5 @@
+/* global Backbone, $, init, fp_pgc */
+
 'use strict';
 
 // A router using Backbone and jQuery to list the DVD and display a player.
