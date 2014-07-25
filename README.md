@@ -12,8 +12,8 @@ also available.
 
 ## Approach
 
-This branch contains the DVD converter. For the attempt to play DVD on-the-fly,
-look into the `master` branch.
+This branch, named `converter`, contains an encoder of DVD to web format. For
+the attempt to play DVD on-the-fly, look into the `master` branch.
 
 I ported libdvdread and libdvdnav to JavaScript. Several passes are applied to
 the content of a DVD to make it playable on a browser using native features:
@@ -22,21 +22,29 @@ the content of a DVD to make it playable on a browser using native features:
 2. Chapters are generated as WebVTT
 3. NAV packets are extracted to JSON
 4. The buttons size/position are saved to CSS
-5. The menu still frames are saved to PNG
+5. The menu still frames are saved to PNG (to be done)
 6. VM commands are compiled into JavaScript
 7. The video is encoded to Webm
 
 ## Install
 
-Clone the repo locally and install the dependencies with `npm install` and
-`bower install`.
+Clone the repo locally and install the dependencies with:
+```bash
+$ npm install
+$ bower install
+```
 
 You'll need to install the latest version of [ffmpeg](http://ffmpeg.org/).
 
 Then, compile the TS files to JavaScript with:
-```javascript
-grunt
+```bash
+$ grunt
 ```
+
+You should see a bunch of warnings. It's just TypeScript complaining.
+
+If you see a message saying 'Done, without errors' then the compilation to
+JavaScript was successful.
 
 Create the folder that will hold your DVD, e.g.:
 ```bash
@@ -54,7 +62,7 @@ Copy an unprotected DVD into a subfolder of `dvd/` (e.g. in
 
 To convert the DVD, do:
 ```bash
-node bin/convert /home/user/dvd/Sita Sings the Blues/
+$ node bin/convert /home/user/dvd/Sita Sings the Blues/
 ```
 
 Wait for a while (reencoding video takes a loooooong time).
@@ -64,7 +72,7 @@ Start the web server:
 node bin/http-server
 ```
 
-Finally, point your browser to...
+Finally, point your browser to:
 ```
 http://localhost:3000/
 ```
@@ -88,8 +96,8 @@ Yes, please, use it, open issues and send pull requests.
 
 There are several reasons:
 
-* I am frustrated with the current VOD offer and I don't want to watch movies
-or TV series on my mobile if I already own the DVD.
+* I am frustrated with the current VOD offer and I don't want to buy movies
+or TV series to watch on my mobile if I already own the DVD.
 * I noticed I'm listening to my CD more often now that I'm using Google Play
 Music and am looking for a similar solution for my DVD.
 
