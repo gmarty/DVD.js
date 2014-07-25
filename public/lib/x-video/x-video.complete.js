@@ -373,19 +373,27 @@
                 video.setAttribute('hidden', '');
             }
 
+            function updateChapterCues(event) {
+                if (!video.textTracks || !video.textTracks[0] || playlist[index].chapterCues.length > 0) {
+                    return;
+                }
+
+                playlist[index].chapterCues = video.textTracks[0].cues;
+            }
+
             // Detect the support of textTracks.
             if ('textTracks' in video) {
                 var tracks = xtag.toArray(video.querySelectorAll('track'));
                 tracks.forEach(function (track) {
-                    var updateChapterCues = function (event) {
-                        if (!video.textTracks) {
-                            return;
-                        }
+                    if (track.track.cues && track.track.cues.length) {
+                        // The WebVTT file is already loaded and parsed.
+                        playlist[index].chapterCues = xtag.toArray(track.track.cues);
+                    } else {
+                        track.addEventListener('load', updateChapterCues);
 
-                        playlist[index].chapterCues = xtag.toArray(video.textTracks[0].cues);
-                    };
-
-                    track.addEventListener('load', updateChapterCues);
+                        // Unfortunately, Firefox doesn't fire events on track elements.
+                        video.addEventListener('durationchange', updateChapterCues);
+                    }
                 });
             } else {
                 // @todo Fallback for non supporting browsers.
@@ -474,6 +482,10 @@
         });
     }
 
+    /**
+    * Hide all menu of the passed x-video object.
+    * @param {Object} xVideo
+    */
     function hideAllMenu(xVideo) {
         var menus = xVideo.querySelectorAll('x-menu');
         for (var i = 0; i < menus.length; i++) {
@@ -519,12 +531,11 @@
                 // Hold the list
                 this.menus = [];
 
-              // An optional function to call when the menu button is clicked.
-              xVideo.xtag.onMenuHandler = null;
+                // An optional function to call when the menu button is clicked.
+                xVideo.xtag.onMenuHandler = null;
 
                 // Initialize the DOM elements.
                 init(xVideo);
-
 
                 // Listen to the inner video events to maintain the interface in sync with the video state.
                 xVideo.xtag.evt = {};
@@ -842,15 +853,12 @@
             'click:delegate(.media-controls-menu-button)': function (event) {
                 var xVideo = event.currentTarget;
 
-              hideAllMenu(xVideo);
+                hideAllMenu(xVideo);
 
-              if (xVideo.xtag.onMenuHandler) {
-                xVideo.pause();
-                xVideo.xtag.onMenuHandler(event);
-                return;
-              }
-
-                if (xVideo.playlist[xVideo.videoIndex].menus[0]) {
+                if (xVideo.xtag.onMenuHandler) {
+                    xVideo.pause();
+                    xVideo.xtag.onMenuHandler(event);
+                } else if (xVideo.playlist[xVideo.videoIndex].menus[0]) {
                     // Does this video have a local menu?
                     xVideo.pause();
                     xVideo.playlist[xVideo.videoIndex].menus[0].show();
@@ -1135,19 +1143,19 @@
             this.addEventListener('chapterchange', event, false);
             }
             },*/
-          onmenu: {
-            get: function() {
-              return this.xtag.onMenuHandler;
+            onmenu: {
+                get: function () {
+                    return this.xtag.onMenuHandler;
+                },
+                set: function (value) {
+                    if (typeof value !== 'function') {
+                        console.error('Provided param is not a function');
+                        return;
+                    }
+                    this.xtag.onMenuHandler = value;
+                }
             },
-            set: function(value) {
-              if (typeof value !== 'function') {
-                console.error('Provided param is not a function');
-                return;
-              }
-              this.xtag.onMenuHandler = value;
-            }
-          },
-          // @todo Check support for this attribute before adding to accessors.
+            // @todo Check support for this attribute before adding to accessors.
             mozFrameBufferLength: {
                 get: function () {
                     return this.playlist[this.videoIndex].video.mozFrameBufferLength;
@@ -1209,7 +1217,6 @@
 
                 updateEventListeners(this.playlist[this.videoIndex].video, this.playlist[videoIndex].video, this.xtag.evt);
                 this.videoIndex = videoIndex;
-                //this.src = this.playlist[videoIndex].src;
                 hideAllMenu(this);
                 this.play();
             },
@@ -1243,7 +1250,6 @@
 
                 updateEventListeners(this.playlist[this.videoIndex].video, this.playlist[targetElementIndex].video, this.xtag.evt);
                 this.videoIndex = targetElementIndex;
-                //this.src = this.playlist[targetElementIndex].src;
                 hideAllMenu(this);
                 this.play();
             },
@@ -1396,9 +1402,9 @@
                     xMenu.xtag.parent.playByIndex(index);
                 } else if (xMenu.xtag.mode === 1 *//* LOCAL *//*) {
                     xMenu.xtag.parent.playChapter(index);
-                }*/
+                }
 
-                //xMenu.hide();
+                xMenu.hide();*/
             }
         },
         accessors: {},
