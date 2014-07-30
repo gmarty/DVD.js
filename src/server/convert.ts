@@ -38,26 +38,26 @@ function convertDVD(dvdPath) {
   }
   dvdPath = dvdPath.join(path.sep);
 
-  // Regenerate the list of DVD.
-  generateCatalogue(function() {
-    // Create an empty directory if not already there.
-    createDir(dvdPath, function() {
-      // Convert IFO files.
-      convertIfo(dvdPath, function() {
-        // Generate WebVTT files with video chapters.
-        generateChapters(dvdPath, function() {
-          // Extract NAV packets.
-          extractNavPackets(dvdPath, function() {
-            // Generate JavaScript from VM instructions.
-            generateJavaScript(dvdPath, function() {
-              // Extract menu still frames.
-              extractMenu(dvdPath, function() {
-                // Generate menu cell table.
-                generateMenuCellTable(dvdPath, function() {
-                  // Generate buttons for menu UI.
-                  generateButtons(dvdPath, function() {
-                    // Convert video.
-                    encodeVideo(dvdPath, function() {
+  // Create an empty directory if not already there.
+  createDir(dvdPath, function() {
+    // Convert IFO files.
+    convertIfo(dvdPath, function() {
+      // Generate WebVTT files with video chapters.
+      generateChapters(dvdPath, function() {
+        // Extract NAV packets.
+        extractNavPackets(dvdPath, function() {
+          // Generate JavaScript from VM instructions.
+          generateJavaScript(dvdPath, function() {
+            // Extract menu still frames.
+            extractMenu(dvdPath, function() {
+              // Generate menu cell table.
+              generateMenuCellTable(dvdPath, function() {
+                // Generate buttons for menu UI.
+                generateButtons(dvdPath, function() {
+                  // Convert video.
+                  encodeVideo(dvdPath, function() {
+                    // Regenerate the list of DVD.
+                    generateCatalogue(function() {
                       console.log('That\'s all folks!');
                     });
                   });
