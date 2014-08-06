@@ -378,7 +378,7 @@
                     return;
                 }
 
-                playlist[index].chapterCues = video.textTracks[0].cues;
+                playlist[index].chapterCues = xtag.toArray(video.textTracks[0].cues);
             }
 
             // Detect the support of textTracks.
@@ -391,8 +391,8 @@
                     } else {
                         track.addEventListener('load', updateChapterCues);
 
-                        // Unfortunately, Firefox doesn't fire events on track elements.
-                        video.addEventListener('durationchange', updateChapterCues);
+                        // For Firefox > 33. See https://bugzil.la/1035505
+                        track.addEventListener('loaded', updateChapterCues);
                     }
                 });
             } else {
