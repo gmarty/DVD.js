@@ -422,6 +422,7 @@ export function formatTitle(title: string): string {
 export function convertVobPath(path: string): string {
   return path
     .replace(/\/VIDEO_TS\//i, '/web/')
+    .replace(/\\VIDEO_TS\\/i, '\\web\\')
     .replace(/\.VOB$/i, '.webm');
 }
 
