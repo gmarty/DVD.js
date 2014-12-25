@@ -1,0 +1,35 @@
+{
+  "version": "v4",
+  "repo": "borisyankov/DefinitelyTyped",
+  "ref": "master",
+  "path": "src/declarations",
+  "installed": {
+    "backbone/backbone.d.ts": {
+      "commit": "5deca4baf3c8ef7abbc919671acb95be27560667"
+    },
+    "jquery/jquery.d.ts": {
+      "commit": "5deca4baf3c8ef7abbc919671acb95be27560667"
+    },
+    "underscore/underscore.d.ts": {
+      "commit": "5deca4baf3c8ef7abbc919671acb95be27560667"
+    },
+    "node/node.d.ts": {
+      "commit": "5deca4baf3c8ef7abbc919671acb95be27560667"
+    },
+    "jdataview/jdataview.d.ts": {
+      "commit": "5deca4baf3c8ef7abbc919671acb95be27560667"
+    },
+    "glob/glob.d.ts": {
+      "commit": "5deca4baf3c8ef7abbc919671acb95be27560667"
+    },
+    "optimist/optimist.d.ts": {
+      "commit": "5deca4baf3c8ef7abbc919671acb95be27560667"
+    },
+    "minimatch/minimatch.d.ts": {
+      "commit": "5deca4baf3c8ef7abbc919671acb95be27560667"
+    },
+    "lodash/lodash.d.ts": {
+      "commit": "5deca4baf3c8ef7abbc919671acb95be27560667"
+    }
+  }
+}

@@ -1,5 +1,7 @@
 // Extract menu still frames.
 
+/// <reference path="../../references.ts" />
+
 'use strict';
 
 

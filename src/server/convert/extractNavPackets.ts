@@ -6,8 +6,8 @@
 import fs = require('fs');
 import path = require('path');
 import glob = require('glob');
+var jDataView: jDataViewStatic = require('jdataview');
 
-import jDataView = require('../../../public/lib/jDataView/src/jdataview.js');
 import Stream = require('../../server/utils/stream');
 import decodePacket = require('../../server/utils/decode_packet');
 import navRead = require('../../dvdread/nav_read');
@@ -38,7 +38,7 @@ function extractNav(dvdPath: string, callback) {
     }
 
     // Filter out non-menu VOB files as we only use these NAV packets for generating UI buttons.
-    vobFiles = vobFiles.filter(function(ifoFile) {
+    vobFiles = vobFiles.filter(function(ifoFile) : boolean {
       return ifoFile.match(/VIDEO_TS\.VOB$/) || ifoFile.match(/VTS_\d{1,2}_0.VOB$/);
     });
 

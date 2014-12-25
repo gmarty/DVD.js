@@ -1,5 +1,8 @@
 // Convert video to webm format.
 
+/// <reference path="../../references.ts" />
+/// <reference path="../../declarations/lodash/lodash.d.ts" />
+
 'use strict';
 
 
@@ -35,18 +38,18 @@ function encodeVideo(dvdPath: string, callback) {
   process.stdout.write('\nEncoding VOB files:\n');
 
   var vobPath = path.join(dvdPath, '/VIDEO_TS', '/*.VOB');
-  glob(vobPath, function(err, vobFiles) {
+  glob(vobPath, function(err, vobFilesList) {
     if (err) {
       console.error(err);
     }
 
     // Group by video (e.g. All VTS_01_xx.VOB together).
-    vobFiles = _.groupBy(vobFiles, function(vobFile) {
+    var vobFilesGrouped = _.groupBy(vobFilesList, function(vobFile) {
       return vobFile.replace(/_[1-9]\.VOB/i, '.VOB');
     });
 
     // Retain the values only.
-    vobFiles = _.values(vobFiles);
+    var vobFiles = _.values(vobFilesGrouped);
 
     // Sort the files.
     vobFiles = _.forEach(vobFiles, function(vobFile) {

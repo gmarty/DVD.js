@@ -1,33 +1,45 @@
 /* global Backbone, $, init, fp_pgc */
 
+/// <reference path="../references.ts" />
+/// <reference path="../declarations/underscore/underscore.d.ts" />
+/// <reference path="../declarations/backbone/backbone.d.ts" />
+
 'use strict';
 
 // A router using Backbone and jQuery to list the DVD and display a player.
 
-var list = '<ul>' +
+interface Window { dvd: Element; }
+interface vmProceduresInterface { (): void; }
+declare var init: vmProceduresInterface;
+declare var fp_pgc: vmProceduresInterface;
+
+var listTpl = _.template('<ul>' +
   '<% _.each(dvds, function(dvd) {%>' +
   '<li class="thumbnail" style="background-image:url(\'<%= dvd.dir %>/cover.jpg\');">' +
   '<a href="#/play/<%= dvd.dir %>"><span><%= dvd.name %></span></a>' +
-  '<%= name %>' +
   '</li>' +
   '<% }); %>' +
-  '</ul>';
+  '</ul>');
 
-var App = Backbone.Router.extend({
-  routes: {
-    'play': 'list',
-    'play/:dvdId': 'play'
-  },
-  list: function() {
+class App extends Backbone.Router {
+  routes: any;
+  constructor(options?: Backbone.RouterOptions) {
+    this.routes = {
+      'play': 'list',
+      'play/:dvdId': 'play'
+    };
+    super(options);
+  }
+  list() {
     $.getJSON('/dvds.json')
       .done(function(data) {
         data = data.sort(function(a, b) {
           return a.name > b.name;
         });
-        $('.video-container').html(_.template(list, {dvds: data}));
+        $('.video-container').html(listTpl({dvds: data}));
       });
-  },
-  play: function(dvdId) {
+  }
+  play(dvdId: string) {
     $.getJSON('/' + dvdId + '/web/metadata.json')
       .done(function(data) {
         $('.video-container').html(buildTag(data));
@@ -47,7 +59,7 @@ var App = Backbone.Router.extend({
         };
       });
   }
-});
+}
 
 Backbone.history.start();
 

@@ -1,4 +1,4 @@
-///<reference path='../declarations/EventEmitter.d.ts'/>
+///<reference path='../references.ts'/>
 
 'use strict';
 
@@ -10,7 +10,7 @@ import dvdTypes = require('../dvdnav/dvd_types');
 import dvdEvents = require('../dvdnav/dvdnav_events');
 import config = require('../config');
 import utils = require('../utils');
-import EventEmitter = require('../../../bower_components/eventEmitter/EventEmitter.min.js');
+var EventEmitter: any = require('../../../bower_components/eventEmitter/EventEmitter.min.js');
 
 var LOG_DEBUG = config.DEBUG;
 var DVDDomain_t = dvdTypes.DVDDomain_t;
@@ -35,7 +35,7 @@ export = dvdnav;
  * @param {HTMLVideoElement} screen A video element.
  * @return {dvdnav}
  */
-function dvdnav(screen) {
+function dvdnav(screen): void {
   if (!(this instanceof dvdnav)) return new dvdnav(screen);
 
   // Not in original code:
