@@ -4,14 +4,13 @@
 
 // A router using Backbone and jQuery to list the DVD and display a player.
 
-var list = '<ul>' +
+var listTpl = _.template('<ul>' +
   '<% _.each(dvds, function(dvd) {%>' +
   '<li class="thumbnail" style="background-image:url(\'<%= dvd.dir %>/cover.jpg\');">' +
   '<a href="#/play/<%= dvd.dir %>"><span><%= dvd.name %></span></a>' +
-  '<%= name %>' +
   '</li>' +
   '<% }); %>' +
-  '</ul>';
+  '</ul>');
 
 var App = Backbone.Router.extend({
   routes: {
@@ -24,7 +23,7 @@ var App = Backbone.Router.extend({
         data = data.sort(function(a, b) {
           return a.name > b.name;
         });
-        $('.video-container').html(_.template(list, {dvds: data}));
+        $('.video-container').html(listTpl({dvds: data}));
       });
   },
   play: function(dvdId) {
