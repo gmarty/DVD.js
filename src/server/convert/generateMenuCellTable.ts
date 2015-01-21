@@ -43,9 +43,8 @@ function extractMenu(dvdPath: string, callback) {
   function next(ifoFile: string) {
     ifoFile = path.join(dvdPath, '../', ifoFile);
     var json = require(ifoFile);
-    var inputFile = ifoFile
-      .replace(/\/web\//, '/VIDEO_TS/')
-      .replace(/\.json$/, '.VOB')
+    var inputFile = path.resolve(ifoFile, '..', '..', 'VIDEO_TS',
+      path.basename(ifoFile, '.json') + '.VOB')
       .replace(/ /, '\ ');
 
     var vobPointer = 0;
@@ -61,8 +60,7 @@ function extractMenu(dvdPath: string, callback) {
       var vob = json.menu_c_adt.cell_adr_table[vobPointer];
       var start = vob.start_sector * DVD_VIDEO_LB_LEN;
       var end = (vob.last_sector + 1) * DVD_VIDEO_LB_LEN;
-      var outputFile = ifoFile
-        .replace(/\/[^/]+\.json$/, '/stillFrame' + pointer + '-' + vobPointer + '.mpg');
+      var outputFile = path.resolve(ifoFile, '..', 'stillFrame' + pointer + '-' + vobPointer + '.mpg');
 
       var cellID = vob.cell_id;
       var vobID = vob.vob_id;
@@ -84,8 +82,7 @@ function extractMenu(dvdPath: string, callback) {
               throw err;
             }
 
-            var imgFile = outputFile
-              .replace(/\/[^/]+\.mpg$/, '/menu-' + pointer + '-' + cellID + '-' + vobID + '.png');
+            var imgFile = path.resolve(outputFile, '..', 'menu-' + pointer + '-' + cellID + '-' + vobID + '.png');
 
             outputFile = outputFile.replace(' ', '\ ');
             imgFile = imgFile.replace(' ', '\ ');

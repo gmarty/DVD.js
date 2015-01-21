@@ -21,7 +21,7 @@ function generateCatalogue(callback) {
         console.error(err);
       }
 
-      process.stdout.write('Done');
+      process.stdout.write('Done\n');
 
       callback();
     });
