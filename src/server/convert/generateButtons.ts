@@ -1,5 +1,7 @@
 // Generate buttons for menu UI.
 
+/// <reference path="../../references.ts" />
+
 'use strict';
 
 

@@ -1,5 +1,7 @@
 // Generate WebVTT files with video chapters.
 
+/// <reference path="../../references.ts" />
+
 'use strict';
 
 

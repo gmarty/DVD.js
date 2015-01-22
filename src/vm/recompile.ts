@@ -3,7 +3,7 @@
 'use strict';
 
 
-import VM = require('../vm');
+var VM = require('../vm');
 import utils = require('../utils');
 
 var sprintf = utils.sprintf;
@@ -32,7 +32,7 @@ export = compile;
  * @param {Array} vm_commands
  * @returns {string}
  */
-function compile(vm_commands: Array): string {
+function compile(vm_commands: Array<number>): string {
   if (!vm_commands) {
     return '';
   }

@@ -1,4 +1,6 @@
-// Generate a WebVTT file with video chapters.
+// Generate a JavaScript file with translated VM programs.
+
+/// <reference path="../../references.ts" />
 
 'use strict';
 

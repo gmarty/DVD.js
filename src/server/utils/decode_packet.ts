@@ -4,6 +4,7 @@
 
 
 import utils = require('../../utils');
+import Stream = require('./stream');
 
 var toHex = utils.toHex;
 

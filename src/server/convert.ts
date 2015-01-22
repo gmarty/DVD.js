@@ -1,5 +1,7 @@
 // Convert a DVD to a web suitable format.
 
+/// <reference path="../references.ts" />
+
 'use strict';
 
 
@@ -17,8 +19,8 @@ import generateButtons = require('../server/convert/generateButtons');
 import generateJavaScript = require('../server/convert/generateJavaScript');
 import encodeVideo = require('../server/convert/encodeVideo');
 
-var cli = optimist
-  .usage('Convert a DVD for the web.\n' +
+var cli: optimist.Optimist = optimist(process.argv.slice(2));
+cli.usage('Convert a DVD for the web.\n' +
     'Usage: $0 path/to/DVD/root');
 var dvdPath = cli.argv._[0];
 

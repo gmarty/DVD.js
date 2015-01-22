@@ -41,8 +41,6 @@ Then, compile the TS files to JavaScript with:
 $ grunt
 ```
 
-You should see a bunch of warnings. It's just TypeScript complaining.
-
 If you see a message saying 'Done, without errors' then the compilation to
 JavaScript was successful.
 

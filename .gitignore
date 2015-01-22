@@ -5,3 +5,12 @@ dist/
 public/js/
 public/bower_components/
 config/
+src/declarations/backbone/
+src/declarations/glob/
+src/declarations/jdataview/
+src/declarations/jquery/
+src/declarations/lodash/
+src/declarations/minimatch/
+src/declarations/node/
+src/declarations/optimist/
+src/declarations/underscore/

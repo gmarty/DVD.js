@@ -1,5 +1,7 @@
 // Generate menu cell table.
 
+/// <reference path="../../references.ts" />
+
 'use strict';
 
 

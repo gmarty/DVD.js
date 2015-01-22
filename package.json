@@ -16,11 +16,13 @@
     "binaryjs": "~0.1.8",
     "glob": "~3.2.6",
     "optimist": "~0.6.0",
-    "lodash": "~2.4.1"
+    "lodash": "~2.4.1",
+    "jdataview": "~2.5.0"
   },
   "devDependencies": {
     "grunt": "~0.4.2",
     "grunt-typescript": "~0.2.7",
+    "grunt-tsd": "~0.1.0",
     "grunt-contrib-watch": "~0.5.3"
   },
   "keywords": [

@@ -1,13 +1,15 @@
 // Convert IFO files and save as JSON.
 
+// <reference path="../../references.ts" />
+
 'use strict';
 
 
 import fs = require('fs');
 import path = require('path');
 import glob = require('glob');
+var jDataView: jDataViewStatic = require('jdataview');
 
-import jDataView = require('../../../public/lib/jDataView/src/jdataview.js');
 import ifoRead = require('../../dvdread/ifo_read');
 import dvdRead = require('../../dvdread/index');
 import ifoTypes = require('../../dvdread/ifo_types');

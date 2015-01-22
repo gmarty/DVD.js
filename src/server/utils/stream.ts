@@ -1,4 +1,4 @@
-///<reference path='../../declarations/Buffer.d.ts'/>
+///<reference path='../../references.ts'/>
 
 'use strict';
 
@@ -13,7 +13,9 @@ class Stream {
   private client: boolean = false;
   private view: DataView;
 
-  constructor(private buffer: Buffer) {
+  constructor(buffer: ArrayBuffer);
+  constructor(buffer: Buffer);
+  constructor(private buffer: any) {
     if (buffer instanceof ArrayBuffer) {
       // Node.js
       this.client = true;
@@ -60,10 +62,11 @@ class Stream {
 
   // The `read...` methods increase the pointer.
   readUint8() {
+    var value: number;
     if (this.client) {
-      var value = this.view.getUint8(this.pos);
+      value = this.view.getUint8(this.pos);
     } else {
-      var value = this.buffer.readUInt8(this.pos);
+      value = this.buffer.readUInt8(this.pos);
     }
 
     this.pos++;
@@ -71,10 +74,11 @@ class Stream {
   }
 
   readUint16() {
+    var value: number;
     if (this.client) {
-      var value = this.view.getUint16(this.pos, false);
+      value = this.view.getUint16(this.pos, false);
     } else {
-      var value = this.buffer.readUInt16BE(this.pos);
+      value = this.buffer.readUInt16BE(this.pos);
     }
 
     this.pos += 2;
@@ -82,10 +86,11 @@ class Stream {
   }
 
   readUint32() {
+    var value: number;
     if (this.client) {
-      var value = this.view.getUint32(this.pos, false);
+      value = this.view.getUint32(this.pos, false);
     } else {
-      var value = this.buffer.readUInt32BE(this.pos);
+      value = this.buffer.readUInt32BE(this.pos);
     }
 
     this.pos += 4;

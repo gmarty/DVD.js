@@ -1,1 +1,0 @@
-declare var EventEmitter: any;
