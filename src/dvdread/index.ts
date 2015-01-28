@@ -69,12 +69,11 @@ dvd_reader.prototype.loadJSON = function(url, successHandler, errorHandler) {
   xhr.timeout = 3000;
   xhr.overrideMimeType && xhr.overrideMimeType('application/json');
   xhr.setRequestHeader('Accept', 'application/json, text/javascript, */*; q=0.01');
-  xhr.addEventListener('load', function(event) {
-    var status = (<XMLHttpRequest>event.target).status;
-    if (status === 200) {
-      successHandler && successHandler((<XMLHttpRequest>event.target).response);
+  xhr.addEventListener('load', function() {
+    if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+      successHandler && successHandler(this.response);
     } else {
-      errorHandler && errorHandler(status);
+      errorHandler && errorHandler(this.status);
     }
   }, false);
   xhr.send();
