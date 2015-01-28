@@ -76,14 +76,10 @@ body {
   </form>
 </div>
 <script src="bower_components/requirejs/require.js"></script>
-<script src="lib/jDataView/src/jdataview.js"></script>
+<script src="bower_components/jquery/dist/jquery.min.js"></script>
+<script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 <script>
 'use strict';
-
-// We load jQuery as a AMD module, then load Bootstrap async
-// (dirty... I know, there must be a better way).
-require(['bower_components/jquery/dist/jquery.min.js'],
-    require.bind(null, ['bower_components/bootstrap/dist/js/bootstrap.min.js']));
 
 if (!window.File || !window.FileReader) {
   // @todo Display an error message.
@@ -98,11 +94,12 @@ if (!window.File || !window.FileReader) {
  */
 
 require([
+  'bower_components/jdataview/dist/browser/jdataview.js',
   'js/dvdjs/dvdread/index',
   'js/dvdjs/dvdread/ifo_types',
   'js/dvdjs/dvdnav/dvd_types',
   'js/dvdjs/dvdread/ifo_print_html'
-], function(dvdReader, ifoTypes, dvdTypes, ifoPrint) {
+], function(jDataView, dvdReader, ifoTypes, dvdTypes, ifoPrint) {
   var ifo_handle_t = ifoTypes.ifo_handle_t;
   var dvd_file_t = dvdTypes.dvd_file_t;
 

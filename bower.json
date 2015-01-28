@@ -27,6 +27,7 @@
     "eventEmitter": "~4.2.7",
     "platform": "~1.0.0",
     "x-tag-core": "~0.9.6",
-    "backbone": "~1.1.2"
+    "backbone": "~1.1.2",
+    "jdataview": "~2.5.0"
   }
 }
