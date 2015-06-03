@@ -80,8 +80,9 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-tsd');
   grunt.loadNpmTasks('grunt-contrib-watch');
 
+  grunt.registerTask('install', ['tsd']);
   grunt.registerTask('client', ['typescript:client']);
   grunt.registerTask('server', ['typescript:server']);
 
-  grunt.registerTask('default', ['tsd', 'client', 'server']);
+  grunt.registerTask('default', ['client', 'server']);
 };

@@ -32,6 +32,7 @@ Clone the repo locally and install the dependencies with:
 ```bash
 $ npm install
 $ bower install
+$ grunt install
 ```
 
 You'll need to install the latest version of [ffmpeg](http://ffmpeg.org/).
