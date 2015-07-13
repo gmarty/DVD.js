@@ -1,3 +1,5 @@
+/// <reference path="declarations/dataview.d.ts" />
+
 'use strict';
 
 
