@@ -56,6 +56,7 @@ function generateChapters(dvdPath: string, callback) {
 
     var vttFile = 0;
     var cues = [];
+    var forceKeyFrames = [];
     var startTime = 0;
     var endTime = 0;
 
@@ -65,6 +66,7 @@ function generateChapters(dvdPath: string, callback) {
           saveWebVTTFile(cues);
 
           cues = [];
+          forceKeyFrames = [];
           startTime = 0;
         }
 
@@ -76,6 +78,8 @@ function generateChapters(dvdPath: string, callback) {
           start: timeToWebVTTTimestamp(startTime),
           end: timeToWebVTTTimestamp(endTime)
         });
+
+        forceKeyFrames.push(startTime);
 
         startTime = endTime;
       });
@@ -100,8 +104,10 @@ function generateChapters(dvdPath: string, callback) {
       if (!vttFilesList[index]) {
         vttFilesList[index] = {};
         vttFilesList[index].vtt = [];
+        vttFilesList[index].forceKeyFrames = [];
       }
       vttFilesList[index].vtt.push('/' + dvdName + '/web/' + fileName);
+      vttFilesList[index].forceKeyFrames = forceKeyFrames;
       fs.writeFile(path.join(dvdPath, '/web/', fileName), content.join('\n'), function(err) {
         if (err) {
           console.error(err);

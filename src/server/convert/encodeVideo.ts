@@ -28,7 +28,6 @@ export = encodeVideo;
  * @see https://sites.google.com/a/webmproject.org/wiki/ffmpeg
  *
  * @todo At the end, delete the ffmpeg2pass-0.log file.
- * @todo Add key frames at chapter beginnings.
  * @todo Check for multiaudio/multiangle video and convert video and sound separately.
  *
  * @param {string} dvdPath
@@ -36,6 +35,9 @@ export = encodeVideo;
  */
 function encodeVideo(dvdPath: string, callback) {
   process.stdout.write('\nEncoding VOB files:\n');
+
+  var metadataPath = getWebName('metadata');
+  var metadata = require(metadataPath);
 
   var vobPath = path.join(dvdPath, '/VIDEO_TS', '/*.VOB');
   glob(vobPath, function(err, vobFilesList) {
@@ -67,9 +69,10 @@ function encodeVideo(dvdPath: string, callback) {
     // There are better ways to do async...
     function next(vobFile) {
       var output = utils.convertVobPath(vobFile[0]);
-      var prefix = path.join(vobFile[0].replace(/\/VIDEO_TS\/.+/i, '/web/'), '/ffmpeg2pass');
+      var passLogFile = path.join(vobFile[0].replace(/\/VIDEO_TS\/.+/i, '/web/'), '/ffmpeg2pass');
       var input = '';
       var index = getFileIndex(vobFile[0]);
+      var forceKeyFramesTimestamps = [0];
 
       // Menu and video are optional. We use arrays here as we can then simply
       // iterate in the template without the need of a heavier logic.
@@ -92,14 +95,18 @@ function encodeVideo(dvdPath: string, callback) {
         }).join('|');
       }
 
+      if (metadata[index] && metadata[index].forceKeyFrames && metadata[index].forceKeyFrames.length) {
+        forceKeyFramesTimestamps = metadata[index].forceKeyFrames;
+      }
+
       input = input.replace(' ', '\ ');
-      prefix = prefix.replace(' ', '\ ');
+      passLogFile = passLogFile.replace(' ', '\ ');
       output = output.replace(' ', '\ ');
 
       var pass1Cmd = [
         '-i', input,
         '-pass', '1',
-        '-passlogfile', prefix,
+        '-passlogfile', passLogFile,
         // Video
         '-c:v', 'libvpx',
         '-b:v', '1000k',
@@ -115,6 +122,7 @@ function encodeVideo(dvdPath: string, callback) {
         '-qmin', '0',
         '-qmax', '51',
         // ffmpeg options
+        '-force_key_frames', forceKeyFramesTimestamps.join(','),
         '-bufsize', '500k',
         '-threads', '16',
         '-vf', 'yadif=1:1:1', // Deinterlace
@@ -127,7 +135,7 @@ function encodeVideo(dvdPath: string, callback) {
       var pass2Cmd = [
         '-i', input,
         '-pass', '2',
-        '-passlogfile', prefix,
+        '-passlogfile', passLogFile,
         // Video
         '-c:v', 'libvpx',
         '-b:v', '1000k',
@@ -145,6 +153,8 @@ function encodeVideo(dvdPath: string, callback) {
         // libvpx options for pass 2
         '-auto-alt-ref', '1',
         '-maxrate', '1000k',  // pass 2
+        // ffmpeg options
+        '-force_key_frames', forceKeyFramesTimestamps.join(','),
         '-bufsize', '500k',
         '-threads', '16',
         '-vf', 'yadif=1:1:1', // Deinterlace
