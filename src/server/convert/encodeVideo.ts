@@ -113,8 +113,6 @@ function encodeVideo(dvdPath: string, callback) {
         // Audio
         '-c:a', 'libvorbis',
         '-b:a', '128k',
-        // @todo Read from source.
-        '-r', '30/1.001',
         // libvpx options
         '-cpu-used', '0',
         '-lag-in-frames', '16',
@@ -142,8 +140,6 @@ function encodeVideo(dvdPath: string, callback) {
         // Audio
         '-c:a', 'libvorbis',
         '-b:a', '128k',
-        // @todo Read from source.
-        '-r', '30/1.001',
         // libvpx options
         '-cpu-used', '0',
         '-lag-in-frames', '16',
