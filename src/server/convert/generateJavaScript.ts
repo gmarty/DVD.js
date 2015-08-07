@@ -24,7 +24,7 @@ export = generateJavaScript;
 function generateJavaScript(dvdPath: string, callback) {
   process.stdout.write('\nGenerating JavaScript files:\n');
 
-  var ifoPath = path.join(dvdPath, '/web', '/metadata.json');
+  var ifoPath = getWebName('metadata');
   var filesList = require(ifoPath);
 
   var pointer = 0;
@@ -405,4 +405,25 @@ function generateJavaScript(dvdPath: string, callback) {
       return code;
     }
   }
+
+  /**
+   * Return the file path for the web given a file.
+   * Used for naming both the IFO files and the metadata file.
+   *
+   * @param name A file name.
+   * @return {string}
+   */
+  function getWebName(name: string): string {
+    return path.join(dvdPath, '/web/', getJsonFileName(name));
+  }
+}
+
+/**
+ * Transform the file name of a JSON file.
+ *
+ * @param {string} name A file name.
+ * @return {string}
+ */
+function getJsonFileName(name: string): string {
+  return name.replace(/\.IFO$/i, '') + '.json';
 }

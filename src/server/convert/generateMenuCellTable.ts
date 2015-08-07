@@ -32,7 +32,7 @@ export = extractMenu;
 function extractMenu(dvdPath: string, callback) {
   process.stdout.write('\nExtracting menu:\n');
 
-  var ifoPath = path.join(dvdPath, '/web', '/metadata.json');
+  var ifoPath = getWebName('metadata');
   var filesList = require(ifoPath);
 
   var dvdName = dvdPath.split(path.sep).pop();

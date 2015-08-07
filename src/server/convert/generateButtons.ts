@@ -24,7 +24,7 @@ export = generateButtons;
 function generateButtons(dvdPath: string, callback) {
   process.stdout.write('\nGenerating buttons:\n');
 
-  var ifoPath = path.join(dvdPath, '/web', '/metadata.json');
+  var ifoPath = getWebName('metadata');
   var filesList = require(ifoPath);
 
   var dvdName = dvdPath.split(path.sep).pop();

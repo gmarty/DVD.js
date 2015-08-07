@@ -35,7 +35,7 @@ export = generateChapters;
 function generateChapters(dvdPath: string, callback) {
   process.stdout.write('\nGenerating chapter files:\n');
 
-  var ifoPath = path.join(dvdPath, '/web', '/metadata.json');
+  var ifoPath = getWebName('metadata');
   var filesList = require(ifoPath);
 
   var dvdName = dvdPath.split(path.sep).pop();
