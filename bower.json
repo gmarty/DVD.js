@@ -22,12 +22,12 @@
     "tests"
   ],
   "dependencies": {
+    "backbone": "^1.2.1",
     "bootstrap": "~3.0.3",
-    "requirejs": "~2.1.10",
-    "eventEmitter": "~4.2.7",
-    "platform": "~1.0.0",
-    "x-tag-core": "~0.9.6",
-    "backbone": "~1.1.2",
-    "jdataview": "~2.5.0"
+    "eventEmitter": "^4.2.11",
+    "jdataview": "^2.5.0",
+    "platform": "^1.3.0",
+    "requirejs": "^2.1.20",
+    "x-tag-core": "^1.1.9"
   }
 }
