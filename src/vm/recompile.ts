@@ -536,7 +536,7 @@ function compile_jump_instruction(command) {
     case 3:
       // JumpVTS_TT x
       // Jump to a video title in the current VTS.
-      code += sprintf('var vtt = PTT_TABLE[domain][%s][0]; PGCIUT[vtt.domain][vtt.pgc].run(); dvd.playChapter(vtt.chapter); return 1;',
+      code += sprintf('var vtt = PTT_TABLE[domain][%s][0]; PGCIUT[vtt.domain][vtt.pgc].run(); dvd.playChapter(vtt.chapter - 1); return 1;',
         getbits(command, 22, 7)
       );
       break;
@@ -545,7 +545,7 @@ function compile_jump_instruction(command) {
       // Jump to a PTT in a specified VTS.
       // @todo Use a table here
       //code += sprintf('console.log(\'JumpVTS_PTT %s:%s\'); return 1;',
-      code += sprintf('var ptt = PTT_TABLE[domain][%s][%s]; PGCIUT[ptt.domain][ptt.pgc].run(); dvd.playChapter(ptt.chapter); return 1;',
+      code += sprintf('var ptt = PTT_TABLE[domain][%s][%s]; PGCIUT[ptt.domain][ptt.pgc].run(); dvd.playChapter(ptt.chapter - 1); return 1;',
         getbits(command, 22, 7),
           getbits(command, 41, 10) - 1
       );
