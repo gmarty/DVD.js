@@ -16,7 +16,7 @@ declare var fp_pgc: vmProceduresInterface;
 var listTpl = _.template('<ul>' +
   '<% _.each(dvds, function(dvd) {%>' +
   '<li class="thumbnail" style="background-image:url(\'<%= dvd.dir %>/cover.jpg\');">' +
-  '<a href="#/play/<%= dvd.dir %>"><span><%= dvd.name %></span></a>' +
+  '<a onclick="app.navigate(\'play/<%= dvd.dir %>\', {trigger: true})"><span><%= dvd.name %></span></a>' +
   '</li>' +
   '<% }); %>' +
   '</ul>');
