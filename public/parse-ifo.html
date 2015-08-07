@@ -74,6 +74,9 @@ body {
       </div>
     </div>
   </form>
+  <footer>
+    <p>© 2015 Guillaume Marty (<a href="https://github.com/gmarty">https://github.com/gmarty</a>)</p>
+  </footer>
 </div>
 <script src="/bower_components/requirejs/require.js"></script>
 <script src="/bower_components/jquery/dist/jquery.min.js"></script>
@@ -95,10 +98,10 @@ if (!window.File || !window.FileReader) {
 
 require([
   '/bower_components/jdataview/dist/browser/jdataview.js',
-  '/js/dvdjs/dvdread/index',
-  '/js/dvdjs/dvdread/ifo_types',
-  '/js/dvdjs/dvdnav/dvd_types',
-  '/js/dvdjs/dvdread/ifo_print_html'
+  'js/dvdjs/dvdread/index',
+  'js/dvdjs/dvdread/ifo_types',
+  'js/dvdjs/dvdnav/dvd_types',
+  'js/dvdjs/dvdread/ifo_print_html'
 ], function(jDataView, dvdReader, ifoTypes, dvdTypes, ifoPrint) {
   var ifo_handle_t = ifoTypes.ifo_handle_t;
   var dvd_file_t = dvdTypes.dvd_file_t;
