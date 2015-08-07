@@ -68,5 +68,8 @@ Backbone.history.start();
 
 var app = new App();
 
+// If the URL is already `/play`, the route won't be triggered, so we first
+// navigate to `/` to refresh the URL.
+app.navigate('', {trigger: true});
 // Always execute the `play` route when starting.
 app.navigate('play', {trigger: true});
