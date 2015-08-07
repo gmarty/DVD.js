@@ -23,6 +23,7 @@ var listTpl = _.template('<ul>' +
 
 class App extends Backbone.Router {
   routes: any;
+
   constructor(options?: Backbone.RouterOptions) {
     this.routes = {
       'play': 'list',
@@ -30,6 +31,7 @@ class App extends Backbone.Router {
     };
     super(options);
   }
+
   list() {
     $.getJSON('/dvds.json')
       .done(function(data) {
@@ -39,6 +41,7 @@ class App extends Backbone.Router {
         $('.video-container').html(listTpl({dvds: data}));
       });
   }
+
   play(dvdId: string) {
     $.getJSON('/' + dvdId + '/web/metadata.json')
       .done(function(data) {
@@ -46,7 +49,7 @@ class App extends Backbone.Router {
 
         var g = document.createElement('script');
         var s = document.scripts[0];
-        g.src = dvdId + '/web/vm.js';
+        g.src = '/' + dvdId + '/web/vm.js';
         s.parentNode.insertBefore(g, s);
         g.onload = function() {
           console.log('Start the DVD.');

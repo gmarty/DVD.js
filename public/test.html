@@ -6,12 +6,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
 <meta name="msapplication-TileColor" content="#00aba9">
 <meta name="msapplication-TileImage" content="/mstile-144x144.png">
-<link href="bower_components/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
-<link href="favicon-196x196.png" rel="icon" sizes="196x196">
-<link href="favicon-160x160.png" rel="icon" sizes="160x160">
-<link href="favicon-96x96.png" rel="icon" sizes="96x96">
-<link href="favicon-32x32.png" rel="icon" sizes="32x32">
-<link href="favicon-16x16.png" rel="icon" sizes="16x16">
+<link href="/bower_components/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
+<link href="/favicon-196x196.png" rel="icon" sizes="196x196">
+<link href="/favicon-160x160.png" rel="icon" sizes="160x160">
+<link href="/favicon-96x96.png" rel="icon" sizes="96x96">
+<link href="/favicon-32x32.png" rel="icon" sizes="32x32">
+<link href="/favicon-16x16.png" rel="icon" sizes="16x16">
 <style>
 body {
   padding-top: 20px;
@@ -30,13 +30,13 @@ body {
         <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span>
         <span class="icon-bar"></span> <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="/"><img src="img/dvd.js.svg" alt="DVD.js" title="DVD.js" width="18" height="18"> DVD.js</a>
+      <a class="navbar-brand" href="/"><img src="/img/dvd.js.svg" alt="DVD.js" title="DVD.js" width="18" height="18"> DVD.js</a>
     </div>
     <div class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-        <li><a href="index.html">Play DVD</a></li>
-        <li class="active"><a href="test.html">Test your browser</a></li>
-        <li><a href="parse-ifo.html">Parse IFO files</a></li>
+        <li><a href="/">Play DVD</a></li>
+        <li class="active"><a href="/test.html">Test your browser</a></li>
+        <li><a href="/parse-ifo.html">Parse IFO files</a></li>
       </ul>
     </div>
   </div>
@@ -89,16 +89,16 @@ body {
     </p>
   </footer>
 </div>
-<script src="bower_components/requirejs/require.js"></script>
+<script src="/bower_components/requirejs/require.js"></script>
 <script>
 'use strict';
 
 // We load jQuery as a AMD module, then load Bootstrap async
 // (dirty... I know, there must be a better way).
-require(['bower_components/jquery/dist/jquery.min.js'],
-    require.bind(null, ['bower_components/bootstrap/dist/js/bootstrap.min.js']));
+require(['/bower_components/jquery/dist/jquery.min.js'],
+    require.bind(null, ['/bower_components/bootstrap/dist/js/bootstrap.min.js']));
 
-require(['bower_components/platform/platform.js'], function(platform) {
+require(['/bower_components/platform/platform.js'], function(platform) {
   document.querySelector('#platform').textContent = platform.description;
 });
 
