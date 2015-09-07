@@ -11,6 +11,7 @@ var jDataView: jDataViewStatic = require('jdataview');
 import Stream = require('../../server/utils/stream');
 import decodePacket = require('../../server/utils/decode_packet');
 import navRead = require('../../dvdread/nav_read');
+import serverUtils = require('../../server/utils/index');
 import utils = require('../../utils');
 
 /**
@@ -31,8 +32,10 @@ export = extractNav;
 function extractNav(dvdPath: string, callback) {
   process.stdout.write('\nExtracting NAV packets:\n');
 
-  var ifoPath = path.join(dvdPath, '/VIDEO_TS', '/*.VOB');
-  glob(ifoPath, function(err, vobFiles) {
+  var webPath = serverUtils.getWebPath(dvdPath);
+
+  var vobPath = path.join(dvdPath, 'VIDEO_TS', '*.VOB');
+  glob(vobPath, function(err, vobFiles) {
     if (err) {
       console.error(err);
     }
@@ -117,7 +120,7 @@ function extractNav(dvdPath: string, callback) {
    * @return {string}
    */
   function getNavFilename(name: string, sector: number): string {
-    return path.join(dvdPath, '/web/', getJsonFileName(name, sector));
+    return path.join(webPath, getJsonFileName(name, sector));
   }
 }
 

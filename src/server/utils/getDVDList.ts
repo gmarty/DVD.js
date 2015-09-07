@@ -23,9 +23,7 @@ function getDVDList(dvdPath: string, callback) {
       var filePath = path.join(dvdPath, file);
       // @todo Use asynchronous functions here.
       var stats = fs.statSync(filePath);
-      var webFolderexists = fs.existsSync(path.join(filePath, 'web'));
-
-      return stats.isDirectory() && webFolderexists;
+      return stats.isDirectory();
     })
     .map(function(dir) {
       return {

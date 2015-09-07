@@ -7,6 +7,7 @@
 
 import path = require('path');
 
+import serverUtils = require('../../server/utils/index');
 import utils = require('../../utils');
 import editMetadataFile = require('../../server/utils/editMetadataFile');
 
@@ -14,13 +15,14 @@ export = extractMenu;
 
 /**
  * Extract menu still frames.
- * @todo Delete the temporary mpeg file after extraction.
  *
  * @param {string} dvdPath
  * @param {function} callback
  */
 function extractMenu(dvdPath: string, callback) {
-  process.stdout.write('\nExtracting menu:\n');
+  process.stdout.write('\nExtracting menu still frames:\n');
+
+  var webPath = serverUtils.getWebPath(dvdPath);
 
   var ifoPath = getWebName('metadata');
   var filesList = require(ifoPath);
@@ -32,7 +34,7 @@ function extractMenu(dvdPath: string, callback) {
 
   // There are better ways to do async...
   function next(ifoFile: string) {
-    ifoFile = path.join(dvdPath, '../', ifoFile);
+    ifoFile = path.join(webPath, '../', ifoFile);
     var json = require(ifoFile);
 
     menu[pointer] = {};
@@ -95,7 +97,7 @@ function extractMenu(dvdPath: string, callback) {
    * @return {string}
    */
   function getWebName(name: string): string {
-    return path.join(dvdPath, '/web/', getJsonFileName(name));
+    return path.join(webPath, getJsonFileName(name));
   }
 }
 

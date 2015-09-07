@@ -3,6 +3,8 @@
 
 import path = require('path');
 
+var config = require('../../../config/app.json');
+
 /**
  * Given a DVD file name, returns the index following this model:
  *  * VIDEO_TS.(IFO|VOB) => 0
@@ -33,6 +35,7 @@ export function getFileSuffix(name: string): number {
 
 /**
  * Break a filename on `_` and return the index coerced to number.
+ *
  * @param {string} name A file name.
  * @param {number} index The index of the portion to return.
  * @returns {number}
@@ -48,4 +51,31 @@ function getFilePortion(name: string, index: number): number {
       var arr = name.split('_');
       return parseInt(arr[index], 10);
   }
+}
+
+/**
+ * Return the path to the web folder given a DVD disc name and a config object:
+ *  * /home/user/path/to/disc/DSTD06151 => /home/user/dvd/web/DSTD06151
+ *
+ * @param {string} dvdPath
+ */
+export function getWebPath(dvdPath: string): string {
+  var dvdFolderName = dvdPath.split(path.sep).pop();
+  return path.join(config.webFolder, dvdFolderName);
+}
+
+/**
+ * Convert a VOB file path to the web format through the following operations:
+ *  * Prepend the web folder to the disc and VOB file name.
+ *  * Replace the `.VOB` extension by `.webm`.
+ *
+ * @param {string} dvdPath
+ * @return {string} A formatted title.
+ */
+export function convertVobPath(dvdPath: string): string {
+  var fileName = dvdPath.split(path.sep).pop().replace(/\.VOB$/i, '.webm');
+  // Extract DVD folder name: /path/to/DVDNAME/VIDEO_TS/VIDEO_TS.VOB => DVDNAME
+  var dvdFolderName = dvdPath.split(path.sep).reverse()[2];
+
+  return path.join(config.webFolder, dvdFolderName, fileName);
 }

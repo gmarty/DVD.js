@@ -14,14 +14,14 @@ export = generateCatalogue;
 function generateCatalogue(callback) {
   process.stdout.write('\nRegenerating the list of DVD:\n');
 
-  getDVDList(config.dvdPath, function(availableDvds) {
-    var metaPath = path.join(config.dvdPath, '/dvds.json');
+  getDVDList(config.webFolder, function(availableDvds) {
+    var metaPath = path.join(config.webFolder, 'dvds.json');
     fs.writeFile(metaPath, JSON.stringify(availableDvds), function(err) {
       if (err) {
         console.error(err);
       }
 
-      process.stdout.write('Done\n');
+      process.stdout.write('.');
 
       callback();
     });

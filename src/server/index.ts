@@ -15,7 +15,7 @@ function start() {
   // Static asset server.
   var app = connect()
     .use(connect.static('public/'))
-    .use(connect.static(config.dvdPath));
+    .use(connect.static(config.webFolder));
   http.createServer(app).listen(config.staticServerPort);
 
   console.log('Server running at http://localhost:%d/', config.staticServerPort);

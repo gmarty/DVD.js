@@ -43,13 +43,13 @@ class App extends Backbone.Router {
   }
 
   play(dvdId: string) {
-    $.getJSON('/' + dvdId + '/web/metadata.json')
+    $.getJSON('/' + dvdId + '/metadata.json')
       .done(function(data) {
         $('.video-container').html(buildTag(data));
 
         var g = document.createElement('script');
         var s = document.scripts[0];
-        g.src = '/' + dvdId + '/web/vm.js';
+        g.src = '/' + dvdId + '/vm.js';
         s.parentNode.insertBefore(g, s);
         g.onload = function() {
           console.log('Start the DVD.');

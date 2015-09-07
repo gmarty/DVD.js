@@ -6,10 +6,12 @@
 import fs = require('fs');
 import path = require('path');
 
+import serverUtils = require('../../server/utils/index');
+
 export = createDir;
 
 /**
- * Create a subfolder name `web` under the path `dvdPath`.
+ * Create a subfolder to `webFolder` named like the DVD disc.
  *
  * @param {string} dvdPath
  * @param {function} callback
@@ -17,12 +19,16 @@ export = createDir;
 function createDir(dvdPath, callback) {
   process.stdout.write('\nCreating the `web` folder:\n');
 
-  fs.mkdir(path.join(dvdPath, '/web/'), function(err) {
+  var webPath = serverUtils.getWebPath(dvdPath);
+
+  fs.mkdir(webPath, function(err) {
     if (err && err.code === 'EEXIST') {
-      process.stdout.write('(Folder already exists)');
+      process.stdout.write('(Folder already exists)\n');
     } else if (err) {
       console.error(err);
     }
+
+    process.stdout.write('.');
 
     callback();
   });

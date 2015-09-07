@@ -1,4 +1,4 @@
 {
-  "dvdPath": "/home/user/dvd",
+  "webFolder": "/home/user/dvd/web",
   "staticServerPort": 3000
 }

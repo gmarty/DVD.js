@@ -35,10 +35,12 @@ export = generateChapters;
 function generateChapters(dvdPath: string, callback) {
   process.stdout.write('\nGenerating chapter files:\n');
 
+  var dvdName = dvdPath.split(path.sep).pop();
+  var webPath = serverUtils.getWebPath(dvdPath);
+
   var ifoPath = getWebName('metadata');
   var filesList = require(ifoPath);
 
-  var dvdName = dvdPath.split(path.sep).pop();
   var vttFilesList = [];
   var pointer = 0;
 
@@ -51,8 +53,9 @@ function generateChapters(dvdPath: string, callback) {
 
   // There are better ways to do async...
   function next(ifoFile: string) {
+    ifoFile = path.join(webPath, '../', ifoFile);
     var name = path.basename(ifoFile);
-    var json = require(path.join(dvdPath, '../', ifoFile));
+    var json = require(ifoFile);
 
     var vttFile = 0;
     var cues = [];
@@ -106,9 +109,9 @@ function generateChapters(dvdPath: string, callback) {
         vttFilesList[index].vtt = [];
         vttFilesList[index].forceKeyFrames = [];
       }
-      vttFilesList[index].vtt.push('/' + dvdName + '/web/' + fileName);
+      vttFilesList[index].vtt.push('/' + dvdName + '/' + fileName);
       vttFilesList[index].forceKeyFrames = forceKeyFrames;
-      fs.writeFile(path.join(dvdPath, '/web/', fileName), content.join('\n'), function(err) {
+      fs.writeFile(path.join(webPath, fileName), content.join('\n'), function(err) {
         if (err) {
           console.error(err);
         }
@@ -142,7 +145,7 @@ function generateChapters(dvdPath: string, callback) {
    * @return {string}
    */
   function getWebName(name: string): string {
-    return path.join(dvdPath, '/web/', getJsonFileName(name));
+    return path.join(webPath, getJsonFileName(name));
   }
 }
 

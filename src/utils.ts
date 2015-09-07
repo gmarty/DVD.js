@@ -3,9 +3,9 @@
 'use strict';
 
 
-import config = require('./config');
+import defaultValues = require('./config');
 
-var DEBUG = config.DEBUG;
+var DEBUG = defaultValues.DEBUG;
 
 // A collection of helper functions.
 
@@ -59,7 +59,7 @@ var DEBUG = config.DEBUG;
  * @param {*=} arg12
  * @return {string}
  */
-export function sprintf(str: string, arg1?: any, arg2?: any, arg3?: any, arg4?: any, arg5?: any, arg6?: any, arg7?: any, arg8?: any, arg9?: any, arg10?: any, arg11?: any, arg12?: any) {
+export function sprintf(str: string, arg1?: any, arg2?: any, arg3?: any, arg4?: any, arg5?: any, arg6?: any, arg7?: any, arg8?: any, arg9?: any, arg10?: any, arg11?: any, arg12?: any): string {
   /*if (NODE || util.format) {
    // @todo Uncomment when util.format support '%x' placeholder.
    return util.format.apply(undefined, arguments)
@@ -418,11 +418,11 @@ export function formatTitle(title: string): string {
  *  * Replace `VIDEO_TS` by `web`.
  *  * Replace the `.VOB` extension by `.webm`.
  *
- * @param {string} path
+ * @param {string} dvdPath
  * @return {string} A formatted title.
  */
-export function convertVobPath(path: string): string {
-  return path
+export function convertVobPath(dvdPath: string): string {
+  return dvdPath
     .replace(/\/VIDEO_TS\//i, '/web/')
     .replace(/\\VIDEO_TS\\/i, '\\web\\')
     .replace(/\.VOB$/i, '.webm');

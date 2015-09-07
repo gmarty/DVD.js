@@ -8,6 +8,7 @@
 import fs = require('fs');
 import path = require('path');
 
+import serverUtils = require('../../server/utils/index');
 import editMetadataFile = require('../../server/utils/editMetadataFile');
 import utils = require('../../utils');
 
@@ -24,10 +25,12 @@ export = generateButtons;
 function generateButtons(dvdPath: string, callback) {
   process.stdout.write('\nGenerating buttons:\n');
 
+  var dvdName = dvdPath.split(path.sep).pop();
+  var webPath = serverUtils.getWebPath(dvdPath);
+
   var ifoPath = getWebName('metadata');
   var filesList = require(ifoPath);
 
-  var dvdName = dvdPath.split(path.sep).pop();
   var menuCell = [];
   var pointer = 0;
 
@@ -35,7 +38,7 @@ function generateButtons(dvdPath: string, callback) {
 
   // There are better ways to do async...
   function next(ifoFile: string) {
-    ifoFile = path.join(dvdPath, '../', ifoFile);
+    ifoFile = path.join(webPath, '../', ifoFile);
     var name = path.basename(ifoFile);
     var basename = path.basename(name, '.json');
     var ifoJson = require(ifoFile);
@@ -56,7 +59,7 @@ function generateButtons(dvdPath: string, callback) {
       var cellID = vob.cell_id;
       var vobID = vob.vob_id;
 
-      var ifoFile = path.join(dvdPath, '/web', '/' + basename + '-' + toHex(start) + '.json');
+      var ifoFile = path.join(webPath, basename + '-' + toHex(start) + '.json');
       var json = require(ifoFile);
 
       var css = [];
@@ -86,7 +89,7 @@ function generateButtons(dvdPath: string, callback) {
         var fileName = 'menu-' + pointer + '-' + cellID + '-' + vobID + '.css';
         css = css.join('\n');
 
-        fs.writeFile(path.join(dvdPath, '/web/', fileName), css, function(err) {
+        fs.writeFile(path.join(webPath, fileName), css, function(err) {
           if (err) {
             console.error(err);
           }
@@ -103,7 +106,7 @@ function generateButtons(dvdPath: string, callback) {
           if (!menuCell[pointer].menuCell[cellID][vobID]) {
             menuCell[pointer].menuCell[cellID][vobID] = {};
           }
-          menuCell[pointer].menuCell[cellID][vobID].css = '/' + dvdName + '/web/' + fileName;
+          menuCell[pointer].menuCell[cellID][vobID].css = '/' + dvdName + '/' + fileName;
           menuCell[pointer].menuCell[cellID][vobID].btn_nb = btn_nb;
 
           // Next iteration.
@@ -143,7 +146,7 @@ function generateButtons(dvdPath: string, callback) {
    * @return {string}
    */
   function getWebName(name: string): string {
-    return path.join(dvdPath, '/web/', getJsonFileName(name));
+    return path.join(webPath, getJsonFileName(name));
   }
 }
 

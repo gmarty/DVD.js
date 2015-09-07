@@ -32,13 +32,15 @@ export = convertIfo;
 function convertIfo(dvdPath: string, callback) {
   process.stdout.write('\nConverting IFO files:\n');
 
-  var ifoPath = path.join(dvdPath, '/VIDEO_TS', '/*.IFO');
+  var dvdName = dvdPath.split(path.sep).pop();
+  var webPath = serverUtils.getWebPath(dvdPath);
+
+  var ifoPath = path.join(dvdPath, 'VIDEO_TS', '*.IFO');
   glob(ifoPath, function(err, ifoFiles) {
     if (err) {
       console.error(err);
     }
 
-    var dvdName = dvdPath.split(path.sep).pop();
     var filesList = [];
     var pointer = 0;
 
@@ -50,7 +52,7 @@ function convertIfo(dvdPath: string, callback) {
       var index = getFileIndex(name);
 
       filesList[index] = {};
-      filesList[index].ifo = '/' + dvdName + '/web/' + getJsonFileName(name);
+      filesList[index].ifo = '/' + dvdName + '/' + getJsonFileName(name);
 
       fs.readFile(ifoFile, function(err, data) {
         if (err) {
@@ -135,14 +137,14 @@ function convertIfo(dvdPath: string, callback) {
    * @return {string}
    */
   function getWebName(name: string): string {
-    return path.join(dvdPath, '/web/', getJsonFileName(name));
+    return path.join(webPath, getJsonFileName(name));
   }
 }
 
 /**
  * Transform the file name of a JSON file.
  *
- * @param name A file name.
+ * @param {string} name A file name.
  * @return {string}
  */
 function getJsonFileName(name: string): string {

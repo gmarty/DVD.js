@@ -9,6 +9,7 @@ import fs = require('fs');
 import path = require('path');
 import child_process = require('child_process');
 
+import serverUtils = require('../../server/utils/index');
 import editMetadataFile = require('../../server/utils/editMetadataFile');
 
 var spawn = child_process.spawn;
@@ -30,12 +31,14 @@ export = extractMenu;
  * @param {function} callback
  */
 function extractMenu(dvdPath: string, callback) {
-  process.stdout.write('\nExtracting menu:\n');
+  process.stdout.write('\nExtracting menu cell table:\n');
+
+  var dvdName = dvdPath.split(path.sep).pop();
+  var webPath = serverUtils.getWebPath(dvdPath);
 
   var ifoPath = getWebName('metadata');
   var filesList = require(ifoPath);
 
-  var dvdName = dvdPath.split(path.sep).pop();
   var menuCell = [];
   var pointer = 0;
 
@@ -43,10 +46,9 @@ function extractMenu(dvdPath: string, callback) {
 
   // There are better ways to do async...
   function next(ifoFile: string) {
-    ifoFile = path.join(dvdPath, '../', ifoFile);
+    ifoFile = path.join(webPath, '../', ifoFile);
     var json = require(ifoFile);
-    var inputFile = path.resolve(ifoFile, '..', '..', 'VIDEO_TS',
-      path.basename(ifoFile, '.json') + '.VOB')
+    var inputFile = path.join(dvdPath, 'VIDEO_TS', path.basename(ifoFile, '.json') + '.VOB')
       .replace(/ /, '\ ');
 
     var vobPointer = 0;
@@ -115,7 +117,7 @@ function extractMenu(dvdPath: string, callback) {
               if (!menuCell[pointer].menuCell[cellID][vobID]) {
                 menuCell[pointer].menuCell[cellID][vobID] = {};
               }
-              menuCell[pointer].menuCell[cellID][vobID].still = '/' + dvdName + '/web/menu-' + pointer + '-' + cellID + '-' + vobID + '.png';
+              menuCell[pointer].menuCell[cellID][vobID].still = '/' + dvdName + '/menu-' + pointer + '-' + cellID + '-' + vobID + '.png';
 
               // Next iteration.
               vobPointer++;
@@ -156,7 +158,7 @@ function extractMenu(dvdPath: string, callback) {
    * @return {string}
    */
   function getWebName(name: string): string {
-    return path.join(dvdPath, '/web/', getJsonFileName(name));
+    return path.join(webPath, getJsonFileName(name));
   }
 }
 

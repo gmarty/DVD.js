@@ -36,10 +36,13 @@ export = encodeVideo;
 function encodeVideo(dvdPath: string, callback) {
   process.stdout.write('\nEncoding VOB files:\n');
 
+  var dvdName = dvdPath.split(path.sep).pop();
+  var webPath = serverUtils.getWebPath(dvdPath);
+
   var metadataPath = getWebName('metadata');
   var metadata = require(metadataPath);
 
-  var vobPath = path.join(dvdPath, '/VIDEO_TS', '/*.VOB');
+  var vobPath = path.join(dvdPath, 'VIDEO_TS', '*.VOB');
   glob(vobPath, function(err, vobFilesList) {
     if (err) {
       console.error(err);
@@ -60,7 +63,6 @@ function encodeVideo(dvdPath: string, callback) {
       });
     });
 
-    var dvdName = dvdPath.split(path.sep).pop();
     var filesList = [];
     var pointer = 0;
 
@@ -68,8 +70,8 @@ function encodeVideo(dvdPath: string, callback) {
 
     // There are better ways to do async...
     function next(vobFile) {
-      var output = utils.convertVobPath(vobFile[0]);
-      var passLogFile = path.join(vobFile[0].replace(/\/VIDEO_TS\/.+/i, '/web/'), '/ffmpeg2pass');
+      var output = serverUtils.convertVobPath(vobFile[0]);
+      var passLogFile = path.join(vobFile[0].replace(/\/VIDEO_TS\/.+/i, '/'), 'ffmpeg2pass');
       var input = '';
       var index = getFileIndex(vobFile[0]);
       var forceKeyFramesTimestamps = [0];
@@ -82,9 +84,9 @@ function encodeVideo(dvdPath: string, callback) {
         filesList[index].video = [];
       }
       if (getFileSuffix(vobFile[0]) === 0) {
-        filesList[index].index.push('/' + dvdName + '/web/' + path.basename(output));
+        filesList[index].index.push('/' + dvdName + '/' + path.basename(output));
       } else {
-        filesList[index].video.push('/' + dvdName + '/web/' + path.basename(output));
+        filesList[index].video.push('/' + dvdName + '/' + path.basename(output));
       }
 
       if (vobFile.length === 1) {
@@ -217,14 +219,14 @@ function encodeVideo(dvdPath: string, callback) {
    * @return {string}
    */
   function getWebName(name: string): string {
-    return path.join(dvdPath, '/web/', getJsonFileName(name));
+    return path.join(webPath, getJsonFileName(name));
   }
 }
 
 /**
  * Transform the file name of a JSON file.
  *
- * @param name A file name.
+ * @param {string} name A file name.
  * @return {string}
  */
 function getJsonFileName(name: string): string {

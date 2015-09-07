@@ -9,6 +9,7 @@ import fs = require('fs');
 import path = require('path');
 
 import recompile = require('../../vm/recompile');
+import serverUtils = require('../../server/utils/index');
 import utils = require('../../utils');
 
 var toHex = utils.toHex;
@@ -23,6 +24,8 @@ export = generateJavaScript;
  */
 function generateJavaScript(dvdPath: string, callback) {
   process.stdout.write('\nGenerating JavaScript files:\n');
+
+  var webPath = serverUtils.getWebPath(dvdPath);
 
   var ifoPath = getWebName('metadata');
   var filesList = require(ifoPath);
@@ -54,7 +57,7 @@ function generateJavaScript(dvdPath: string, callback) {
 
   // There are better ways to do async...
   function next(ifoFile: string) {
-    ifoFile = path.join(dvdPath, '../', ifoFile);
+    ifoFile = path.join(webPath, '../', ifoFile);
     var name = path.basename(ifoFile);
     var basename = path.basename(name, '.json');
     var json = require(ifoFile);
@@ -92,8 +95,7 @@ function generateJavaScript(dvdPath: string, callback) {
       code = addEventListener(json, code);
 
       // Save file.
-      var jsPath = path.join(dvdPath, '/web', '/vm.js');
-      fs.writeFile(jsPath, code.join('\n'), function(err) {
+      fs.writeFile(path.join(webPath, 'vm.js'), code.join('\n'), function(err) {
         if (err) {
           console.error(err);
         }
@@ -224,7 +226,7 @@ function generateJavaScript(dvdPath: string, callback) {
         var vob = json.menu_c_adt.cell_adr_table[i];
         var start = vob.start_sector;
 
-        var ifoFile = path.join(dvdPath, '/web', '/' + basename + '-' + toHex(start) + '.json');
+        var ifoFile = path.join(webPath, basename + '-' + toHex(start) + '.json');
         var pci = require(ifoFile).pci;
 
         code.push('btnCmd[' + pointer + '][' + vobPointer + '] = [];');
@@ -414,7 +416,7 @@ function generateJavaScript(dvdPath: string, callback) {
    * @return {string}
    */
   function getWebName(name: string): string {
-    return path.join(dvdPath, '/web/', getJsonFileName(name));
+    return path.join(webPath, getJsonFileName(name));
   }
 }
 
