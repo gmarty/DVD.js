@@ -477,7 +477,7 @@ function compile_link_instruction(command, optional: boolean) {
     case 4:
       // LinkPGCN x
       // Link to a PGC in the same domain.
-      code += sprintf('setTimeout(MPGCIUT[domain][lang][%i].run.bind(MPGCIUT[domain][lang][%i])); return 1;',
+      code += sprintf('clearTimeout(t); t = setTimeout(MPGCIUT[domain][lang][%i].run.bind(MPGCIUT[domain][lang][%i])); return 1;',
         getbits(command, 14, 15),
         getbits(command, 14, 15),
         getbits(command, 14, 15)
@@ -561,13 +561,13 @@ function compile_jump_instruction(command) {
         case 1:
           // JumpSS VMGM (menu x)
           // x is the type of menu (Root, Title...)
-          code += sprintf('var menu = MENU_TYPES[0][lang][%s]; setTimeout(MPGCIUT[menu.domain][menu.lang][menu.pgc].run.bind(MPGCIUT[menu.domain][menu.lang][menu.pgc])); return 1;',
+          code += sprintf('var menu = MENU_TYPES[0][lang][%s]; clearTimeout(t); t = setTimeout(MPGCIUT[menu.domain][menu.lang][menu.pgc].run.bind(MPGCIUT[menu.domain][menu.lang][menu.pgc])); return 1;',
             getbits(command, 19, 4)
           );
           break;
         case 2:
           // JumpSS VTSM (vts x, title y, menu z)
-          code += sprintf('var menu = MENU_TYPES[%s][lang/* Should be %s */][%s]; setTimeout(MPGCIUT[menu.domain][menu.lang][menu.pgc].run.bind(MPGCIUT[menu.domain][menu.lang][menu.pgc])); return 1;',
+          code += sprintf('var menu = MENU_TYPES[%s][lang/* Should be %s */][%s]; clearTimeout(t); t = setTimeout(MPGCIUT[menu.domain][menu.lang][menu.pgc].run.bind(MPGCIUT[menu.domain][menu.lang][menu.pgc])); return 1;',
             getbits(command, 30, 7),
             getbits(command, 38, 7),
             getbits(command, 19, 4)
@@ -576,7 +576,7 @@ function compile_jump_instruction(command) {
         case 3:
           // JumpSS VMGM (pgc x)
           // pgc is entry pgc
-          code += sprintf('setTimeout(MPGCIUT[0][lang][%s].run.bind(MPGCIUT[0][lang][%s])); return 1;',
+          code += sprintf('clearTimeout(t); t = setTimeout(MPGCIUT[0][lang][%s].run.bind(MPGCIUT[0][lang][%s])); return 1;',
             getbits(command, 46, 15),
             getbits(command, 46, 15)
           );
@@ -609,7 +609,7 @@ function compile_jump_instruction(command) {
         case 3:
           // CallSS VMGM (pgc x, rsm_cell y)
           // @todo What to do with the value of rsm_cell?
-          code += sprintf('setTimeout(MPGCIUT[0][lang][%s].run.bind(MPGCIUT[0][lang][%s])) /* rsm_cell %s*/; return 1;',
+          code += sprintf('clearTimeout(t); t = setTimeout(MPGCIUT[0][lang][%s].run.bind(MPGCIUT[0][lang][%s])) /* rsm_cell %s*/; return 1;',
             getbits(command, 46, 15),
             getbits(command, 46, 15),
             getbits(command, 31, 8)

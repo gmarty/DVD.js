@@ -47,6 +47,7 @@ function generateJavaScript(dvdPath: string, callback) {
     'var PTT_TABLE = {};',
     'var MENU_TYPES = [];',
     'var dummy = 0;',
+    'var t = null; // Handler to setTimeout IDs.',
     '',
     'for (var i = 0; i < 16; i++) {',
     '  gprm[i] = 0;',
