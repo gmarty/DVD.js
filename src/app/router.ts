@@ -13,13 +13,14 @@ interface vmProceduresInterface { (): void; }
 declare var init: vmProceduresInterface;
 declare var fp_pgc: vmProceduresInterface;
 
-var listTpl = _.template('<ul>' +
-  '<% _.each(dvds, function(dvd) {%>' +
-  '<li class="thumbnail" style="background-image:url(\'<%= dvd.dir %>/cover.jpg\');">' +
-  '<a onclick="app.navigate(\'play/<%= dvd.dir %>\', {trigger: true})"><span><%= dvd.name %></span></a>' +
-  '</li>' +
-  '<% }); %>' +
-  '</ul>');
+var listTpl = _.template(`
+  <ul>
+  <% _.each(dvds, function(dvd) { %>
+    <li class="thumbnail" style="background-image:url('<%= dvd.dir %>/cover.jpg');">
+      <a onclick="app.navigate('play/<%= dvd.dir %>', {trigger: true})"><span><%= dvd.name %></span></a>
+    </li>
+  <% }); %>
+  </ul>`);
 
 class App extends Backbone.Router {
   routes: any;
@@ -33,7 +34,7 @@ class App extends Backbone.Router {
   }
 
   list() {
-    $.getJSON('/dvds.json')
+    $.getJSON(`/dvds.json`)
       .done(function(data) {
         data = data.sort(function(a, b) {
           return a.name > b.name;
@@ -43,13 +44,13 @@ class App extends Backbone.Router {
   }
 
   play(dvdId: string) {
-    $.getJSON('/' + dvdId + '/metadata.json')
+    $.getJSON(`/${dvdId}/metadata.json`)
       .done(function(data) {
         $('.video-container').html(buildTag(data));
 
         var g = document.createElement('script');
         var s = document.scripts[0];
-        g.src = '/' + dvdId + '/vm.js';
+        g.src = `/${dvdId}/vm.js`;
         s.parentNode.insertBefore(g, s);
         g.onload = function() {
           console.log('Start the DVD.');
