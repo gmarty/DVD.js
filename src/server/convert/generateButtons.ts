@@ -76,18 +76,35 @@ function generateButtons(dvdPath: string, callback) {
       }
 
       function buttonToCss(btn, i) {
+        // @todo Read video dimension from source (e.g. 720 x 480).
         return '[data-cell="' + cellID + '"][data-vob="' + vobID + '"] .btn[data-id="' + i + '"]{' +
-          'display:block;' +
-          'left:' + btn.x_start + 'px;' +
-          'top:' + btn.y_start + 'px;' +
-          'width:' + (btn.x_end - btn.x_start) + 'px;' +
-          'height:' + (btn.y_end - btn.y_start) + 'px' +
+          'left:' + round(btn.x_start / 720 * 100) + '%;' +
+          'top:' + round(btn.y_start / 480 * 100) + '%;' +
+          'width:' + round((btn.x_end - btn.x_start) / 720 * 100) + '%;' +
+          'height:' + round((btn.y_end - btn.y_start) / 480 * 100) + '%' +
           '}';
+
+        /**
+         * Round a number to 1 digit.
+         *
+         * @param {Number} val
+         * @returns {Number}
+         */
+        function round(val) {
+          val = val.toFixed(1);
+
+          if (val.substr(-1) === '0') {
+            // Return '9' if val equals '9.0'.
+            return Math.round(val);
+          }
+
+          return val;
+        }
       }
 
       function saveCSSFile(css, btn_nb) {
         var fileName = 'menu-' + pointer + '-' + cellID + '-' + vobID + '.css';
-        css = css.join('\n');
+        css = css.join('');
 
         fs.writeFile(path.join(webPath, fileName), css, function(err) {
           if (err) {
