@@ -63,21 +63,36 @@ function generateChapters(dvdPath: string, callback) {
     var startTime = 0;
     var endTime = 0;
 
+    var cellsStartTime = [];
+    var currentTime = 0;
     json.vts_pgcit.pgci_srp.forEach(function(title, titleNum) {
-      title.pgc.cell_playback.forEach(function(chapter, chapterNum) {
-        if (chapter.first_sector === 0 && cues.length > 0) {
+      cellsStartTime[titleNum] = [];
+
+      title.pgc.cell_playback.forEach(function(cell, cellNum) {
+        if (cell.first_sector === 0) {
+          // @todo Test me.
+          currentTime = 0;
+        }
+
+        cellsStartTime[titleNum][cellNum] = currentTime;
+        currentTime += timeToNumber(cell.playback_time);
+      });
+
+      title.pgc.program_map.forEach(function(chapter, chapterNum) {
+        var cell = title.pgc.cell_playback[chapterNum];
+        if (cell.first_sector === 0 && cues.length > 0) {
           saveWebVTTFile(cues);
 
           cues = [];
           forceKeyFrames = [];
-          startTime = 0;
         }
 
-        endTime = startTime + timeToNumber(chapter.playback_time);
+        startTime = cellsStartTime[titleNum][chapterNum];
+        endTime = startTime + timeToNumber(cell.playback_time);
 
         cues.push({
           title: titleNum + 1, // titleNum and chapterNum are 0-based index.
-          chapter: chapterNum + 1,
+          chapter: chapter,
           start: timeToWebVTTTimestamp(startTime),
           end: timeToWebVTTTimestamp(endTime)
         });
