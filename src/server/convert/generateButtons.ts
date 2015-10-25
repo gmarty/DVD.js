@@ -31,7 +31,7 @@ function generateButtons(dvdPath: string, callback) {
   var ifoPath = getWebName('metadata');
   var filesList = require(ifoPath);
 
-  var menuCell = [];
+  var css = [];
   var pointer = 0;
 
   next(filesList[pointer].ifo);
@@ -62,27 +62,40 @@ function generateButtons(dvdPath: string, callback) {
       var ifoFile = path.join(webPath, basename + '-' + toHex(start) + '.json');
       var json = require(ifoFile);
 
-      var css = [];
+      var cssContent = [];
 
       // A CSS file is always generated even if it's empty.
       if (json.pci && json.pci.hli && json.pci.hli.hl_gi && json.pci.hli.hl_gi.btn_ns !== undefined) {
         // Creating a CSS file with the buttons coordinates and size.
         // json.pci.hli.hl_gi.`btn_ns` or json.pci.hli.hl_gi.`nsl_btn_ns`?
         for (var i = 0; i < json.pci.hli.hl_gi.btn_ns; i++) {
-          css.push(buttonToCss(json.pci.hli.btnit[i], i));
+          cssContent.push(`[data-domain="${pointer}"][data-cell="${cellID}"][data-vob="${vobID}"] .btn[data-id="${i}"]{` +
+            buttonToCss(json.pci.hli.btnit[i], i) + '}');
+
+          if (!css[pointer]) {
+            css[pointer] = {};
+          }
+          if (!css[pointer].css) {
+            css[pointer].css = [];
+          }
+          if (!css[pointer].css[cellID - 1]) {
+            css[pointer].css[cellID - 1] = [];
+          }
+          if (!css[pointer].css[cellID - 1][vobID - 1]) {
+            css[pointer].css[cellID - 1][vobID - 1] = [];
+          }
+          css[pointer].css[cellID - 1][vobID - 1].push(buttonToCss(json.pci.hli.btnit[i], i));
         }
 
-        saveCSSFile(css, json.pci.hli.hl_gi.btn_ns);
+        saveCSSFile(cssContent, json.pci.hli.hl_gi.btn_ns);
       }
 
       function buttonToCss(btn, i) {
         // @todo Read video dimension from source (e.g. 720 x 480).
-        return '[data-cell="' + cellID + '"][data-vob="' + vobID + '"] .btn[data-id="' + i + '"]{' +
-          'left:' + round(btn.x_start / 720 * 100) + '%;' +
+        return 'left:' + round(btn.x_start / 720 * 100) + '%;' +
           'top:' + round(btn.y_start / 480 * 100) + '%;' +
           'width:' + round((btn.x_end - btn.x_start) / 720 * 100) + '%;' +
-          'height:' + round((btn.y_end - btn.y_start) / 480 * 100) + '%' +
-          '}';
+          'height:' + round((btn.y_end - btn.y_start) / 480 * 100) + '%';
 
         /**
          * Round a number to 1 digit.
@@ -102,29 +115,33 @@ function generateButtons(dvdPath: string, callback) {
         }
       }
 
-      function saveCSSFile(css, btn_nb) {
+      function saveCSSFile(cssContent, btn_nb) {
         var fileName = 'menu-' + pointer + '-' + cellID + '-' + vobID + '.css';
-        css = css.join('');
+        cssContent = cssContent.join('');
 
-        fs.writeFile(path.join(webPath, fileName), css, function(err) {
+        fs.writeFile(path.join(webPath, fileName), cssContent, function(err) {
           if (err) {
             console.error(err);
           }
 
           process.stdout.write('.');
 
-          if (!menuCell[pointer]) {
-            menuCell[pointer] = {};
-            menuCell[pointer].menuCell = {};
+          if (btn_nb > 0) {
+            if (!css[pointer]) {
+              css[pointer] = {};
+            }
+            if (!css[pointer].menuCell) {
+              css[pointer].menuCell = {};
+            }
+            if (!css[pointer].menuCell[cellID]) {
+              css[pointer].menuCell[cellID] = {};
+            }
+            if (!css[pointer].menuCell[cellID][vobID]) {
+              css[pointer].menuCell[cellID][vobID] = {};
+            }
+            css[pointer].menuCell[cellID][vobID].css = '/' + dvdName + '/' + fileName;
+            css[pointer].menuCell[cellID][vobID].btn_nb = btn_nb;
           }
-          if (!menuCell[pointer].menuCell[cellID]) {
-            menuCell[pointer].menuCell[cellID] = {};
-          }
-          if (!menuCell[pointer].menuCell[cellID][vobID]) {
-            menuCell[pointer].menuCell[cellID][vobID] = {};
-          }
-          menuCell[pointer].menuCell[cellID][vobID].css = '/' + dvdName + '/' + fileName;
-          menuCell[pointer].menuCell[cellID][vobID].btn_nb = btn_nb;
 
           // Next iteration.
           vobPointer++;
@@ -147,7 +164,7 @@ function generateButtons(dvdPath: string, callback) {
         } else {
           // At the end of all iterations.
           // Save a metadata file containing the list of all IFO files.
-          editMetadataFile(getWebName('metadata'), menuCell, function() {
+          editMetadataFile(getWebName('metadata'), css, function() {
             callback();
           });
         }
