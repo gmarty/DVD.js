@@ -18,6 +18,7 @@
     "glob": "~5.0.10",
     "jdataview": "~2.5.0",
     "lodash": "^3.10.0",
+    "mdns-js": "^0.5.0",
     "optimist": "~0.6.1",
     "serve-static": "^1.9.3"
   },
