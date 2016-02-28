@@ -16,9 +16,9 @@ var config = require('../../config/app.json');
 function startServer() {
   // Static asset server.
   var app = connect()
+    .use(cors({origin: true}))
     .use(connect.static('public/'))
-    .use(connect.static(config.webFolder))
-    .use(cors({origin: false}));
+    .use(connect.static(config.webFolder));
   http.createServer(app).listen(config.staticServerPort);
 
   console.log('Server running at http://localhost:%d/', config.staticServerPort);
