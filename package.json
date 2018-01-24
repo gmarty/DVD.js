@@ -1,15 +1,15 @@
 {
-  "name": "dvd.js",
+  "name": "DVD.js",
   "version": "0.0.1",
   "author": "G. C. Marty",
   "description": "Play DVD in JavaScript for the sake of interoperability",
   "scripts": {
-    "http-server": "node ./bin/http-server",
+    "start": "node ./bin/http-server",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/gmarty/DVD.js"
+    "url": "git+https://github.com/gmarty/DVD.js.git"
   },
   "dependencies": {
     "binaryjs": "~0.2.1",
@@ -24,9 +24,9 @@
   },
   "devDependencies": {
     "grunt": "~0.4.5",
-    "grunt-typescript": "~0.6.2",
+    "grunt-contrib-watch": "~0.6.1",
     "grunt-tsd": "~0.1.0",
-    "grunt-contrib-watch": "~0.6.1"
+    "grunt-typescript": "~0.6.2"
   },
   "keywords": [
     "dvd",
@@ -34,6 +34,5 @@
     "libdvdread",
     "interoperability"
   ],
-  "license": "GNU GPL",
-  "readmeFilename": "README.md"
+  "license": "GPL-3.0"
 }
