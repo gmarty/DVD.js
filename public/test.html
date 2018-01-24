@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
 <meta name="msapplication-TileColor" content="#00aba9">
 <meta name="msapplication-TileImage" content="/mstile-144x144.png">
-<link href="/bower_components/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-IS73LIqjtYesmURkDE9MXKbXqYA8rvKEp/ghicjem7Vc3mGRdQRptJSz60tvrB6+" crossorigin="anonymous">
 <link href="/favicon-196x196.png" rel="icon" sizes="196x196">
 <link href="/favicon-160x160.png" rel="icon" sizes="160x160">
 <link href="/favicon-96x96.png" rel="icon" sizes="96x96">
@@ -85,21 +85,15 @@ body {
     </div>
   </div>
   <footer>
-    <p>© 2015 Guillaume Marty (<a href="https://github.com/gmarty">https://github.com/gmarty</a>)</p>
+    <p>© 2018 Guillaume Marty (<a href="https://github.com/gmarty">https://github.com/gmarty</a>)</p>
   </footer>
 </div>
-<script src="/bower_components/alameda/alameda.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/alameda@0.2.0/alameda.min.js"></script>
+<script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js" integrity="sha384-s1ITto93iSMDxlp/79qhWHi+LsIi9Gx6yL+cOKDuymvihkfol83TYbLbOw+W/wv4" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/platform@1.3.5/platform.js"></script>
 <script>
 'use strict';
-
-// We load jQuery as a AMD module, then load Bootstrap async
-// (dirty... I know, there must be a better way).
-require(['/bower_components/jquery/dist/jquery.min.js'],
-    require.bind(null, ['/bower_components/bootstrap/dist/js/bootstrap.min.js']));
-
-require(['/bower_components/platform/platform.js'], function(platform) {
-  document.querySelector('#platform').textContent = platform.description;
-});
 
 (function() {
   /**
@@ -152,6 +146,8 @@ require(['/bower_components/platform/platform.js'], function(platform) {
         'glyphicon glyphicon-ok text-success' :
         'glyphicon glyphicon-remove text-danger';
   }
+
+  document.querySelector('#platform').textContent = platform.description;
 })();
 </script>
 </body>

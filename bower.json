@@ -22,12 +22,9 @@
     "tests"
   ],
   "dependencies": {
-    "alameda": "~0.2.0",
     "backbone": "^1.2.1",
-    "bootstrap": "~3.0.3",
     "eventEmitter": "^4.2.11",
     "jdataview": "^2.5.0",
-    "platform": "^1.3.0",
     "x-tag-core": "^1.1.9"
   }
 }
